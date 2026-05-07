@@ -1,0 +1,23 @@
+{
+  "lastChangelogVersion": "0.73.0",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "high",
+  "theme": "dark",
+  "hideThinkingBlock": true,
+  "enableInstallTelemetry": true,
+  "workingVibe": "zen",
+  "bashMode": {
+    "toggleShortcut": "ctrl+b",
+    "transcriptMaxLines": 5000,
+    "transcriptMaxBytes": 1048576
+  },
+  "packages": [
+    "npm:pi-powerline-footer",
+    "npm:pi-web-access"
+  ],
+  "powerline": {
+    "preset": "compact",
+    "fixedEditor": true
+  }
+}
