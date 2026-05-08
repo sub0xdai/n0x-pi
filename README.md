@@ -8,7 +8,7 @@ pi, re-forged. Extended, disciplined, and alive.
 
 - **📐 [TigerBeetle standards](agent/prompts/tigerbeetle.md)** — enforced on all code paths. Assertion density ≥ 2 per function, typed errors, zero tech debt, units in variable names. Safety over performance, determinism over convenience.
 
-- **🫁 [Vox](agent/skills/vox/SKILL.md)** — spec-driven development pipeline. `plan` (gap analysis → checkpoints, on Opus) then `build` (TDD checkpoint execution, on Sonnet). *Vox* = voice, the creative force that speaks structure into chaos.
+- **🫁 [Vox](agent/skills/vox/SKILL.md)** — spec-driven development pipeline. `plan` (gap analysis → checkpoints) then `build` (TDD checkpoint execution). Model-agnostic — configure plan/build models via env vars. *Vox* = voice, the creative force that speaks structure into chaos.
 
 - **🎨 Kanso-Ink** — custom dark theme. Ink-blue accents, muted parchment tones.
 
