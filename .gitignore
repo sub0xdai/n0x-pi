@@ -1,0 +1,8 @@
+# Auth — API keys, tokens
+agent/auth.json
+
+# Sessions — personal conversation history
+agent/sessions/
+
+# Backup / stale files
+*.bak
