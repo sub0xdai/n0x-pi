@@ -24,7 +24,6 @@ pi, re-forged. Extended, disciplined, and alive.
 
 - **💬 Prompts**: `brainstorm` (guided design, one question per turn), `grill-me` (depth-first interrogation, no hand-waves), `tigerbeetle` (active coding standards)
 
-- **⚙️ Defaults**: deepseek-v4-pro, high thinking, zen vibe
 
 ## vs. Stock pi
 
