@@ -3,7 +3,7 @@
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
-  "theme": "ansi-dark",
+  "theme": "opencode-catppuccin-macchiato",
   "hideThinkingBlock": true,
   "enableInstallTelemetry": true,
   "workingVibe": "zen",
@@ -15,7 +15,8 @@
   "packages": [
     "npm:pi-powerline-footer",
     "npm:pi-web-access",
-    "git:github.com/leblancfg/pi-ansi-themes"
+    "git:github.com/leblancfg/pi-ansi-themes",
+    "git:github.com/lulucatdev/pi-themes"
   ],
   "powerline": {
     "preset": "compact",

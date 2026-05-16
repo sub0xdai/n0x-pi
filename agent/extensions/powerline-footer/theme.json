@@ -1,7 +1,7 @@
 {
   "colors": {
     "model": "accent",
-    "path": "#7aa89f",
+    "path": "success",
     "separator": "borderMuted"
   }
 }
