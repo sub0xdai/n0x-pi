@@ -24,19 +24,28 @@ Two-step spec-to-code workflow. `plan` does gap analysis and decomposes work int
 |---|---|
 | `plan-mode` | Tracks checkpoints in a markdown file. Gates destructive tool calls when plan mode is active |
 | `comment` | Opens the agent's last response in `$EDITOR` so you can edit before sending |
-| `tmux-manager` | Exposes `tmux_new_session`, `tmux_capture_pane`, `tmux_send_keys`, `tmux_kill_session` as LLM-callable tools. Background jobs without leaving the session |
+| `tmux-manager` | Exposes tmux session tools as LLM-callable. Background jobs without leaving the session |
 | `notifications` | Desktop pings when a long task finishes and when the agent is ready for the next command |
 
 ### Skills
 
+**Structure & navigation:**  
+`anchor:init` — scaffold `@anchor` tag infrastructure with manifest index.  
+`anchor:verify` — pre-commit hook enforcement + CI-ready policy validation.
+
 **Code & review:**  
-`vox` — spec-driven plan and build. `diff-review` — visual HTML diff with architecture comparison. `shannon` — annotate code in your Neovim session via RPC.
+`vox` — spec-driven plan → build pipeline.  
+`diff-review` — visual HTML diff with architecture comparison, KPI dashboard, Mermaid diagrams.  
+`shannon` — annotate code in your Neovim session via RPC.  
+`librarian` — research open-source library internals with GitHub permalinks.
 
 **Infra & deploy:**  
-`cloudflare-devops` — deploy to Cloudflare Workers/Pages, manage tunnels.
+`cloudflare-devops` — deploy to Cloudflare Workers/Pages, manage tunnels, CI/CD.
 
-**Docs & research:**  
-`kami` — typeset resumes, one-pagers, white papers, slide decks to PDF. `graphify` — turn any folder into a knowledge graph. `handoff` — write a session summary for the next agent. `librarian` — research open-source library internals with GitHub permalinks.
+**Knowledge & docs:**  
+`graphify` — codebase → knowledge graph → communities → HTML + JSON + report.  
+`kami` — typeset resumes, one-pagers, white papers, slide decks to PDF.  
+`handoff` — session summary for the next agent.
 
 **Editing:**  
 `humanizer` — strip AI-isms from text.
@@ -59,6 +68,56 @@ Plus pi-ansi-themes and pi-themes packages for catppuccin, dracula, monokai, ros
 ### pi packages
 
 `pi-powerline-footer` (compact status bar), `pi-web-access` (web search + librarian skill), `pi-blackboard-theme`, `pi-ansi-themes` + `pi-themes` (community theme collections: catppuccin, dracula, monokai, rose-pine, solarized, and more).
+
+## Workflow
+
+### New project, from zero
+
+```
+anchor:init        → structural boundaries, manifest index
+vox plan <spec>    → gap analysis → IMPLEMENTATION_PLAN.md
+vox build <spec>   → TDD checkpoints, one per invocation
+anchor:verify      → deploy pre-commit gate
+cloudflare-devops  → deploy to edge (if web)
+```
+
+### Existing codebase, first touch
+
+```
+anchor:init        → scan + annotate + index
+graphify           → knowledge graph → communities → GRAPH_REPORT.md
+  └─ query "<q>"   → traverse the graph, find surprising connections
+librarian <dep>    → understand critical dependencies from source
+diff-review        → before/after architecture comparison (branches, PRs)
+```
+
+### Feature work loop
+
+```
+vox plan           → decompose
+vox build          → checkpoint by checkpoint
+shannon            → annotated walkthrough in Neovim
+/grill-me          → depth-first interrogation of design decisions
+/brilliance        → iterate until reviewer can't flag anything
+diff-review        → visual diff before merge
+humanizer          → clean AI artifacts from docs/comments
+```
+
+### Session boundaries
+
+```
+handoff            → write summary for the next agent
+  ── or ──
+graphify query     → persist findings into the knowledge graph
+```
+
+### Guardrails (always on)
+
+```
+anchor:verify      → blocks commits on un-annotated files
+  +                 → manifest auto-syncs on each commit
+TigerBeetle std    → assertion density, typed errors, zero tech debt
+```
 
 ## vs. stock pi
 
