@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.75.5",
+  "lastChangelogVersion": "0.77.0",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
@@ -17,7 +17,8 @@
     "npm:pi-web-access",
     "git:github.com/leblancfg/pi-ansi-themes",
     "git:github.com/lulucatdev/pi-themes",
-    "npm:pi-blackboard-theme"
+    "npm:pi-blackboard-theme",
+    "npm:vim-motions-pi"
   ],
   "powerline": {
     "preset": "compact",

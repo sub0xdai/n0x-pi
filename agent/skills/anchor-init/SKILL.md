@@ -1,5 +1,5 @@
 ---
-name: anchor:init
+name: anchor-init
 description: >-
   Scaffolds anchor tag infrastructure and generates the initial master manifest
   map. Zero-dependency anchor tagging subsystem for codebase navigation.
@@ -7,7 +7,7 @@ description: >-
   (typescript, rust, python, lean).
 ---
 
-# anchor:init — Anchor Tag Bootstrapper
+# anchor-init — Anchor Tag Bootstrapper
 
 Scaffolds a zero-dependency anchor tagging subsystem. For existing projects, parses directory structures to inject syntactical boundaries without breaking compiling code. For new projects, sets up the scaffolding so every new file is tagged from the start.
 
@@ -121,7 +121,7 @@ from pathlib import Path
 def load_config():
     config_path = Path(".anchor/config.json")
     if not config_path.exists():
-        print("ERROR: .anchor/config.json not found. Run anchor:init first.")
+        print("ERROR: .anchor/config.json not found. Run anchor-init first.")
         raise SystemExit(1)
     with open(config_path, "r") as f:
         return json.load(f)
@@ -310,7 +310,7 @@ python3 .anchor/generate_manifest.py
 Print a summary:
 
 ```
-anchor:init complete — {$PROJECT_ROOT}
+anchor-init complete — {$PROJECT_ROOT}
 
   Config:       .anchor/config.json
   Manifest:     .anchor/anchor-manifest.json
@@ -322,4 +322,4 @@ anchor:init complete — {$PROJECT_ROOT}
 
 Then remind the user:
 
-> "Anchor infrastructure is active. The pre-commit hook (anchor:verify) must be installed separately. Run `anchor:verify` to deploy the hook and validate your first commit."
+> "Anchor infrastructure is active. The pre-commit hook (anchor-verify) must be installed separately. Run `anchor-verify` to deploy the hook and validate your first commit."

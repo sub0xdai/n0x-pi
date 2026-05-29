@@ -9,13 +9,7 @@ description: |
   voice, negative parallelisms, and filler phrases.
 license: MIT
 compatibility: claude-code opencode
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - AskUserQuestion
+allowed-tools: Read Write Edit
 ---
 
 # Humanizer: Remove AI Writing Patterns
