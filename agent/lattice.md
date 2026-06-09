@@ -2,6 +2,13 @@
 
 > Read once. Navigate deterministically. Verify on failure.
 
+> **DOX Hierarchy:** This file is the spatial protocol for `~/.pi/agent/`.
+> For behavioral contracts, see `~/.pi/agent/AGENTS.md` and its children:
+> `skills/AGENTS.md`, `extensions/AGENTS.md`, `prompts/AGENTS.md`,
+> `themes/AGENTS.md`. Lattice.md governs spatial layout; AGENTS.md files
+> govern behavioral contracts. When they disagree about boundaries or naming,
+> lattice.md takes precedence.
+
 ---
 
 ## Rules of Engagement
