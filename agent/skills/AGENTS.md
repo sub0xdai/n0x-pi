@@ -1,3 +1,7 @@
+---
+description: Contract and index for all skill directories. Defines creation rules, invocation conventions, conflict resolution, and verification procedures.
+---
+
 # Skills — Directory Contract
 
 Agents editing or invoking skills under `~/.pi/agent/skills/` must follow this contract
