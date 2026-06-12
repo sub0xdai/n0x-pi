@@ -56,6 +56,7 @@ require explicit invocation.
 | `handoff` | `/skill:handoff` | "write a handoff", "summarise this session", wrapping up a session | no |
 | `humanizer` | `/skill:humanizer` | Removing AI-generated writing patterns from text; editing/reviewing for natural voice | no |
 | `kami` | `/skill:kami` | Typesetting PDFs, resumes, one-pagers, white papers, slide decks; "做 PDF", "排版", "make this presentable" | no |
+| `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: __n0x_build.sh, __n0x_bootstrap.sh, __n0x_ingest.sh, __n0x_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |

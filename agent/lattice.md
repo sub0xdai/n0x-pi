@@ -144,6 +144,7 @@ Then restart from step 2.
 |------------|------|-------------|---------|
 | `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. Self-contained HTML file. Use for reviewing branches, commits, PRs, or working tree changes. | (none) |
 | `/kami` | Skill | 'Typeset professional documents: resumes, one-pagers, white papers, letters, portfolios, slide decks. Warm parchment, ink-blue accent, serif-led hierarchy. CN uses TsangerJinKai02, EN uses Charter, JA uses YuMincho (best-effort). Triggers on "做 PDF / 排版 / 一页纸 / 白皮书 / 作品集 / 简历 / PPT / slides", or "build me a resume / make a one-pager / design a slide deck / turn this into a PDF / make this presentable".' | (none) |
+| `/n0x-content` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the n0x-content pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "n0x-content", "n0x video". | __n0x_build.sh, __n0x_bootstrap.sh, __n0x_ingest.sh, __n0x_render.sh |
 | `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. Use when the user asks to show something "in Neovim", requests an annotated code review, guided walkthrough, or error markers in their editor. | (none) |
 | `/vox` | Skill | >- | (none) |
 
@@ -153,6 +154,7 @@ Then restart from step 2.
 |------------|------|-------------|---------|
 | `/brainstorm` | Prompt | Guided brainstorming mode — turn a rough idea into a fully-formed design through collaborative dialogue. No code, just design. | N/A |
 | `/grill-me` | Prompt | Deep-dive interrogation — drill into every aspect of a plan or design, one question at a time, until shared understanding is reached | N/A |
+| `/n0x-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the n0x-content renderer | N/A |
 | `/tigerbeetle` | Prompt | TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths | N/A |
 
 <!-- INDEX_END -->
