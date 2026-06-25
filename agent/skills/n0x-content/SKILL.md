@@ -24,10 +24,10 @@ Wrapper scripts in `~/dotfiles/scripts/` bridge the engine into pi:
 
 | Script | Purpose |
 |--------|---------|
-| `~/dotfiles/scripts/__n0x_build.sh` | Ensure the Podman container image exists |
-| `~/dotfiles/scripts/__n0x_bootstrap.sh <dir>` | Scaffold a video project directory |
-| `~/dotfiles/scripts/__n0x_ingest.sh <dir> [opts]` | Fetch royalty-free audio, video, images |
-| `~/dotfiles/scripts/__n0x_render.sh <dir> [opts]` | Build container + render MP4 |
+| `~/dotfiles/scripts/n0x_build.sh` | Ensure the Podman container image exists |
+| `~/dotfiles/scripts/n0x_bootstrap.sh <dir>` | Scaffold a video project directory |
+| `~/dotfiles/scripts/n0x_ingest.sh <dir> [opts]` | Fetch royalty-free audio, video, images |
+| `~/dotfiles/scripts/n0x_render.sh <dir> [opts]` | Build container + render MP4 |
 
 The prompt template is at `~/.pi/agent/prompts/n0x-cutlist.md`.
 
@@ -47,7 +47,7 @@ The agent must resolve an absolute path before proceeding to phase 2.
 ### Phase 2 — Bootstrap the scaffold
 
 ```bash
-bash ~/dotfiles/scripts/__n0x_bootstrap.sh <absolute-target-dir>
+bash ~/dotfiles/scripts/n0x_bootstrap.sh <absolute-target-dir>
 ```
 
 This creates the directory with: `audio/`, `raw_footage/`, `overlays/`, `prompts/`,
@@ -74,7 +74,7 @@ If the project has no audio in `audio/`:
    *"dark aggressive drill beat"*) and run:
 
 ```bash
-bash ~/dotfiles/scripts/__n0x_ingest.sh <dir> --audio-query "<vibe>"
+bash ~/dotfiles/scripts/n0x_ingest.sh <dir> --audio-query "<vibe>"
 ```
 
 If `raw_footage/` is empty beyond what was copied from the project:
@@ -83,7 +83,7 @@ If `raw_footage/` is empty beyond what was copied from the project:
 2. If the user wants auto-ingestion:
 
 ```bash
-bash ~/dotfiles/scripts/__n0x_ingest.sh <dir> --no-audio --ia-id <identifier>
+bash ~/dotfiles/scripts/n0x_ingest.sh <dir> --no-audio --ia-id <identifier>
 ```
 
 Use `--no-preprocess` if the user wants the raw unprocessed look.
@@ -135,7 +135,7 @@ This is where the agent does the creative work.
 Once the user approves the cutlist:
 
 ```bash
-bash ~/dotfiles/scripts/__n0x_render.sh <project-dir>
+bash ~/dotfiles/scripts/n0x_render.sh <project-dir>
 ```
 
 Optionally pass style overrides:
@@ -180,6 +180,6 @@ unreleased material in the video.
 
 ## Verification
 
-- `~/dotfiles/scripts/__n0x_build.sh` must succeed before render
+- `~/dotfiles/scripts/n0x_build.sh` must succeed before render
 - `prompts/cutlist.json` must exist and be valid JSON before render
 - `audio/` should contain at least one file (warn if not)

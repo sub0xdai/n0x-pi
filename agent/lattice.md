@@ -25,21 +25,18 @@
 
 ### Naming Convention
 
-Scripts invoked by the agent carry a double-underscore prefix to signal "headless subroutine":
+Scripts use unprefixed names. Group related scripts by prefix (e.g., `n0x_*`, `setup_*`).
 
 ```
-~/dotfiles/scripts/__<name>*.sh   — agent-invoked
-~/dotfiles/scripts/<name>.sh      — human-facing CLI tools
+~/dotfiles/scripts/<name>.sh   — all scripts, agent or human
 ```
 
 A skill named `<name>` expects its companion scripts at:
-`~/dotfiles/scripts/__<name>*.sh`
+`~/dotfiles/scripts/<name>*.sh`
 
 Example:
-- Skill: `vox` → scripts: `~/dotfiles/scripts/__vox_plan.sh`, `~/dotfiles/scripts/__vox_checkpoint.sh`
-- Skill: `diff-review` → script: `~/dotfiles/scripts/__diff_review.sh`
-
-Do not execute unprefixed scripts autonomously. They may expect TTY input.
+- Skill: `vox` → scripts: `~/dotfiles/scripts/vox_plan.sh`, `~/dotfiles/scripts/vox_checkpoint.sh`
+- Skill: `n0x-content` → scripts: `~/dotfiles/scripts/n0x_bootstrap.sh`, `~/dotfiles/scripts/n0x_render.sh`
 
 ### The Extension Boundary (Control vs. Execution)
 
@@ -100,11 +97,11 @@ Do not use relative paths for:
 - Prompts in `~/.pi/agent/prompts/`
 
 A skill named `vox` references its script as:
-  `~/dotfiles/scripts/__vox_plan.sh`
+  `~/dotfiles/scripts/vox_plan.sh`
 
 Not as:
-  `./__vox_plan.sh`
-  `../../../dotfiles/scripts/__vox_plan.sh`
+  `./vox_plan.sh`
+  `../../../dotfiles/scripts/vox_plan.sh`
 
 A skill has no "local assets." If it needs a template, that template
 is a prompt in `~/.pi/agent/prompts/` — referenced by absolute path.
@@ -130,7 +127,7 @@ tools (`read`, `write`, `edit`, `bash`), follow this sequence:
                                    shell commands.
 
 If step 4 fails (script not found), regenerate the index:
-`bash ~/dotfiles/scripts/__lattice_index.sh`
+`bash ~/dotfiles/scripts/lattice_index.sh`
 Then restart from step 2.
 
 ---
@@ -143,8 +140,7 @@ Then restart from step 2.
 | Invocation | Type | Description | Scripts |
 |------------|------|-------------|---------|
 | `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. Self-contained HTML file. Use for reviewing branches, commits, PRs, or working tree changes. | (none) |
-| `/kami` | Skill | 'Typeset professional documents: resumes, one-pagers, white papers, letters, portfolios, slide decks. Warm parchment, ink-blue accent, serif-led hierarchy. CN uses TsangerJinKai02, EN uses Charter, JA uses YuMincho (best-effort). Triggers on "做 PDF / 排版 / 一页纸 / 白皮书 / 作品集 / 简历 / PPT / slides", or "build me a resume / make a one-pager / design a slide deck / turn this into a PDF / make this presentable".' | (none) |
-| `/n0x-content` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the n0x-content pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "n0x-content", "n0x video". | __n0x_build.sh, __n0x_bootstrap.sh, __n0x_ingest.sh, __n0x_render.sh |
+| `/n0x-content` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the n0x-content pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "n0x-content", "n0x video". | n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
 | `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. Use when the user asks to show something "in Neovim", requests an annotated code review, guided walkthrough, or error markers in their editor. | (none) |
 | `/vox` | Skill | >- | (none) |
 

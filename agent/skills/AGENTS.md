@@ -25,7 +25,7 @@ instructions. Tools come from extensions or native pi tools.
 
 Each skill is a directory containing exactly one `SKILL.md` file. No other assets
 (lattices, scripts, templates) belong in the skill directory. Script companions live
-at `~/dotfiles/scripts/__<skill-name>*.sh`.
+at `~/dotfiles/scripts/<skill-name>*.sh`.
 
 ### Creation Rules
 
@@ -33,7 +33,7 @@ at `~/dotfiles/scripts/__<skill-name>*.sh`.
   allowed-tools, argument-hint, disable-model-invocation)
 - Description must specify trigger conditions clearly
 - If skill requires scripts, create them in `~/dotfiles/scripts/` with the
-  `__<skill-name>` prefix convention
+  `<skill-name>` prefix convention
 - If skill requires prompt templates, create them in `~/.pi/agent/prompts/`
 - Update lattice.md index when adding or removing a skill
 
@@ -55,8 +55,7 @@ require explicit invocation.
 | `graphify` | `/skill:graphify` | Codebase analysis, architecture questions, file relationships; especially if graphify-out/ exists | no |
 | `handoff` | `/skill:handoff` | "write a handoff", "summarise this session", wrapping up a session | no |
 | `humanizer` | `/skill:humanizer` | Removing AI-generated writing patterns from text; editing/reviewing for natural voice | no |
-| `kami` | `/skill:kami` | Typesetting PDFs, resumes, one-pagers, white papers, slide decks; "做 PDF", "排版", "make this presentable" | no |
-| `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: __n0x_build.sh, __n0x_bootstrap.sh, __n0x_ingest.sh, __n0x_render.sh |
+| `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write a handoff document summarising the current conversation so a fresh agent can continue the work. Saves to the OS temporary directory. Use when wrapping up a session, handing off to another agent/colleague, or when asked to "write a handoff" or "summarise this session."
+description: Write a handoff document summarising the current conversation so a fresh agent can continue the work. Saves to the root project directory. Use when wrapping up a session, handing off to another agent/colleague, or when asked to "write a handoff" or "summarise this session."
 ---
 
 # Handoff
@@ -15,13 +15,13 @@ Usage: `/skill:handoff [next-session focus]`
 
 ### 1. Determine output location
 
-Use the OS temporary directory. The file should be named so it's easy to find:
+Write to the **root of the current project** (the workspace directory). Always overwrite:
 
 ```
-${TMPDIR:-/tmp}/handoff-<YYYY-MM-DD>-<HHMM>.md
+<workspace-root>/handoff.md
 ```
 
-If `$TMPDIR` is unset, use `/tmp`.  The timestamp is **local time**, 24-hour.
+No timestamp in the filename — each invocation replaces the previous handoff. The date inside the document records when it was written.
 
 ### 2. Gather context
 
@@ -86,7 +86,7 @@ Also suggest **non-skill actions**: test commands, git operations, files to read
 
 ### 6. Write the document
 
-Write to the temp-file location from step 1. Use this structure:
+Write to `<workspace-root>/handoff.md`. Use this structure:
 
 ```markdown
 # Handoff — <brief topic>
@@ -167,7 +167,7 @@ After writing, tell the user:
 
 Example:
 ```
-Handoff written to /tmp/handoff-2026-05-22-1430.md (2.1 KB)
+Handoff written to ./handoff.md (2.1 KB)
   3 artifacts referenced
   2 skills suggested
   1 redaction (API key)
@@ -181,4 +181,4 @@ Handoff written to /tmp/handoff-2026-05-22-1430.md (2.1 KB)
 - **Do not invent information.** If you don't know something, say "unknown" or "not yet determined."
 - **Keep it concise.** The handoff is a map, not a novel. The next agent will read the artifacts directly.
 - **One handoff per invocation.** Do not chain multiple handoffs.
-- **Always write to the temp directory.** Never save the handoff to the workspace unless the user explicitly asks you to (and warns about committing it).
+- **Always write to the workspace root as `handoff.md`.** This file persists across sessions. Overwrite on each invocation — only the latest handoff matters.

@@ -1,0 +1,39 @@
+{
+  "defaultProfile": "balanced",
+  "tierStickiness": 0.5,
+  "defaultContextThresholdPercent": 70,
+  "classifierModel": "google/gemini-2.5-flash",
+  "profiles": {
+    "balanced": {
+      "high": {
+        "model": "openrouter/z-ai/glm-5.2",
+        "contextWindow": 1048576,
+        "maxTokens": 16384,
+        "thinking": "high"
+      },
+      "medium": {
+        "model": "deepseek/deepseek-v4-pro",
+        "thinking": "medium",
+        "fallbacks": ["google/gemini-2.5-flash"]
+      },
+      "low": {
+        "model": "deepseek/deepseek-v4-pro",
+        "thinking": "low"
+      }
+    },
+    "cheap": {
+      "high": {
+        "model": "deepseek/deepseek-v4-pro",
+        "thinking": "medium"
+      },
+      "medium": {
+        "model": "deepseek/deepseek-v4-pro",
+        "thinking": "low"
+      },
+      "low": {
+        "model": "deepseek/deepseek-v4-pro",
+        "thinking": "off"
+      }
+    }
+  }
+}

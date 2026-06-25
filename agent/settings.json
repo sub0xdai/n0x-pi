@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.79.1",
-  "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
+  "lastChangelogVersion": "0.80.2",
+  "defaultProvider": "router",
+  "defaultModel": "balanced",
   "defaultThinkingLevel": "high",
   "theme": "vanilla-amoled",
   "hideThinkingBlock": true,
@@ -18,7 +18,10 @@
     "git:github.com/leblancfg/pi-ansi-themes",
     "git:github.com/lulucatdev/pi-themes",
     "npm:pi-blackboard-theme",
-    "npm:vim-motions-pi"
+    "npm:vim-motions-pi",
+    "git:github.com/DietrichGebert/ponytail",
+    "npm:@upstash/context7-pi",
+    "npm:@yeliu84/pi-model-router"
   ],
   "powerline": {
     "preset": "compact",
