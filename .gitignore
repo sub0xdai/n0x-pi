@@ -4,5 +4,8 @@ agent/auth.json
 # Sessions — personal conversation history
 agent/sessions/
 
+# Runtime data
+agent/pi-fff/
+
 # Backup / stale files
 *.bak

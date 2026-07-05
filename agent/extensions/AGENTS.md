@@ -56,9 +56,8 @@ Extensions from pi packages live in `~/.pi/agent/npm/node_modules/` or
 
 | Package | Extension | Purpose |
 |---------|-----------|---------|
-| `pi-powerline-footer` | powerline footer | Custom footer replacing built-in footer |
 | `pi-web-access` | web tools | Registers `web_search`, `fetch_content`, `code_search`, `get_search_content` tools |
-| `vim-motions-pi` | vim motions | Vim-like keybindings for pi editor |
+| `@tungthedev/pi-extensions` | boxed editor | Floating detached input box with extensible status row and fixed editor mode |
 
 ## Work Guidance
 

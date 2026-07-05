@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.80.2",
-  "defaultProvider": "router",
-  "defaultModel": "balanced",
+  "lastChangelogVersion": "0.80.3",
+  "defaultProvider": "openai",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "high",
   "theme": "vanilla-amoled",
   "hideThinkingBlock": true,
@@ -13,18 +13,16 @@
     "transcriptMaxBytes": 1048576
   },
   "packages": [
-    "npm:pi-powerline-footer",
     "npm:pi-web-access",
     "git:github.com/leblancfg/pi-ansi-themes",
     "git:github.com/lulucatdev/pi-themes",
     "npm:pi-blackboard-theme",
-    "npm:vim-motions-pi",
     "git:github.com/DietrichGebert/ponytail",
     "npm:@upstash/context7-pi",
-    "npm:@yeliu84/pi-model-router"
+    "npm:@yeliu84/pi-model-router",
+    "npm:@tungthedev/pi-extensions"
   ],
-  "powerline": {
-    "preset": "compact",
+  "editor": {
     "fixedEditor": true
   }
 }
