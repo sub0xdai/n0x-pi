@@ -39,21 +39,23 @@ Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
 
 ### Runtime Configuration (`settings.json`)
 
-- Default model: DeepSeek v4 Pro, thinking level: high
+- Default model: DeepSeek v4 Pro (via OpenAI provider), thinking level: high
 - Theme: vanilla-amoled, thinking blocks hidden
-- Powerline footer in compact mode with fixed editor
-- Six installed pi packages (powerline-footer, web-access, themes, vim-motions)
+- Boxed editor with fixed editor mode
+- Eight installed pi packages
 
 ### Pi Packages Installed
 
 | Package | Provides |
 |---------|----------|
-| `pi-powerline-footer` | Custom footer with git status, context usage, shortcuts |
 | `pi-web-access` | web_search, fetch_content, code_search tools + librarian skill |
 | `pi-blackboard-theme` | Blackboard and Blackboard Pro themes |
-| `vim-motions-pi` | Vim-like motions in pi editor |
 | `pi-ansi-themes` (git) | ANSI theme collection |
 | `pi-themes` (git) | Theme collection |
+| `ponytail` (git) | Ponytail skill family (ponytail, ponytail-audit, ponytail-review, ponytail-debt, ponytail-gain, ponytail-help) |
+| `@upstash/context7-pi` | Context7 documentation lookup (resolve-library-id, query-docs) |
+| `@yeliu84/pi-model-router` | Model routing between providers |
+| `@tungthedev/pi-extensions` | Boxed editor with extensible status row |
 
 ## Work Guidance
 

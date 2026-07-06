@@ -139,9 +139,11 @@ Then restart from step 2.
 
 | Invocation | Type | Description | Scripts |
 |------------|------|-------------|---------|
+| `/adr` | Skill | Create and manage Architecture Decision Records (ADRs) with the Nygard template format. Use when asked to "write an ADR", "document this decision", "capture this architecture choice", or when encountering a new dependency, new architectural pattern, or hard-to-reverse choice. | (none) |
 | `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. Self-contained HTML file. Use for reviewing branches, commits, PRs, or working tree changes. | (none) |
 | `/n0x-content` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the n0x-content pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "n0x-content", "n0x video". | n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
 | `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. Use when the user asks to show something "in Neovim", requests an annotated code review, guided walkthrough, or error markers in their editor. | (none) |
+| `/vault-context` | Skill | Search Obsidian vault (`sub0x_vault/`) for relevant knowledge before coding decisions. Use when the agent needs domain context, encounters an unfamiliar area, or before vox plan on a spec. Triggers on "what do I know about X", "check my notes on Y". | (none) |
 | `/vox` | Skill | >- | (none) |
 
 ## Prompts

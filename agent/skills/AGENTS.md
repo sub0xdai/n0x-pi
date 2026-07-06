@@ -47,6 +47,7 @@ require explicit invocation.
 
 | Skill | Invocation | Triggers On | Has Scripts |
 |-------|-----------|-------------|-------------|
+| `adr` | `/skill:adr` | Create and manage Architecture Decision Records; "write an ADR", "document this decision", new dependency or pattern introduction | no |
 | `anchor-init` | `/skill:anchor-init` | Scaffolding anchor tags for codebase navigation; "new" or "existing" project with language target | generate_manifest.py |
 | `anchor-verify` | `/skill:anchor-verify` | Validating anchor compliance on "staged" or "all" files | pre-commit hook |
 | `audit` | `/skill:audit` | Two-pass code audit; after implementing features, fixing multi-file bugs, or "audit this" | no |
@@ -59,6 +60,7 @@ require explicit invocation.
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |
+| `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before vox plan | no |
 | `vox` | `/skill:vox plan` → `/skill:vox build` | Spec-driven development with TDD checkpoints; two-step pipeline from spec to code | no |
 
 ### Skill Conflicts
