@@ -38,7 +38,7 @@
 
     "selectedBg": "surface2",
     "userMessageBg": "surface1",
-    "userMessageText": "textFg",
+    "userMessageText": "brightFg",
     "customMessageBg": "surface1",
     "customMessageText": "textFg",
     "customMessageLabel": "faintBlue",
