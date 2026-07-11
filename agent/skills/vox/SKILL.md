@@ -95,6 +95,33 @@ Only include the sections you need. A greenfield feature has only ADDED.
 A refactor may have MODIFIED + REMOVED. Each requirement MUST have at least
 one Scenario.
 
+### Living spec format
+
+The living spec at `specs/<domain>/spec.md` is the archive merge target.
+It uses a flat structure with a single `## Requirements` section:
+
+```markdown
+# <domain> — Living Spec
+
+## Requirements
+
+### Requirement: <title>
+<description using SHALL/MUST>
+
+#### Scenario: <name>
+- GIVEN <precondition>
+- WHEN <trigger>
+- THEN <expected outcome>
+```
+
+Archive merges are mechanical against this structure:
+- **ADDED** → append requirement blocks under `## Requirements`.
+- **MODIFIED** → find the matching `### Requirement: <title>` block and replace it.
+- **REMOVED** → delete the matching `### Requirement: <title>` block entirely.
+
+The living spec never contains `## ADDED`, `## MODIFIED`, or `## REMOVED` headers.
+Those only exist in delta specs.
+
 ---
 
 ## Plan Mode
@@ -116,19 +143,30 @@ and determinism over convenience.
 
 **1. Locate the change or spec**
 Resolution order:
-1. `.specify/changes/<spec-name>/` — delta layout (check for proposal.md + specs/)
-2. `.specify/specs/<spec-name>/spec.md` — legacy layout
-3. Fuzzy match in both directories
-4. If none exist, create a new change directory from the delta template:
-   - Create `.specify/changes/<spec-name>/proposal.md` (problem, user stories, risks)
-   - Create `.specify/changes/<spec-name>/specs/<domain>/spec.md` (delta, initially ADDED only)
-   - Ask user to fill in requirements, then re-run plan.
+1. `.specify/changes/<spec-name>/` — delta layout (check for proposal.md + specs/).
+   Note: if a legacy spec at `.specify/specs/<spec-name>/spec.md` also exists,
+   the delta layout wins — the legacy spec is ignored for this change.
+2. `.specify/specs/<spec-name>/spec.md` — legacy layout.
+3. Fuzzy match in both directories.
+4. If none exist, create a new delta change:
+   - Ask the user: "Which domain does this change affect?" (e.g. `auth-session`,
+     `checkout-cart`). Use the answer as `<domain>`.
+   - Create `.specify/changes/<spec-name>/proposal.md` with sections:
+     `## Problem`, `## User Stories`, `## Risks`.
+   - Create `.specify/changes/<spec-name>/specs/<domain>/spec.md` using the
+     delta spec format (initially ADDED only).
+   - Ask user to fill in the delta requirements, then re-run plan.
+5. **If an `IMPLEMENTATION_PLAN.md` already exists** in the change directory,
+   ask: "A plan already exists. Overwrite or merge?" before proceeding.
 
 **2. Read context**
-- The delta spec (every requirement + scenario in `changes/<name>/specs/<domain>/spec.md`).
-- **If delta layout**: also read the living spec at `.specify/specs/<domain>/spec.md` —
-  this is the current truth that the delta modifies. For MODIFIED/REMOVED requirements,
-  verify the living spec actually contains the requirement being changed.
+- **All delta specs** under `changes/<spec-name>/specs/*/spec.md` (a change may
+  touch multiple domains). Read every one.
+- **If delta layout**: for each domain in the delta, also read the living spec
+  at `.specify/specs/<domain>/spec.md`. For MODIFIED/REMOVED requirements,
+  verify the living spec actually contains the matching `### Requirement:` block.
+  If a requirement title doesn't match any in the living spec, flag it and stop —
+  the delta may reference a requirement that doesn't exist.
 - `.specify/memory/constitution.md` — project verification commands, tech stack, key files.
 - Project `CLAUDE.md` / `AGENTS.md` for routing rules.
 - Any rule files referenced for the affected components.
@@ -158,6 +196,9 @@ Each checkpoint must be:
 Write to the change directory's `IMPLEMENTATION_PLAN.md`.
 For delta layout: `.specify/changes/<spec-name>/IMPLEMENTATION_PLAN.md`.
 For legacy layout: `.specify/specs/<spec-name>/IMPLEMENTATION_PLAN.md`.
+
+**If the file already exists**, ask "A plan already exists. Overwrite or merge?"
+before writing.
 
 Structure:
 
@@ -224,8 +265,8 @@ prioritize safety over performance, simplicity over cleverness,
 and determinism over convenience.
 
 **1. Load context**
-- Delta layout: `.specify/changes/<spec-name>/specs/<domain>/spec.md` (the delta) +
-  `.specify/specs/<domain>/spec.md` (the living truth being modified).
+- Delta layout: **all delta specs** under `.specify/changes/<spec-name>/specs/*/spec.md` +
+  their corresponding living specs at `.specify/specs/<domain>/spec.md`.
   `.specify/changes/<spec-name>/IMPLEMENTATION_PLAN.md`.
 - Legacy layout: `.specify/specs/<spec-name>/spec.md` +
   `.specify/specs/<spec-name>/IMPLEMENTATION_PLAN.md`.
@@ -258,8 +299,11 @@ Run the project's standard verification commands (from constitution.md or CLAUDE
 **8. Mark CP complete**
 - Edit `IMPLEMENTATION_PLAN.md`: change `### CP-N: <name>` to `### CP-N: <name> ✅`
 - Add a one-line note: `Completed YYYY-MM-DD by /skill:vox build`.
-- **If delta layout**: cross off the Scenarios this CP covered in the delta spec.
-  Append `<!-- covered by CP-N -->` after each verified Scenario.
+- **If delta layout**: mark each Scenario this CP verified by appending exactly
+  `<!-- vox:covered CP-N -->` on the line immediately after the Scenario block.
+  (Use `vox:covered` prefix so markers won't collide with other HTML comments.
+  Each Scenario gets exactly one marker — if a later CP re-verifies the same
+  Scenario, do not add a second marker.)
 
 **9. Stop. Do not start the next CP.**
 - Summarize what changed (files + lines).
@@ -278,42 +322,56 @@ Run the project's standard verification commands (from constitution.md or CLAUDE
 ## Archive Mode
 
 Triggered by `/skill:vox archive <spec-name>`. Only works with the delta layout.
-Merges completed delta specs into the living source of truth, then moves the
-change directory to the archive.
+If invoked on a legacy spec (no `changes/` directory), respond:
+"Archive mode requires the delta layout. This spec is in the legacy layout.
+Migrate it to `changes/<spec-name>/` first, then re-run archive." and exit.
 
 ### Steps
 
 **1. Verify all CPs complete**
 - Read `.specify/changes/<spec-name>/IMPLEMENTATION_PLAN.md`.
 - Every checkpoint must be marked ✅.
-- Every Scenario in the delta spec must be covered (check `<!-- covered by CP-N -->` markers).
-- If any are missing, stop and report which CPs or Scenarios are incomplete.
+- Every Scenario in every delta spec must have a `<!-- vox:covered CP-N -->` marker
+  on the line immediately following its Scenario block. Search across all
+  `.specify/changes/<spec-name>/specs/*/spec.md` files.
+- If any Scenario is missing its marker, stop and report the exact Scenario name,
+  file, and line number.
 
 **2. Merge deltas into living specs**
 For each domain directory under `.specify/changes/<spec-name>/specs/`:
 
-- **ADDED requirements**: Append them to `.specify/specs/<domain>/spec.md`.
-  Create the file if it doesn't exist (greenfield domain).
-- **MODIFIED requirements**: Find the matching `### Requirement:` in the living spec
-  and replace its description + scenarios with the updated version.
-- **REMOVED requirements**: Remove the matching `### Requirement:` block (including
-  all its Scenarios) from the living spec.
+- **ADDED requirements**: Append each `### Requirement:` block (including its
+  description and Scenarios) under the `## Requirements` section of
+  `.specify/specs/<domain>/spec.md`. Create the file with the living spec
+  template if it doesn't exist (greenfield domain).
+- **MODIFIED requirements**: Search the living spec for the exact
+  `### Requirement: <title>` heading. If found, replace the entire requirement
+  block (heading through last Scenario) with the updated version. If the title
+  is not found in the living spec, **stop** — the delta references a
+  requirement that doesn't exist. Report the missing title and ask the user to
+  resolve the mismatch.
+- **REMOVED requirements**: Search the living spec for the exact
+  `### Requirement: <title>` heading. If found, delete the entire requirement
+  block (heading through last Scenario). If the title is not found, **stop** —
+  same resolution as MODIFIED mismatch.
 
-If a living spec doesn't exist for a domain touched by MODIFIED or REMOVED,
-that's an error — stop and ask the user to create it first.
+**3. Remove coverage markers**
+After merging, strip all `<!-- vox:covered CP-N -->` markers from the delta specs.
+The archived delta should be clean.
 
-**3. Run repo-wide gates**
-Run the project's standard verification commands. The merge itself is spec-only
-(no code), but run gates to confirm the repo is still clean.
+**4. Run repo-wide gates**
+Run the project's standard verification commands.
 
-**4. Archive the change**
-- Move `.specify/changes/<spec-name>/` to `.specify/archive/<spec-name>/`.
-- Add a `COMPLETION.md` to the archive with:
+**5. Archive the change**
+- If `.specify/archive/<spec-name>/` already exists, rename the target to
+  `<spec-name>-<YYYYMMDD-HHMMSS>/` to avoid collisions.
+- Move `.specify/changes/<spec-name>/` to `.specify/archive/<target-name>/`.
+- Add a `COMPLETION.md` to the archive directory with:
   - Date completed
   - List of files changed (from CP summaries)
   - Final commit range
 
-**5. Summary**
+**6. Summary**
 - List which living specs were updated (file + requirement count).
 - Confirm archive location.
 - The living specs now reflect reality. The archive preserves the change's
