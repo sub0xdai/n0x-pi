@@ -2,7 +2,7 @@
 
 pi, re-forged. Extended, disciplined, and alive.
 
-Batteries-included pi config. The agent knows its own filesystem, follows strict coding standards, and has a spec-to-code pipeline that ships. Extensions are rare and justified. Everything else is plain bash scripts called by naming convention.
+Batteries-included pi config. The agent knows its own filesystem, follows strict coding standards, has a spec-to-code pipeline that ships, and runs a dual-gate emission check before any code reaches you. Extensions are rare and justified. Everything else is plain bash scripts called by naming convention.
 
 ## What's inside
 
@@ -114,10 +114,17 @@ graphify query     → persist findings into the knowledge graph
 ### Guardrails (always on)
 
 ```
-anchor:verify      → blocks commits on un-annotated files
-  +                 → manifest auto-syncs on each commit
-TigerBeetle std    → assertion density, typed errors, zero tech debt
+anchor:verify       → blocks commits on un-annotated files
+  +                  → manifest auto-syncs on each commit
+TigerBeetle std     → assertion density, typed errors, zero tech debt
+Emission gate       → mechanical + semantic dual-gate before any code reaches you
+  __check.sh        →   POSIX scanner: line width, forbidden tokens, waiver support
+  self-check        →   AI evaluates all 21 TB+RP rules, emits [VERIFIED] receipt
 ```
+
+### 🛡 Emission gate: [check protocol](agent/primitives/check.schema.json)
+
+No code reaches your screen without passing two gates. First, a zero-dependency POSIX shell script (`__check.sh`) scans for mechanical violations: line width over 100 chars, forbidden tokens like `TODO`/`FIXME`. Then the AI runs a semantic self-check against all 21 TigerBeetle + review-policy rules. Every emitted code block carries a `[VERIFIED]` receipt. No receipt = protocol breach, visible immediately. Waivers are inline (`// @waiver TB-09: reason`), rule-scoped, and survive sessions.
 
 ## vs. stock pi
 
