@@ -1,0 +1,122 @@
+{
+  "$id": "https://pi.agent/primitives/check",
+  "title": "Code Emission Check Protocol",
+  "description": "Dual-gate enforcement protocol. Mechanical rules run via __check.sh. Semantic rules run via agent self-check. Code is not emitted until both gates pass.",
+
+  "ruleClassification": {
+    "mechanical": {
+      "description": "Rules checked by __check.sh shell script. Language-agnostic text checks.",
+      "rules": ["TB-09", "TB-10"],
+      "runner": "~/dotfiles/scripts/__check.sh"
+    },
+    "semantic": {
+      "description": "Rules evaluated by the agent. Requires reasoning about code structure.",
+      "rules": [
+        "TB-01", "TB-02", "TB-03", "TB-04", "TB-05",
+        "TB-06", "TB-07", "TB-08", "TB-11", "TB-12",
+        "TB-13", "TB-14",
+        "RP-01", "RP-02", "RP-03", "RP-04", "RP-05",
+        "RP-06", "RP-07"
+      ],
+      "runner": "agent self-check",
+      "evaluationProtocol": {
+        "description": "For each semantic rule, the agent must produce a one-line verdict: PASS, WAIVED (with reason), or FIXED (with what changed). If any rule yields FAIL, the code must be fixed and both gates re-run.",
+        "verdictFormat": "[{rule}] {PASS|WAIVED: reason|FIXED: what changed}"
+      }
+    }
+  },
+
+  "enforcementLoop": {
+    "sequence": [
+      "1. Write modified code to a .tmp file (never check against stale on-disk state)",
+      "2. Run __check.sh <file>.tmp — resolve all mechanical violations",
+      "3. Run semantic self-check against all 21 rules",
+      "4. If any violation remains: fix code, go to step 1",
+      "5. Only when both gates pass: overwrite target file, emit code"
+    ],
+    "circuitBreaker": {
+      "maxAttempts": 3,
+      "description": "If the same violation persists after 3 correction attempts, halt. Emit the failing code, state the unresolved violation, and request human intervention.",
+      "onExhaustion": "Emit code with [VERIFIED: BLOCKED] summary and unresolved violation details."
+    },
+    "contextManagement": {
+      "description": "Drop failed intermediate reasoning traces from context. Only the final verified artifact and summary receipt survive in the active trace."
+    }
+  },
+
+  "mechanicalRunner": {
+    "path": "~/dotfiles/scripts/__check.sh",
+    "canonicalStorage": "~/.pi/agent/scripts/__check.sh",
+    "constraints": {
+      "stateless": true,
+      "readOnly": true,
+      "sideEffects": "none",
+      "portability": "POSIX shell, awk, grep -E only",
+      "maxViolations": 20
+    },
+    "outputSchema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": {"type": "string", "enum": ["TB-09", "TB-10", "SYSTEM"]},
+          "line": {"type": "integer"},
+          "message": {"type": "string"}
+        }
+      },
+      "overflowSentinel": {
+        "rule": "SYSTEM",
+        "line": 0,
+        "message": "Truncated: N additional violations hidden"
+      }
+    }
+  },
+
+  "waiverProtocol": {
+    "syntax": "// @waiver RULE-ID: justification",
+    "scoping": "rule-scoped, not line-scoped. A waiver for TB-09 does not waive TB-10 on the same line.",
+    "persistence": "Inline with code. Survives sessions. Dies when the code dies.",
+    "reEvaluation": "Agent must re-evaluate waivers when surrounding code changes. If the justification no longer holds, flag it."
+  },
+
+  "emissionContract": {
+    "summaryFormat": "[VERIFIED] Mechanical: {Pass|Fail} | Semantic: {Pass|Fail} | Waivers: {count}",
+    "description": "Every code block emitted by the agent MUST be immediately followed by this one-line summary. Code without a [VERIFIED] line is a protocol breach.",
+    "missingReceiptResponse": "The user sees no receipt line — a human-detectable protocol breach."
+  },
+
+  "failureModes": {
+    "fm1_infiniteLoop": {
+      "scenario": "Agent fails a check, fixes, fails again, loops.",
+      "mitigation": "Circuit breaker: 3 attempts per violation, then halt."
+    },
+    "fm2_ioDesync": {
+      "scenario": "Agent runs __check.sh on stale on-disk file while holding modified code in memory.",
+      "mitigation": "Always write to .tmp first, check .tmp, overwrite target only on pass."
+    },
+    "fm3_contextExhaustion": {
+      "scenario": "Multiple fix iterations fill context, agent forgets primitives.",
+      "mitigation": "Drop failed intermediate traces. Only final artifact + summary survive."
+    },
+    "fm4_regexCollision": {
+      "scenario": "grep flags valid literal string as forbidden token.",
+      "mitigation": "Apply @waiver annotation. Accepted cost of parser-less checks."
+    },
+    "fm5_skipCheck": {
+      "scenario": "Agent emits code without running check protocol.",
+      "mitigation": "Missing [VERIFIED] line is human-detectable protocol breach."
+    },
+    "fm6_malformedJson": {
+      "scenario": "__check.sh produces invalid JSON.",
+      "mitigation": "Agent must validate JSON before proceeding. Block emission on parse failure."
+    },
+    "fm7_waiverRot": {
+      "scenario": "Waiver remains on code whose context has changed.",
+      "mitigation": "Re-evaluate waivers when surrounding code changes."
+    },
+    "fm8_semanticInconsistency": {
+      "scenario": "Same code, different sessions, different pass/fail on semantic rules.",
+      "mitigation": "Concrete evaluation criteria in each rule's check description."
+    }
+  }
+}

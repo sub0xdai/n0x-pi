@@ -20,6 +20,7 @@
 | `~/.pi/agent/skills/` | Behavioral workflows. Each skill is a directory containing a single `SKILL.md`. | Skills define how the agent acts, not what tools it uses. |
 | `~/.pi/agent/prompts/` | Reusable instruction templates. Invoked via `/<name>`. | Self-contained. No dependencies on extensions or scripts. |
 | `~/.pi/agent/extensions/` | Runtime modifications to the harness itself. `.ts` modules only. Use sparingly. | Lifecycle hooks, TTY/UI manipulation, persistent transport protocols. |
+| `~/.pi/agent/primitives/` | Structured ground truth referenced by prompts. `.schema.json` files only. No prose instruction — only typed data, enumeration sets, compatibility matrices, and computable validation rules. | Knowledge primitives (ProjectContext, Glossary, ADR), Action primitives (Spec, DecisionTree, ReviewResult), Constraint primitives (CodingStandard, ReviewPolicy). |
 | `~/dotfiles/scripts/` | Executable logic. Shell scripts that skills and prompts invoke. | Always referenced by absolute path. |
 | `~/dotfiles/shell_common/` | Human shell environment. Not agent-navigable. | Agent benefits implicitly (aliases, PATH, functions). Never read directly. |
 
@@ -146,13 +147,29 @@ Then restart from step 2.
 | `/vault-context` | Skill | Search Obsidian vault (`sub0x_vault/`) for relevant knowledge before coding decisions. Use when the agent needs domain context, encounters an unfamiliar area, or before vox plan on a spec. Triggers on "what do I know about X", "check my notes on Y". | (none) |
 | `/vox` | Skill | >- | (none) |
 
+## Primitives
+
+| Primitive | Category | Serves |
+|-----------|----------|--------|
+| `project-context.schema.json` | Knowledge | brainstorm, brilliance, grill-me, grill-with-docs |
+| `glossary.schema.json` | Knowledge | grill-with-docs |
+| `adr.schema.json` | Knowledge | grill-with-docs, adr skill |
+| `spec.schema.json` | Action | brainstorm, grill-me, grill-with-docs |
+| `decision-tree.schema.json` | Action | grill-me, grill-with-docs |
+| `review-result.schema.json` | Action | brilliance |
+| `coding-standard.schema.json` | Constraint | tigerbeetle |
+| `review-policy.schema.json` | Constraint | brilliance |
+| `check.schema.json` | Constraint | all code emission |
+
 ## Prompts
 
-| Invocation | Type | Description | Scripts |
-|------------|------|-------------|---------|
-| `/brainstorm` | Prompt | Guided brainstorming mode — turn a rough idea into a fully-formed design through collaborative dialogue. No code, just design. | N/A |
-| `/grill-me` | Prompt | Deep-dive interrogation — drill into every aspect of a plan or design, one question at a time, until shared understanding is reached | N/A |
-| `/n0x-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the n0x-content renderer | N/A |
-| `/tigerbeetle` | Prompt | TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths | N/A |
+| Invocation | Type | Description | Primitives Referenced |
+|------------|------|-------------|----------------------|
+| `/brainstorm` | Prompt | Guided brainstorming mode — turn a rough idea into a fully-formed design through collaborative dialogue. No code, just design. | project-context, spec |
+| `/brilliance` | Prompt | Code review for brilliance — polish changes until they're elegant, bulletproof, and leave reviewers with nothing to say but "LGTM" | project-context, review-policy, review-result |
+| `/grill-me` | Prompt | Deep-dive interrogation — drill into every aspect of a plan or design, one question at a time, until shared understanding is reached | project-context, decision-tree, spec |
+| `/grill-with-docs` | Prompt | Grill-me + ubiquitous language refinement + ADR writing. For existing codebases. | project-context, glossary, adr, decision-tree, spec |
+| `/n0x-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the n0x-content renderer | cutlist.schema.json, filter-effect-matrix.json (in n0x-content project) |
+| `/tigerbeetle` | Prompt | TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths | coding-standard |
 
 <!-- INDEX_END -->

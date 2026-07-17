@@ -5,7 +5,7 @@ When using git commit, NEVER add Co-authored-by, Signed-off-by, or any other tra
 ## Scripting language preference
 
 When creating helper scripts, one-off tools, or automation scripts, you MUST use Go.
-
+Exception: Python when a required library is Python-only (e.g., Presidio for PII scrubbing).
 Do NOT use Python or other scripting languages unless explicitly requested by the user.
 
 ## PII & secret scrubbing pre-commit hook
@@ -178,3 +178,28 @@ ponytail ladder — smallest change that passes the test, no bonus features.
 
 Ponytail is the default. Vox is the escalation for structured work.
 TigerBeetle is the concrete they both pour onto.
+
+## Emission Protocol (Zero-Defect Standard)
+
+Before emitting any code artifact, you MUST execute the dual-gate check protocol:
+
+1. Write modified code to a `.tmp` file. Never check against stale on-disk state.
+2. Run `~/dotfiles/scripts/__check.sh <file>.tmp` on all modified code.
+   Resolve any JSON violations.
+3. Perform a semantic self-check against the remaining TB and RP rules.
+   For each rule, produce a verdict: PASS, WAIVED (with reason), or FIXED (what changed).
+4. If any violation remains, fix the code and restart from step 1.
+5. If a violation persists after 3 correction attempts, halt.
+   Emit the failing code with `[VERIFIED: BLOCKED]` and request human intervention.
+6. If code violates a rule but warrants an exception, inject an inline waiver:
+   `// @waiver RULE-ID: brief justification`
+7. Overwrite the target file only after a verified pass.
+
+You are strictly prohibited from emitting unchecked code.
+Every code block you output MUST be immediately followed by a one-line summary:
+
+`[VERIFIED] Mechanical: Pass | Semantic: Pass | Waivers: N`
+
+A missing `[VERIFIED]` line is a protocol breach.
+Drop failed intermediate reasoning traces from context.
+Only the final verified artifact and summary receipt survive.
