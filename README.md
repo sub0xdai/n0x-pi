@@ -1,131 +1,56 @@
 # n0x-pi
 
-pi, re-forged. Extended, disciplined, and alive.
+My pi config. The agent knows where everything lives, follows a coding standard, and checks its own output before showing it to me.
 
-Batteries-included pi config. The agent knows its own filesystem, follows strict coding standards, has a spec-to-code pipeline that ships, and runs a dual-gate emission check before any code reaches you. Extensions are rare and justified. Everything else is plain bash scripts called by naming convention.
+- [Lattice](agent/lattice.md) — directory layout, naming rules, the extension litmus test
+- [TigerBeetle](agent/prompts/tigerbeetle.md) — 14 coding rules, always enforced
+- [Vox](agent/skills/vox/SKILL.md) — spec → plan → TDD checkpoints
+- [Emission gate](agent/primitives/check.schema.json) — script + AI self-check before any code reaches me
 
-## What's inside
+## Extensions
 
-### 🧭 Self-model: [Lattice](agent/lattice.md)
+Four total. Each one modifies the harness event loop — no CLI wrappers dressed up as extensions.
 
-The agent reads this file once and knows where everything lives. Directory boundaries, naming conventions, a 3-criteria test for when a TypeScript extension is warranted, and a deterministic discovery loop. No guessing what tools exist.
-
-### 📐 Coding standards: [TigerBeetle](agent/prompts/tigerbeetle.md)
-
-Enforced on every code path by default. Assertion density ≥ 2 per function. Typed errors, not strings. Zero tech debt on commit. Units in variable names. Safety over performance, determinism over convenience.
-
-### 🫁 Spec pipeline: [Vox](agent/skills/vox/SKILL.md)
-
-Two-step spec-to-code workflow. `plan` does gap analysis and decomposes work into vertical checkpoints. `build` runs TDD checkpoint execution — red, green, refactor, verify. Runs one checkpoint per invocation. Never skips a gate.
-
-### Extensions (only 4, each justifies its existence)
-
-| Extension | Why it's here |
+| Extension | Does |
 |---|---|
-| `plan-mode` | Tracks checkpoints in a markdown file. Gates destructive tool calls when plan mode is active |
-| `comment` | Opens the agent's last response in `$EDITOR` so you can edit before sending |
-| `tmux-manager` | Exposes tmux session tools as LLM-callable. Background jobs without leaving the session |
-| `notifications` | Desktop pings when a long task finishes and when the agent is ready for the next command |
+| `plan-mode` | Gates destructive tools when a build plan is active |
+| `comment` | Opens the last response in `$EDITOR` so I can edit before sending |
+| `tmux-manager` | Background jobs in tmux, callable by the agent |
+| `notifications` | Pings my desktop when a task finishes |
 
-### Skills
+## Skills
 
-**Structure & navigation:**  
-`anchor:init` — scaffold `@anchor` tag infrastructure with manifest index.  
-`anchor:verify` — pre-commit hook enforcement + CI-ready policy validation.
-
-**Code & review:**  
-`vox` — spec-driven plan → build pipeline.  
-`diff-review` — visual HTML diff with architecture comparison, KPI dashboard, Mermaid diagrams.  
-`shannon` — annotate code in your Neovim session via RPC.  
-`librarian` — research open-source library internals with GitHub permalinks.
-
-**Infra & deploy:**  
-`cloudflare-devops` — deploy to Cloudflare Workers/Pages, manage tunnels, CI/CD.
-
-**Knowledge & docs:**  
-`graphify` — codebase → knowledge graph → communities → HTML + JSON + report.  
-`kami` — typeset resumes, one-pagers, white papers, slide decks to PDF.  
+`anchor:init`, `anchor:verify` — structural @anchor tags, pre-commit enforcement.
+`vox` — plan/build from specs.
+`diff-review` — visual HTML diff, architecture diagrams.
+`shannon` — annotate code in Neovim via RPC.
+`librarian` — library internals with source links.
+`cloudflare-devops` — Workers/Pages, tunnels, CI/CD.
+`graphify` — codebase to knowledge graph.
 `handoff` — session summary for the next agent.
-
-**Editing:**  
 `humanizer` — strip AI-isms from text.
 
-### Prompts
+## Prompts
 
-`/brainstorm` — guided design, one question per turn.  
-`/grill-me` — depth-first interrogation, no hand-waves.  
-`/grill-with-docs` — grill-me, but also refines your project's ubiquitous language and writes ADRs as you go.  
-`/brilliance` — push changes until the reviewer has nothing to flag.  
-`/tigerbeetle` — the coding standard, loaded explicitly when needed.
+`/brainstorm` — guided design, one question at a time.
+`/grill-me` — depth-first interrogation, no surface-level answers.
+`/grill-with-docs` — grill-me but also refines project language and writes ADRs.
+`/brilliance` — iterate until there's nothing left to flag.
+`/tigerbeetle` — load the coding standard explicitly.
 
-### Themes
+## Guardrails (always on)
 
-- **kanso-ink** — custom dark theme. Ink-blue accents on muted charcoal.  
-- **vanilla-amoled** — pure black background, high contrast. The active default.  
-
-Plus pi-ansi-themes and pi-themes packages for catppuccin, dracula, monokai, rose-pine, solarized, and a dozen more.
-
-### pi packages
-
-`pi-powerline-footer` (compact status bar), `pi-web-access` (web search + librarian skill), `pi-blackboard-theme`, `pi-ansi-themes` + `pi-themes` (community theme collections: catppuccin, dracula, monokai, rose-pine, solarized, and more).
+- **anchor:verify** blocks commits with un-annotated files, auto-syncs the manifest.
+- **TigerBeetle** — assertion density, typed errors, zero tech debt. Always enforced.
+- **Emission gate** — `__check.sh` scans for line width and forbidden tokens. Then the AI self-checks all 21 rules. Every code block needs a `[VERIFIED]` receipt. Missing receipt = the agent skipped the gate.
 
 ## Workflow
 
-### New project, from zero
-
 ```
-anchor:init        → structural boundaries, manifest index
-vox plan <spec>    → gap analysis → IMPLEMENTATION_PLAN.md
-vox build <spec>   → TDD checkpoints, one per invocation
-anchor:verify      → deploy pre-commit gate
-cloudflare-devops  → deploy to edge (if web)
+New project:       anchor:init → vox plan → vox build → anchor:verify
+Existing code:     anchor:init → graphify → librarian → diff-review
+Feature work:      vox plan → vox build → /grill-me → /brilliance → diff-review
+Session end:       handoff
 ```
 
-### Existing codebase, first touch
-
-```
-anchor:init        → scan + annotate + index
-graphify           → knowledge graph → communities → GRAPH_REPORT.md
-  └─ query "<q>"   → traverse the graph, find surprising connections
-librarian <dep>    → understand critical dependencies from source
-diff-review        → before/after architecture comparison (branches, PRs)
-```
-
-### Feature work loop
-
-```
-vox plan           → decompose
-vox build          → checkpoint by checkpoint
-shannon            → annotated walkthrough in Neovim
-/grill-me          → depth-first interrogation of design decisions
-/brilliance        → iterate until reviewer can't flag anything
-diff-review        → visual diff before merge
-humanizer          → clean AI artifacts from docs/comments
-```
-
-### Session boundaries
-
-```
-handoff            → write summary for the next agent
-  ── or ──
-graphify query     → persist findings into the knowledge graph
-```
-
-### Guardrails (always on)
-
-```
-anchor:verify       → blocks commits on un-annotated files
-  +                  → manifest auto-syncs on each commit
-TigerBeetle std     → assertion density, typed errors, zero tech debt
-Emission gate       → mechanical + semantic dual-gate before any code reaches you
-  __check.sh        →   POSIX scanner: line width, forbidden tokens, waiver support
-  self-check        →   AI evaluates all 21 TB+RP rules, emits [VERIFIED] receipt
-```
-
-### 🛡 Emission gate: [check protocol](agent/primitives/check.schema.json)
-
-No code reaches your screen without passing two gates. First, a zero-dependency POSIX shell script (`__check.sh`) scans for mechanical violations: line width over 100 chars, forbidden tokens like `TODO`/`FIXME`. Then the AI runs a semantic self-check against all 21 TigerBeetle + review-policy rules. Every emitted code block carries a `[VERIFIED]` receipt. No receipt = protocol breach, visible immediately. Waivers are inline (`// @waiver TB-09: reason`), rule-scoped, and survive sessions.
-
-## vs. stock pi
-
-Stock pi is a blank canvas. n0x-pi is a workshop. The agent has a self-model, a philosophy, a design pipeline, themes, and knows its boundaries. Extensions pass a strict litmus test or they don't ship. Almost every capability is a bash script following the `__<name>.sh` naming convention in `~/dotfiles/scripts/`. The lattice makes capability discovery deterministic instead of ad-hoc.
+Stock pi is a blank config. This one ships with opinions and checks. Almost everything outside the four extensions is a bash script in `~/dotfiles/scripts/`. The lattice file maps it all.
