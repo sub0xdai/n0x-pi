@@ -1,0 +1,68 @@
+{
+  "$id": "https://pi.agent/primitives/adr",
+  "title": "Architecture Decision Record Primitive",
+  "description": "Records a non-obvious, hard-to-reverse architectural decision. Follows the Nygard template. Stored in docs/adr/YYYY-MM-DD-<slug>.md.",
+
+  "schema": {
+    "title": {
+      "type": "string",
+      "pattern": "^ADR \\d+: .+$",
+      "description": "Numbered decision title."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "superseded", "deprecated"],
+      "description": "Current status of the decision."
+    },
+    "context": {
+      "type": "string",
+      "description": "What problem are we solving? What constraints exist? What forces are at play?"
+    },
+    "decision": {
+      "type": "string",
+      "description": "What we decided. One sentence summary followed by rationale."
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "option": { "type": "string", "description": "Alternative approach considered." },
+          "rejectedBecause": { "type": "string", "description": "Why this alternative was not chosen." }
+        }
+      },
+      "description": "At least one alternative must be listed. An ADR with no alternatives is not an ADR."
+    },
+    "consequences": {
+      "type": "object",
+      "properties": {
+        "easier": { "type": "array", "items": { "type": "string" } },
+        "harder": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "What becomes easier, what becomes harder. Both must be non-empty."
+    }
+  },
+
+  "creationCriteria": {
+    "description": "An ADR is warranted when a decision meets ANY of:",
+    "criteria": [
+      "Hard to reverse (database schema, API contract, file format, protocol)",
+      "Surprising without context (a reader would ask 'why did they do it this way?')",
+      "Real trade-off (two plausible alternatives, each with meaningful consequences)"
+    ],
+    "antiCriteria": [
+      "Obvious choices ('use Postgres because we already use Postgres')",
+      "Easily reversible ('start with a flat JSON file and migrate later')",
+      "Stylistic ('tabs vs spaces', 'formatting convention')"
+    ]
+  },
+
+  "storageTarget": {
+    "path": "docs/adr/YYYY-MM-DD-<slug>.md",
+    "format": "Markdown with frontmatter or heading-structured sections matching the schema"
+  },
+
+  "crossReference": {
+    "description": "When an ADR bears on a glossary term, add 'see ADR #N' to the term's adrReferences in CONTEXT.md."
+  }
+}

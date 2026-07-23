@@ -1,0 +1,68 @@
+{
+  "$id": "https://pi.agent/primitives/glossary",
+  "title": "Glossary Primitive",
+  "description": "Domain language registry. A glossary is a collection of terms, each with a definition, relationships to other terms, code references, and ADR cross-references. Lives within a CONTEXT.md file but exposes structured operations.",
+
+  "termSchema": {
+    "name": { "type": "string", "description": "Canonical term. PascalCase for entities, camelCase for properties." },
+    "definition": { "type": "string", "description": "One-sentence definition. Must disambiguate from sibling terms." },
+    "category": {
+      "type": "string",
+      "enum": ["entity", "value_object", "aggregate", "service", "event", "command", "property", "role", "state", "external_system"],
+      "description": "Domain-driven design classification."
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "enum": ["subtype_of", "has_many", "belongs_to", "references", "produces", "consumes", "orthogonal_to"] },
+          "target": { "type": "string", "description": "Canonical name of the related term." }
+        }
+      }
+    },
+    "codeReferences": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "file:line references where this term appears in code."
+    },
+    "adrReferences": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ADR filenames that bear on this term."
+    }
+  },
+
+  "operations": {
+    "CreateTerm": {
+      "description": "Add a new term to the glossary. Fails if name already exists.",
+      "input": "termSchema (minus codeReferences and adrReferences)",
+      "output": "termSchema"
+    },
+    "RefineTerm": {
+      "description": "Update definition, relationships, or references of an existing term.",
+      "input": "{ name: string, patch: partial termSchema }",
+      "output": "termSchema"
+    },
+    "DeprecateTerm": {
+      "description": "Mark a term as deprecated, with migration guidance.",
+      "input": "{ name: string, replacedBy: string, reason: string }",
+      "output": "termSchema (with deprecation metadata)"
+    },
+    "ResolveTerm": {
+      "description": "Look up a term by name. Returns null if not found.",
+      "input": "string (name)",
+      "output": "termSchema | null"
+    },
+    "FindCollisions": {
+      "description": "Check if a proposed term collides with existing terms.",
+      "input": "string (proposed name)",
+      "output": "array of termSchema (terms that are exact or fuzzy matches)"
+    }
+  },
+
+  "storageTarget": {
+    "description": "Glossary data lives in CONTEXT.md or UBIQUITOUS_LANGUAGE.md files, encoded as markdown with a structured glossary section. The primitive defines the schema; the file is the storage.",
+    "format": "Markdown with ### Glossary section containing term entries"
+  }
+}

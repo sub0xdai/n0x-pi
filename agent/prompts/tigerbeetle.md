@@ -2,73 +2,43 @@
 description: TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths
 ---
 
-You are coding under TigerBeetle's architectural philosophy. These are
-not suggestions. They are the standard.
+You are coding under the `CodingStandard` primitive defined at
+`~/.pi/agent/primitives/coding-standard.schema.json`. The 14 rules in that
+standard are not suggestions — they are blocks. Code that violates any rule
+is not emitted.
 
-## Safety Above All Else
+## Primitive (read before acting)
 
-1. **Assertion density ≥ 2 per function.** Assert preconditions before
-   mutation. Assert postconditions after. Assert invariants at every
-   boundary. If you can't assert it, you don't understand it.
+**`~/.pi/agent/primitives/coding-standard.schema.json`** — the 14 TigerBeetle rules (TB-01 through TB-14), each with a check description and severity=block. Query `CodingStandard.rules` for the full set.
 
-2. **No `.unwrap()` in production code paths.** Every fallible
-   operation must be handled or explicitly propagated. A panic is
-   acceptable only for programmer error (invariant violation), never
-   for runtime data.
+## Enforcement protocol
 
-3. **Typed errors, not strings.** Error types must be enumerated.
-   Never return `Result<(), &str>` or equivalent. The caller must be
-   able to match on the error variant.
+1. Write code normally, applying all 14 rules as you go.
+2. Before emitting any code, run self-check against every rule in `coding-standard.schema.json`.
+3. A violation is a block — fix it, do not emit the code.
+4. If a rule genuinely does not apply, emit an explicit waiver: `CodingStandard.waiver(rule='TB-NN', reason='...', scope='this function only')`.
 
-4. **Pair-assert before write AND after read.** After writing data,
-   immediately read it back and assert it matches what you wrote.
-   Hardware lies. File systems lie. Databases lie.
+## Rule summary (query the primitive for full check descriptions)
 
-## Mechanical Sympathy
+| ID | Rule | Key Check |
+|----|------|-----------|
+| TB-01 | Assertion density ≥ 2 | Count asserts per function |
+| TB-02 | No .unwrap() | Search for unwrap/expect/panic without invariant assertion |
+| TB-03 | Typed errors | Error types must be enum variants, never strings |
+| TB-04 | Pair-assert write+read | Every write followed by read+assert within 5 lines |
+| TB-05 | No hot-path allocation | Allocate at init, not in loops/request handlers |
+| TB-06 | Batch over individual | N items = 1 batch call, not N individual calls |
+| TB-07 | Control/data plane separation | O(1) decisions outside O(N) loops |
+| TB-08 | Function ≤ 70 lines | Hard limit — split if exceeded |
+| TB-09 | Line width ≤ 100 | Restructure if a line wraps |
+| TB-10 | Zero tech debt | No TODO, FIXME, HACK, commented-out blocks |
+| TB-11 | Units in names | latency_ms, timeout_sec, buffer_bytes |
+| TB-12 | Single source of truth | Derived state computed on read, never stored |
+| TB-13 | Explicit boundaries | Module exports explicit, no leaked internal state |
+| TB-14 | Determinism | Seed RNG, log seeds, no time.Now() in decision paths |
 
-5. **No dynamic allocation on the hot path.** Allocate once at
-   initialization. The critical path must be allocation-free.
-
-6. **Batching over individual operations.** If you process N items,
-   process them in a batch. One network round-trip, one filesystem
-   sync, one lock acquisition.
-
-7. **Control plane / data plane separation.** O(1) decisions must
-   live outside O(N) loops. Never mix metadata computation with
-   record processing.
-
-## Code Discipline
-
-8. **Function length ≤ 70 lines.** Hard limit. If a function exceeds
-   this, extract a helper. No exceptions for "complex" logic —
-   complexity is exactly what benefits from decomposition.
-
-9. **Line width ≤ 100 columns.** Format aggressively. If a line wraps,
-   restructure it.
-
-10. **Zero technical debt.** No `// TODO`, no `// FIXME`, no deprecated
-    code left in tree, no commented-out blocks. Ship it clean or don't
-    ship it.
-
-11. **Units in variable names.** `latency_ms`, `timeout_sec`,
-    `max_retries`, `buffer_bytes`. Never `latency`, `timeout`,
-    `max`, `buffer`.
-
-## Architecture
-
-12. **Single source of truth.** Data lives in exactly one place.
-    Derived state is computed on read, never stored.
-
-13. **Explicit boundaries.** Every module declares its public surface.
-    Internal state is never leaked across module boundaries.
-
-14. **Design for determinism.** Given the same inputs and the same
-    state, produce the same outputs. Seed randomness. Log seeds.
-    Reproduce bugs from a git commit + seed.
-
-## When in Doubt
+## When in doubt
 
 - Simplify. The correct answer is usually fewer lines.
 - Remove, don't add. A deleted line can't cause a bug.
-- If you can't explain the invariant in one sentence, the code is
-  wrong.
+- If you can't explain the invariant in one sentence, the code is wrong.

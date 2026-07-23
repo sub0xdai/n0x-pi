@@ -1,0 +1,103 @@
+{
+  "$id": "https://pi.agent/primitives/coding-standard",
+  "title": "TigerBeetle Coding Standard",
+  "description": "14 non-negotiable rules applied to all production code. Each rule is machine-checkable — the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
+
+  "rules": {
+    "assertionDensity": {
+      "id": "TB-01",
+      "description": "Assertion density ≥ 2 per function. Assert preconditions before mutation. Assert postconditions after. Assert invariants at every boundary.",
+      "check": "Count assert statements in function body. Must be >= 2 for every function longer than 5 lines. Functions <= 5 lines are exempt.",
+      "severity": "block"
+    },
+    "noUnwrap": {
+      "id": "TB-02",
+      "description": "No .unwrap() in production code paths. Every fallible operation must be handled or explicitly propagated. Panic acceptable only for invariant violation (programmer error), never for runtime data.",
+      "check": "Search for .unwrap(), .expect(), panic!() not preceded by an invariant assertion comment.",
+      "severity": "block"
+    },
+    "typedErrors": {
+      "id": "TB-03",
+      "description": "Typed errors, not strings. Error types must be enumerated. Never return Result<(), &str> or equivalent. The caller must be able to match on the error variant.",
+      "check": "Verify error return types are enum variants or typed error structs, never bare strings.",
+      "severity": "block"
+    },
+    "pairAssert": {
+      "id": "TB-04",
+      "description": "Pair-assert before write AND after read. After writing data, immediately read it back and assert it matches what was written.",
+      "check": "Every write operation must be followed by a read + assert within 5 lines. Hardware lies. File systems lie. Databases lie.",
+      "severity": "block"
+    },
+    "noHotPathAlloc": {
+      "id": "TB-05",
+      "description": "No dynamic allocation on the hot path. Allocate once at initialization. The critical path must be allocation-free.",
+      "check": "Identify hot paths (loops processing N items, request handlers). Verify no heap allocation inside them.",
+      "severity": "block"
+    },
+    "batchOverIndividual": {
+      "id": "TB-06",
+      "description": "Batching over individual operations. Process N items in a batch. One network round-trip, one filesystem sync, one lock acquisition.",
+      "check": "Verify that N operations use a single batch call, not N individual calls.",
+      "severity": "block"
+    },
+    "controlDataPlaneSeparation": {
+      "id": "TB-07",
+      "description": "Control plane / data plane separation. O(1) decisions must live outside O(N) loops. Never mix metadata computation with record processing.",
+      "check": "Verify that loop bodies contain only O(1) per-item logic. O(N) metadata computation runs before or after the loop.",
+      "severity": "block"
+    },
+    "maxFunctionLines": {
+      "id": "TB-08",
+      "description": "Function length ≤ 70 lines. Hard limit. If a function exceeds this, extract a helper.",
+      "check": "Count lines per function. Functions > 70 lines must be split.",
+      "severity": "block"
+    },
+    "maxLineWidth": {
+      "id": "TB-09",
+      "description": "Line width ≤ 100 columns. Format aggressively. If a line wraps, restructure it.",
+      "check": "Verify no line exceeds 100 characters.",
+      "severity": "block"
+    },
+    "noTechDebt": {
+      "id": "TB-10",
+      "description": "Zero technical debt. No TODO, no FIXME, no deprecated code left in tree, no commented-out blocks.",
+      "check": "Search for TODO, FIXME, HACK, XXX, commented-out code blocks. None allowed.",
+      "severity": "block"
+    },
+    "unitsInNames": {
+      "id": "TB-11",
+      "description": "Units in variable names. latency_ms, timeout_sec, max_retries, buffer_bytes. Never latency, timeout, max, buffer.",
+      "check": "Verify time, size, count variables have unit suffixes.",
+      "severity": "block"
+    },
+    "singleSourceOfTruth": {
+      "id": "TB-12",
+      "description": "Single source of truth. Data lives in exactly one place. Derived state is computed on read, never stored.",
+      "check": "Verify no derived state is persisted. Computed values are functions, not stored fields.",
+      "severity": "block"
+    },
+    "explicitBoundaries": {
+      "id": "TB-13",
+      "description": "Explicit boundaries. Every module declares its public surface. Internal state is never leaked across module boundaries.",
+      "check": "Verify module exports are explicit. No pub fields on structs with invariants.",
+      "severity": "block"
+    },
+    "determinism": {
+      "id": "TB-14",
+      "description": "Design for determinism. Given the same inputs and same state, produce the same outputs. Seed randomness. Log seeds. Reproduce bugs from a git commit + seed.",
+      "check": "Verify all RNG is seeded and the seed is logged. Verify no time.Now() or equivalent in decision paths.",
+      "severity": "block"
+    }
+  },
+
+  "enforcementProtocol": {
+    "description": "How the agent enforces this standard on code output.",
+    "beforeOutput": "Run CodingStandard.check on every changed function.",
+    "violationResponse": "Fix the violation. Do not emit the code.",
+    "waiverProtocol": {
+      "description": "A rule may be waived only with explicit justification.",
+      "format": "CodingStandard.waiver(rule='TB-NN', reason='...', scope='this function only')",
+      "requires": "reason must explain why the rule does not apply in this specific context."
+    }
+  }
+}

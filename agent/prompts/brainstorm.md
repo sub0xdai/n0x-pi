@@ -9,15 +9,17 @@ Goal: turn a rough idea into a fully-formed design through collaborative dialogu
 
 Topic: $@
 
+## Primitives (read before acting)
+
+1. **`~/.pi/agent/primitives/project-context.schema.json`** — defines the structured context query protocol. Use it instead of raw `git log`, `ls`, or ad-hoc file searches.
+2. **`~/.pi/agent/primitives/spec.schema.json`** — defines the output shape. Every design section maps to a Spec section. The final output is a Spec, not freeform markdown.
+
 ## Process
 
-**1. Ground yourself in the project first** — before asking the user anything:
-- Read recent commits (`git log --oneline -20`)
-- Glance at the directory structure
-- Read any `CLAUDE.md` / `AGENTS.md` / `.specify/memory/constitution.md` files in scope
-- Note relevant existing patterns, types, constraints
-
-State briefly what you found ("what exists") before asking questions.
+**1. Ground yourself via ProjectContext**
+- Query `ProjectContext` using the protocol defined in `project-context.schema.json`.
+- Do not run raw shell commands — use the structured query steps.
+- State briefly what you found ("what exists") before asking questions.
 
 **2. Refine the idea — one question at a time**
 - One question per message. Never batch.
@@ -30,10 +32,9 @@ State briefly what you found ("what exists") before asking questions.
 - Lead with your recommendation and reasoning.
 - Wait for the user to pick or push back before proceeding.
 
-**4. Present the design incrementally**
-- Break the design into 200-300 word sections.
+**4. Present the design incrementally against Spec sections**
+- Break the design into sections matching `spec.schema.json`: purpose, scope, constraints, architecture, failureModes, testing, migration, reversibility.
 - After each section ask: "Does this look right so far?"
-- Cover: architecture, components, data flow, error handling, testing, what's out of scope.
 - Be ready to backtrack and clarify when something doesn't fit.
 
 ## Principles
@@ -47,6 +48,4 @@ State briefly what you found ("what exists") before asking questions.
 
 ## When the design is locked
 
-Ask: "Save this as a spec under `.specify/specs/<NAME>/spec.md`, or write to `docs/plans/YYYY-MM-DD-<topic>-design.md`?"
-
-Write the validated design. Do not start implementation in this session — that's `/skill:vox plan <spec>` next.
+Write the validated design as a Spec matching `spec.schema.json`. Save to the Spec's canonical storage target (`.specify/specs/<NAME>/spec.md`). Do not start implementation — that's `/skill:vox plan <spec>` next.

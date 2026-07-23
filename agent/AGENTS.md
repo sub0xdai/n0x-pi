@@ -78,3 +78,4 @@ Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
 | `extensions/AGENTS.md` | `~/.pi/agent/extensions/` | Extension contracts enforcing lattice.md criteria |
 | `prompts/AGENTS.md` | `~/.pi/agent/prompts/` | Prompt template index and usage conventions |
 | `themes/AGENTS.md` | `~/.pi/agent/themes/` | Theme file conventions |
+| `primitives/AGENTS.md` | `~/.pi/agent/primitives/` | Primitive contracts — structured ground truth referenced by prompts |

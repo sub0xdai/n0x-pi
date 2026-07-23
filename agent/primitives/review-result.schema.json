@@ -1,0 +1,52 @@
+{
+  "$id": "https://pi.agent/primitives/review-result",
+  "title": "Review Result Primitive",
+  "description": "Structured output from a brilliance code review. Each finding is a typed entry with dimension, severity, location, and a concrete fix diff.",
+
+  "findingSchema": {
+    "dimension": {
+      "type": "string",
+      "enum": ["naming", "shape", "correctness", "errorHandling", "testing", "minimalism", "consistency"],
+      "description": "Which review dimension this finding relates to."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low", "praise"],
+      "description": "critical: data corruption/security/crash. high: swallowed errors/race/leaks. medium: misleading names/missing edge cases. low: style nits. praise: positive reinforcement."
+    },
+    "location": {
+      "type": "string",
+      "description": "file:line or file:line-range."
+    },
+    "issue": {
+      "type": "string",
+      "description": "One-sentence description of the problem. Empty string if severity is praise."
+    },
+    "fix": {
+      "type": "string",
+      "description": "Concrete diff or code suggestion. For praise, describe what's good."
+    }
+  },
+
+  "outputSchema": {
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/findingSchema" },
+      "description": "Ordered by severity descending."
+    },
+    "verdict": {
+      "type": "string",
+      "description": "One-paragraph summary. If zero non-praise findings: 'Ship it. 🚢'"
+    },
+    "praiseCount": {
+      "type": "number",
+      "description": "Number of findings with severity=praise. Must be >= 1. Positive reinforcement is mandatory."
+    }
+  },
+
+  "outputRules": {
+    "noUnactionableFeedback": "Every non-praise finding must include a concrete fix. No 'this could be better' without showing how.",
+    "praiseIsMandatory": "At least one praise finding per review. Tell them what's already good.",
+    "severityOrder": "Critical/high first, then medium, then low, then praise."
+  }
+}

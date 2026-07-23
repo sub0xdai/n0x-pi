@@ -1,0 +1,65 @@
+{
+  "$id": "https://pi.agent/primitives/decision-tree",
+  "title": "Decision Tree Primitive",
+  "description": "Structured decision tracking for grill-mode sessions. A tree of Decision nodes, each with status, dependencies, and the standard branch taxonomy.",
+
+  "branchTaxonomy": {
+    "description": "Standard branches every decision tree must cover. New branches may be added via CreateBranch if the subject demands one not in this set.",
+    "branches": [
+      { "id": "purpose",       "question": "What changes for the user? What is success?" },
+      { "id": "scope",          "question": "What is explicitly in scope, out of scope, deferred?" },
+      { "id": "constraints",    "question": "What are the performance, security, deadline, budget, and compatibility constraints?" },
+      { "id": "architecture",   "question": "What are the components, boundaries, data flow, and entity cardinality?" },
+      { "id": "failureModes",   "question": "What breaks? What are the partial failure, retry, rollback, and observability strategies?" },
+      { "id": "testing",        "question": "What proves correctness? What is the first failing test?" },
+      { "id": "migration",      "question": "How does this ship without breaking prod?" },
+      { "id": "reversibility",  "question": "What does back-out look like if it goes wrong?" }
+    ]
+  },
+
+  "decisionSchema": {
+    "id": { "type": "string", "description": "Unique identifier within the tree." },
+    "branch": { "type": "string", "description": "Branch ID from branchTaxonomy." },
+    "question": { "type": "string", "description": "The specific question being resolved." },
+    "status": {
+      "type": "string",
+      "enum": ["resolved", "deferred", "out_of_scope"],
+      "description": "resolved: answer is known. deferred: will decide when trigger condition is met. out_of_scope: explicitly not in this design."
+    },
+    "answer": { "type": "string", "description": "Concrete answer. Required if status is resolved. Must be the deferred trigger condition if status is deferred." },
+    "dependsOn": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of decisions that must be resolved before this one."
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "option": { "type": "string" },
+          "rejectedBecause": { "type": "string" }
+        }
+      },
+      "description": "Alternatives considered and rejected. Required for resolved decisions."
+    }
+  },
+
+  "traversalRules": {
+    "depthFirst": "Resolve all decisions in one branch before moving to the next.",
+    "dependencyOrder": "If decision A depends on B, resolve B first. Surface this constraint explicitly.",
+    "noHandwaves": "Status must be resolved, deferred with a concrete trigger, or out_of_scope. No 'probably', no 'we'll figure it out later'."
+  },
+
+  "completionCriteria": {
+    "description": "The tree is complete when:",
+    "conditions": [
+      "Every standard branch has at least one decision (resolved, deferred, or out_of_scope)",
+      "No decision has status unresolved",
+      "Every deferred decision has a concrete trigger condition",
+      "Agent can write the full spec from the resolved decisions alone"
+    ]
+  },
+
+  "storageTarget": "Session artifact — may be written to .specify/specs/<NAME>/decisions.json or emitted inline."
+}

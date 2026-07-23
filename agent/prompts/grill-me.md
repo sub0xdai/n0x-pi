@@ -9,37 +9,45 @@ Subject: $@
 
 Interview the user relentlessly about every aspect of the plan or design under discussion until you reach a shared understanding. Walk down each branch of the decision tree, resolving dependencies between decisions one-by-one.
 
+## Primitives (read before acting)
+
+1. **`~/.pi/agent/primitives/project-context.schema.json`** — query for codebase facts. Answer questions from code, not from the user.
+2. **`~/.pi/agent/primitives/decision-tree.schema.json`** — the decision taxonomy (8 standard branches), Decision schema, traversal rules, and completion criteria.
+3. **`~/.pi/agent/primitives/spec.schema.json`** — the output shape when the tree is resolved.
+
 ## Rules
 
 - **One question per turn.** Never batch.
-- **Depth-first.** Pick one branch, drill until it bottoms out, *then* move sideways.
-- **No accepting hand-waves.** "It depends" / "we'll figure it out later" / "probably" → push back, force a concrete answer or an explicit "out of scope" / "deferred — to be decided when X."
+- **Depth-first.** Pick one branch from `decision-tree.schema.json`, drill until it bottoms out, *then* move sideways.
+- **No accepting hand-waves.** "It depends" / "we'll figure it out later" / "probably" → push back, force a concrete answer or an explicit `Decision` with status=deferred and a concrete trigger condition.
 - **Identify hidden assumptions.** When the user states something as fact, ask how they know.
-- **Surface trade-offs.** For every decision, ask what the alternative was and why it was rejected.
+- **Surface trade-offs.** For every resolved Decision, list the alternatives considered and why they were rejected.
 - **Test for failure modes.** "What happens when X breaks?" "What if input is empty / malformed / huge?" "Who notices, how, in how long?"
-- **Resolve coupling.** When decision A depends on decision B, force B to be answered first.
+- **Resolve coupling.** When Decision A depends on Decision B, force B to be answered first.
 
 ## Codebase priority
 
-If a question can be answered by reading the codebase, **read the codebase yourself** instead of asking. Quote `file:line` when citing existing behavior. Save the user's attention for things only they know (intent, priority, constraints).
+If a question can be answered by reading the codebase, query ProjectContext instead of asking. Quote `file:line` when citing existing behavior. Save the user's attention for things only they know (intent, priority, constraints).
 
-## Branches to cover
+## Branches (from decision-tree.schema.json branchTaxonomy)
 
-For any plan/design, walk through:
+Walk through every standard branch. Create new branches only if the subject demands one not in the taxonomy:
 
-1. **Purpose** — what changes for the user? what's success?
-2. **Scope** — explicitly: in / out / deferred
-3. **Constraints** — perf, security, deadlines, budgets, compatibility
-4. **Architecture** — components, boundaries, data flow
-5. **Failure modes** — partial failures, retries, rollback, observability
-6. **Testing** — what proves correctness, what's the failing test you'd write first
-7. **Migration / rollout** — how does this ship without breaking prod
-8. **Reversibility** — what does "back out" look like if it goes wrong
+1. **purpose** — what changes for the user? what's success?
+2. **scope** — explicitly: in / out / deferred
+3. **constraints** — perf, security, deadlines, budgets, compatibility
+4. **architecture** — components, boundaries, data flow, cardinality
+5. **failureModes** — partial failures, retries, rollback, observability
+6. **testing** — what proves correctness, what's the failing test you'd write first
+7. **migration** — how does this ship without breaking prod
+8. **reversibility** — what does "back out" look like if it goes wrong
 
 ## When to stop
 
-Stop when:
-- Every branch above has either a concrete answer or an explicit "deferred — to be decided when X."
-- You can write the spec / plan from memory without asking another question.
+Stop when the DecisionTree meets all completion criteria from `decision-tree.schema.json`:
+- Every standard branch has at least one Decision
+- No Decision has status unresolved
+- Every deferred Decision has a concrete trigger condition
+- You can write the full Spec from memory without asking another question
 
-End with a one-paragraph summary of what was decided and what was deferred. Offer to write it to `.specify/specs/<NAME>/spec.md` or `docs/plans/YYYY-MM-DD-<topic>.md`.
+End with the resolved DecisionTree and a one-paragraph summary. Offer to write the Spec to `.specify/specs/<NAME>/spec.md`.

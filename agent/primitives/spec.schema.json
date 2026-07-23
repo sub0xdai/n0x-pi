@@ -1,0 +1,63 @@
+{
+  "$id": "https://pi.agent/primitives/spec",
+  "title": "Specification Primitive",
+  "description": "A design specification produced by brainstorm mode or grill sessions. Defines what to build, not how. Stored in .specify/specs/<NAME>/spec.md or docs/plans/YYYY-MM-DD-<topic>-design.md.",
+
+  "sections": {
+    "required": ["purpose", "scope", "architecture", "failureModes"],
+    "optional": ["constraints", "testing", "migration", "reversibility"],
+
+    "purpose": {
+      "description": "What changes for the user? What does success look like?",
+      "shape": "one paragraph, user-centric"
+    },
+    "scope": {
+      "description": "Explicit boundaries.",
+      "shape": {
+        "in": { "type": "array", "items": { "type": "string" } },
+        "out": { "type": "array", "items": { "type": "string" } },
+        "deferred": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "constraints": {
+      "description": "Performance, security, deadlines, budgets, compatibility requirements.",
+      "shape": "array of { category: string, requirement: string }"
+    },
+    "architecture": {
+      "description": "Components, boundaries, data flow, cardinality between entities.",
+      "shape": {
+        "components": "array of { name: string, responsibility: string, boundaries: string[] }",
+        "dataFlow": "description of how data moves between components",
+        "cardinality": "array of { entityA: string, relationship: string, entityB: string }"
+      }
+    },
+    "failureModes": {
+      "description": "Partial failures, retries, rollback, observability.",
+      "shape": "array of { scenario: string, impact: string, mitigation: string }"
+    },
+    "testing": {
+      "description": "What proves correctness. The first failing test you'd write.",
+      "shape": "array of { test: string, proves: string }"
+    },
+    "migration": {
+      "description": "How this ships without breaking prod.",
+      "shape": "array of { step: string, rollback: string }"
+    },
+    "reversibility": {
+      "description": "What does 'back out' look like if it goes wrong?",
+      "shape": "one paragraph"
+    }
+  },
+
+  "storageTargets": [
+    ".specify/specs/<NAME>/spec.md",
+    "docs/plans/YYYY-MM-DD-<topic>-design.md"
+  ],
+
+  "validationRules": {
+    "allRequiredSectionsPresent": "purpose, scope, architecture, and failureModes must all be non-empty",
+    "scopeIsExhaustive": "in + out + deferred must cover the full problem space — nothing unaddressed",
+    "failureModesNonTrivial": "at least one failure mode beyond 'the whole thing crashes'",
+    "alternativesAcknowledged": "if alternatives were discussed, the rejected ones must appear in an alternatives section"
+  }
+}

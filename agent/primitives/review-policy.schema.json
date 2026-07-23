@@ -1,0 +1,92 @@
+{
+  "$id": "https://pi.agent/primitives/review-policy",
+  "title": "Review Policy Primitive",
+  "description": "The 7 dimensions of a brilliance code review, formalized as queryable rules. Each dimension defines what to check, how to check it, and what constitutes a violation.",
+
+  "dimensions": {
+    "naming": {
+      "id": "RP-01",
+      "question": "Does the name reveal intent without requiring a comment?",
+      "checks": [
+        "Name reveals intent without comment",
+        "Consistent with vocabulary already used in the codebase",
+        "Units in name where applicable (timeout_ms, buffer_bytes)",
+        "No abbreviations not universally understood in this domain"
+      ]
+    },
+    "shape": {
+      "id": "RP-02",
+      "question": "Is the code shaped for readability and single responsibility?",
+      "checks": [
+        "Single responsibility — one thing per function",
+        "No surprises — function name matches behavior",
+        "Shallow nesting — early returns/guards over if-else ladders",
+        "Function under ~40 lines (unless domain genuinely demands more)",
+        "Arguments ≤ 4 — more means extract a struct/config object"
+      ]
+    },
+    "correctness": {
+      "id": "RP-03",
+      "question": "Are edge cases handled and invariants preserved?",
+      "checks": [
+        "Empty input, null/undefined/nil, zero, negative, max value",
+        "Off-by-one errors in loops and slices",
+        "Race conditions if concurrency is involved",
+        "Resource lifecycle — every opened handle/fd/connection closed on every path"
+      ]
+    },
+    "errorHandling": {
+      "id": "RP-04",
+      "question": "Are errors handled, not swallowed? Are messages actionable?",
+      "checks": [
+        "Errors not swallowed silently — no bare catch/except: pass",
+        "Error messages are actionable — 'File not found' over 'Error 2'",
+        "Errors propagate with context — caller can decide what to do",
+        "Panics/crashes only for programmer error, never for runtime data"
+      ]
+    },
+    "testing": {
+      "id": "RP-05",
+      "question": "Do tests prove correctness, not just the happy path?",
+      "checks": [
+        "Tests catch the bug you just introduced, not just happy path",
+        "Test names describe behavior, not implementation",
+        "No tests that pass by accident (assertions on constants, mock returning assertion value)"
+      ]
+    },
+    "minimalism": {
+      "id": "RP-06",
+      "question": "Is every line pulling its weight?",
+      "checks": [
+        "No dead code, commented-out blocks, TODO without ticket",
+        "Every import used, every variable read",
+        "No unearned abstraction — one-line helper called once is noise",
+        "Deleted lines are celebrated — a deleted line can't cause a bug"
+      ]
+    },
+    "consistency": {
+      "id": "RP-07",
+      "question": "Does this match existing patterns in the codebase?",
+      "checks": [
+        "Matches existing patterns — if project uses Result<T,E>, don't introduce callbacks",
+        "Formatting matches — line width ≤ 100, no trailing whitespace",
+        "Commit message follows project convention"
+      ]
+    }
+  },
+
+  "severityClassification": {
+    "critical": "Data corruption, security vulnerability, crash on valid input",
+    "high": "Swallowed errors, race conditions, resource leaks",
+    "medium": "Misleading names, missing edge case, excessive nesting",
+    "low": "Style nits (only if they break consistency)",
+    "praise": "Positive reinforcement — something already well done"
+  },
+
+  "processRules": {
+    "groundFirst": "Read the diff and surrounding code before forming opinions. Read AGENTS.md/CONTEXT.md for conventions.",
+    "dimensionTagging": "Every finding must be tagged with its dimension ID (RP-NN).",
+    "concreteFix": "Every non-praise finding must include a concrete diff or code suggestion.",
+    "severityOrdering": "Output findings ordered by severity: critical, high, medium, low, praise."
+  }
+}

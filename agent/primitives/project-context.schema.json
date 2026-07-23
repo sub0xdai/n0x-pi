@@ -1,0 +1,61 @@
+{
+  "$id": "https://pi.agent/primitives/project-context",
+  "title": "Project Context Primitive",
+  "description": "Defines what 'knowing the project' means. Prompts read this to understand what structured context exists before acting. Replaces ad-hoc git log, ls, find AGENTS.md commands.",
+
+  "contextSources": {
+    "versionControl": {
+      "description": "Recent commit history for understanding active work streams.",
+      "command": "git log --oneline -20",
+      "outputShape": "array of { hash: string, message: string }"
+    },
+    "structure": {
+      "description": "Top-level directory layout.",
+      "command": "ls -1",
+      "outputShape": "array of { name: string, type: 'file' | 'directory' }"
+    },
+    "conventions": {
+      "description": "Project-level agent instructions and constitution.",
+      "files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".specify/memory/constitution.md",
+        "CONTEXT.md",
+        "UBIQUITOUS_LANGUAGE.md"
+      ],
+      "outputShape": "object with keys: conventions, constraints, patterns, glossary (if CONTEXT.md present)"
+    },
+    "dependencies": {
+      "description": "Package manifest for understanding available libraries.",
+      "files": [
+        "package.json",
+        "Cargo.toml",
+        "pyproject.toml",
+        "go.mod",
+        "deno.json"
+      ],
+      "outputShape": "object with keys: runtime, devDependencies, language, toolchain"
+    }
+  },
+
+  "queryProtocol": {
+    "description": "How an agent queries project context. Always use this structured approach, never raw shell commands.",
+    "steps": [
+      "1. Read nearest AGENTS.md or CLAUDE.md for conventions",
+      "2. Read version control context (recent commits, active branches)",
+      "3. Read dependency manifest for language/toolchain/framework",
+      "4. Read directory structure for module boundaries",
+      "5. Compose a ProjectContext object from all sources"
+    ]
+  },
+
+  "outputSchema": {
+    "conventions": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "language": { "type": "string" },
+    "framework": { "type": "string", "description": "null if no framework detected" },
+    "moduleBoundaries": { "type": "array", "items": { "type": "string" }, "description": "Top-level directories representing modules" },
+    "recentWorkStreams": { "type": "array", "items": { "type": "string" }, "description": "Active topics from recent commits" },
+    "glossaryRefs": { "type": "array", "items": { "type": "string" }, "description": "Paths to CONTEXT.md or UBIQUITOUS_LANGUAGE.md files found" }
+  }
+}
