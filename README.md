@@ -6,11 +6,11 @@ My pi config. The agent knows where everything lives, follows a coding standard,
 - [TigerBeetle](agent/prompts/tigerbeetle.md) — 14 coding rules, always enforced
 - [Vox](agent/skills/vox/SKILL.md) — spec → plan → TDD checkpoints
 - [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) — lazy-first, simplest solution that works
-- [Emission gate](agent/primitives/check.schema.json) — script + AI self-check before any code reaches me
+- [Primitives](agent/primitives/) — 9 typed schemas (ADR, Spec, DecisionTree, Glossary, CodingStandard, ReviewPolicy, ReviewResult, ProjectContext, Check) — structured ground truth for prompts and the emission gate
 
 ## Extensions
 
-Four total. Each one modifies the harness event loop — no CLI wrappers dressed up as extensions.
+Each one modifies the harness event loop — no CLI wrappers dressed up as extensions.
 
 | Extension | Does |
 |---|---|
@@ -18,6 +18,8 @@ Four total. Each one modifies the harness event loop — no CLI wrappers dressed
 | `comment` | Opens the last response in `$EDITOR` so I can edit before sending |
 | `tmux-manager` | Background jobs in tmux, callable by the agent |
 | `notifications` | Pings my desktop when a task finishes |
+| `herdr-agent-state` | Agent state tracker for the Herdr platform |
+| `powerline-footer` | Custom footer rendering for the TUI status bar |
 
 ## Skills
 
@@ -73,4 +75,4 @@ Feature work:      vox plan → vox build → /grill-me → /brilliance → diff
 Session end:       handoff
 ```
 
-Stock pi is a blank config. This one ships with opinions and checks. Almost everything outside the four extensions is a bash script in `~/dotfiles/scripts/`. The lattice file maps it all.
+Stock pi is a blank config. This one ships with opinions and checks. Almost everything outside the extensions is a bash script in `~/dotfiles/scripts/`. The lattice file maps it all.
