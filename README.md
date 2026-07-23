@@ -56,9 +56,6 @@ Each one modifies the harness event loop — no CLI wrappers dressed up as exten
 `/tigerbeetle` — load the coding standard explicitly.
 `/n0x-cutlist` — video cut-list spec for n0x-content.
 
-## Themes
-
-`kanso-ink` and `vanilla-amoled` (the default). Plus community packs: catppuccin, dracula, monokai, rose-pine, solarized.
 
 ## Guardrails (always on)
 
