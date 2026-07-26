@@ -1,75 +1,42 @@
-# n0x-pi
+# The cure for AI slop is a 1986 aircraft manual
 
-My pi config. The agent knows where everything lives, follows a coding standard, and checks its own output before showing it to me.
+This kit contains the STE writing skill, the anti-slop linter, and the full
+test data. It needs only Python 3.
 
-- [Lattice](agent/lattice.md) — directory layout, naming rules, the extension litmus test
-- [TigerBeetle](agent/prompts/tigerbeetle.md) — 14 coding rules, always enforced
-- [Vox](agent/skills/vox/SKILL.md) — spec → plan → TDD checkpoints
-- [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) — lazy-first, simplest solution that works
-- [Primitives](agent/primitives/) — 9 typed schemas (ADR, Spec, DecisionTree, Glossary, CodingStandard, ReviewPolicy, ReviewResult, ProjectContext, Check) — structured ground truth for prompts and the emission gate
+## Files
 
-## Extensions
-
-Each one modifies the harness event loop — no CLI wrappers dressed up as extensions.
-
-| Extension | Does |
+| File | What it is |
 |---|---|
-| `plan-mode` | Gates destructive tools when a build plan is active |
-| `comment` | Opens the last response in `$EDITOR` so I can edit before sending |
-| `tmux-manager` | Background jobs in tmux, callable by the agent |
-| `notifications` | Pings my desktop when a task finishes |
-| `herdr-agent-state` | Agent state tracker for the Herdr platform |
-| `powerline-footer` | Custom footer rendering for the TUI status bar |
+| `ste-writing-skill.md` | The ASD-STE100 agent skill. Two modes: strict (procedures, error messages) and flavored (prose, no dictionary lockdown). |
+| `ste-lint.py` | The anti-slop linter. It checks the rules of STE that a machine can check. Lint a draft, apply the skill, then lint it again. The delta between the two scores is the signal. |
+| `experiment-results.md` | Cross-model test. 6 writing tasks, 4 conditions, run on Claude and gpt-5.5. |
+| `experiment-results-openai.md` | Per-category detail for the gpt-5.5 run. |
+| `before-after-samples.md` | Real baseline outputs next to STE outputs from the experiment. |
+| `run-openai.py` | Script to reproduce the OpenAI side of the experiment. |
 
-## Skills
-
-**Code & review:**
-`vox` — plan/build from specs.
-`ponytail` — lazy-first, simplest solution that works.
-`audit` — two-pass adversarial code review.
-`nuclear-review` — thermonuclear maintainability audit.
-`diff-review` — visual HTML diff, architecture diagrams.
-`shannon` — annotate code in Neovim via RPC.
-`librarian` — library internals with source links.
-
-**Structure & knowledge:**
-`anchor:init`, `anchor:verify` — @anchor tags, pre-commit enforcement.
-`adr` — architecture decision records.
-`graphify` — codebase to knowledge graph.
-`vault-context` — search Obsidian vault before coding decisions.
-
-**Infra & media:**
-`cloudflare-devops` — Workers/Pages, tunnels, CI/CD.
-`n0x-content` — brutalist kinetic promo videos.
-
-**Meta:**
-`handoff` — session summary for the next agent.
-`humanizer` — strip AI-isms from text.
-`teach` — interactive learning sessions.
-
-## Prompts
-
-`/brainstorm` — guided design, one question at a time.
-`/grill-me` — depth-first interrogation.
-`/grill-with-docs` — grill-me + glossary refinement + ADRs.
-`/brilliance` — iterate until there's nothing left to flag.
-`/tigerbeetle` — load the coding standard explicitly.
-`/n0x-cutlist` — video cut-list spec for n0x-content.
-
-
-## Guardrails (always on)
-
-- **anchor:verify** blocks commits with un-annotated files, auto-syncs the manifest.
-- **TigerBeetle** — assertion density, typed errors, zero tech debt. Always enforced.
-- **Emission gate** — `__check.sh` scans for line width and forbidden tokens. Then the AI self-checks all 21 rules. Every code block needs a `[VERIFIED]` receipt. Missing receipt = the agent skipped the gate.
-
-## Workflow
+## Run the linter
 
 ```
-New project:       anchor:init → vox plan → vox build → anchor:verify
-Existing code:     anchor:init → graphify → librarian → diff-review
-Feature work:      vox plan → vox build → /grill-me → /brilliance → diff-review
-Session end:       handoff
+python3 ste-lint.py your-draft.md
 ```
 
-Stock pi is a blank config. This one ships with opinions and checks. Almost everything outside the extensions is a bash script in `~/dotfiles/scripts/`. The lattice file maps it all.
+The score is violations per 100 words. A lower score means cleaner text.
+
+## Headline numbers
+
+| Condition | Claude sonnet | gpt-5.5 |
+|---|---|---|
+| baseline | 4.36 | 3.54 |
+| banned-words list | 4.21 (-3%) | 2.14 (-40%) |
+| Orwell's 6 rules | 2.48 (-43%) | 1.69 (-52%) |
+| STE skill | 1.12 (-74%) | 1.76 (-50%) |
+
+Give the model a writing system and slop drops by half or more. This held on
+every model tested. STE was best or tied for best. A banned-words list is the
+least reliable fix.
+
+This linter is not a certified STE checker. The judgment rules of ASD-STE100
+need a human. The linter covers the rules a machine can check. That is where
+the slop lives.
+
+Spec: ASD-STE100 Issue 9, free at asd-ste100.org

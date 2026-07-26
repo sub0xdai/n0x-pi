@@ -59,6 +59,7 @@ require explicit invocation.
 | `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
+| `ste-writing` | `/skill:ste-writing` | Rewrite prose in ASD-STE100 Simplified Technical English to remove AI slop; two modes: strict (procedures) and STE-flavored (general prose). Triggers on "ste", "STE", "de-slop", "anti-slop", "make this not sound like AI", "clean up this doc". | ste_lint.py |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |
 | `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before vox plan | no |
 | `vox` | `/skill:vox plan` → `/skill:vox build` | Spec-driven development with TDD checkpoints; two-step pipeline from spec to code | no |
