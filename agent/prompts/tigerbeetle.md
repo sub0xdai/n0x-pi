@@ -36,6 +36,8 @@ is not emitted.
 | TB-12 | Single source of truth | Derived state computed on read, never stored |
 | TB-13 | Explicit boundaries | Module exports explicit, no leaked internal state |
 | TB-14 | Determinism | Seed RNG, log seeds, no time.Now() in decision paths |
+| TB-15 | No boolean-gated structs | Boolean + optional sibling fields → convert to discriminated union |
+| TB-16 | Parse at boundary | Parse unstructured data into ADTs at ingestion; no runtime checks downstream |
 
 ## When in doubt
 

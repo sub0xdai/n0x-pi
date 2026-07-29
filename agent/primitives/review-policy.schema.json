@@ -22,7 +22,9 @@
         "No surprises — function name matches behavior",
         "Shallow nesting — early returns/guards over if-else ladders",
         "Function under ~40 lines (unless domain genuinely demands more)",
-        "Arguments ≤ 4 — more means extract a struct/config object"
+        "Arguments ≤ 4 — more means extract a struct/config object",
+        "Structs with boolean fields that gate sibling optional fields → flag as 'missed sum type (TB-15), convert to discriminated union'",
+        "Functions accepting untyped maps (Record<string, unknown>, Any, map[string]interface{}) and performing internal key checks → flag as 'parse at boundary violation (TB-16)'"
       ]
     },
     "correctness": {

@@ -1,0 +1,82 @@
+{
+  "repo": "LoveByCartiana",
+  "commit": "d7a8a6d",
+  "run": 1,
+  "date": "2026-06-25",
+  "auditor": "pi security-audit skill",
+  "summary": { "critical": 0, "high": 1, "medium": 4, "low": 1 },
+  "findings": [
+    {
+      "id": "F-1",
+      "title": "DROP_ACTIVE kill switch bypass — admin toggle does not gate checkout",
+      "severity": "HIGH",
+      "category": "business-logic / security-boundary-defeat",
+      "location": "src/lib/config/store.ts (isDropActive reads env var) vs src/routes/(admin)/admin/dashboard/+page.server.ts (toggleStoreStatus writes DB settings row); checkout at src/routes/api/create-checkout-session/+server.ts:31",
+      "authenticated": false,
+      "attack": "Operator pauses store in admin dashboard; settings.drop_active becomes 'false' and UI shows paused. Customers still POST /api/create-checkout-session successfully because isDropActive() reads the DROP_ACTIVE env var, which is unchanged.",
+      "impact": "Orders and Stripe payments continue during a state the operator believes is closed. Defeats the documented kill switch (explicit security boundary). Fulfillment chaos, oversell risk, incident-response failure.",
+      "fix": "Make isDropActive() read settings.drop_active from SQLite (single source of truth), or have the admin toggle update the env-backed value. Reconcile the two sources.",
+      "exploitable": true
+    },
+    {
+      "id": "F-2",
+      "title": "Admin session cookie stores the raw passcode",
+      "severity": "MEDIUM",
+      "category": "credential exposure / session design",
+      "location": "src/routes/(admin)/admin/+page.server.ts: cookies.set(COOKIE_NAME, ADMIN_PASSCODE, ...); isAuthenticated compares cookies.get(COOKIE_NAME) === ADMIN_PASSCODE",
+      "authenticated": false,
+      "attack": "Any non-JS exfiltration of the cookie (proxy logs, request mirroring, server-side header logging, backups) yields the long-lived admin passcode directly, since the token equals the credential.",
+      "impact": "Single cookie leak = full admin takeover persisting until env var rotation. Combined with F-3 (weak default admin123, no rate limit) this is trivially exploitable.",
+      "fix": "Store a random, revocable session id in the cookie; validate server-side. Never store the raw credential as the session token.",
+      "exploitable": true
+    },
+    {
+      "id": "F-3",
+      "title": "No rate limiting/lockout on admin login + weak default passcode",
+      "severity": "MEDIUM",
+      "category": "auth brute-force / weak credential",
+      "location": "src/routes/(admin)/admin/+page.server.ts login action; .env ADMIN_PASSCODE=admin123",
+      "authenticated": false,
+      "attack": "Unthrottled POST /admin with FormData passcode guesses. Non-constant-time !== compare. admin123 is dictionary-brute-forceable in seconds.",
+      "impact": "Full admin takeover: inventory CRUD, order deletion, store toggle, disclosure of all customer emails and order history.",
+      "fix": "Constant-time compare, per-IP rate limit on /admin login, lockout after N failures, require strong generated passcode (or magic-link auth).",
+      "exploitable": true
+    },
+    {
+      "id": "F-4",
+      "title": "X-Forwarded-For spoofing bypasses waitlist rate limit + O(n) memory amplification",
+      "severity": "MEDIUM",
+      "category": "rate-limit bypass / DoS / data pollution",
+      "location": "src/routes/api/waitlist/+server.ts extractIp(); src/lib/server/waitlist.ts isDuplicate() and addToWaitlist()",
+      "authenticated": false,
+      "attack": "Send POST /api/waitlist with a unique X-Forwarded-For and unique email per request. Rate limit (3/hr) never trips. isDuplicate reads the whole file O(n); addToWaitlist reads it again for the pair-assert. Two full reads per request on an unboundedly growing file.",
+      "impact": "Rate limit defeated; waitlist polluted with arbitrary emails; O(n) per request enables memory exhaustion DoS from a single client.",
+      "fix": "Trust XFF only from a known proxy hop (use getClientAddress behind a trusted proxy). Drop the post-write pair-assert readback on the hot path. Cap file size or move to SQLite.",
+      "exploitable": true
+    },
+    {
+      "id": "F-5",
+      "title": "Payment captured but order rejected on stock race — no automatic refund",
+      "severity": "MEDIUM",
+      "category": "business-logic / financial",
+      "location": "src/routes/api/create-checkout-session/+page.server.ts pre-check; src/routes/api/webhooks/stripe/+server.ts OUT_OF_STOCK branch returns 200 with no refund",
+      "authenticated": false,
+      "attack": "Two customers check out the last unit near-simultaneously. Both Stripe Checkout Sessions are created (stock pre-check passes for both). Both pay. Webhook decrements stock for the first; second hits OUT_OF_STOCK, returns HTTP 200, payment is captured, no stripe.refunds.create anywhere in repo.",
+      "impact": "Customer pays for an order that will never be fulfilled; no automatic refund; chargeback/dispute risk; operator receives no alert (only console.warn).",
+      "fix": "Issue stripe.refunds.create on OUT_OF_STOCK in the webhook and email the operator. Optionally reserve stock at session-creation time with a TTL.",
+      "exploitable": true
+    },
+    {
+      "id": "F-6",
+      "title": "Order audit log not gitignored; path mismatch with README",
+      "severity": "LOW",
+      "category": "info disclosure / hardening",
+      "location": "src/lib/server/logger.ts writes join(process.cwd(), 'orders.log.jsonl'); .gitignore omits orders.log.jsonl, data/waitlist.jsonl, data/orders.jsonl",
+      "authenticated": false,
+      "attack": "Developer runs store locally, then git add . — customer PII (emails, shipping addresses, recipient names) lands in git history.",
+      "impact": "PII disclosure via committed git history if pushed.",
+      "fix": "Write to data/orders.jsonl (match README) and add data/*.jsonl and orders.log.jsonl to .gitignore.",
+      "exploitable": false
+    }
+  ]
+}

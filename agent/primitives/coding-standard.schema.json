@@ -1,7 +1,7 @@
 {
   "$id": "https://pi.agent/primitives/coding-standard",
   "title": "TigerBeetle Coding Standard",
-  "description": "14 non-negotiable rules applied to all production code. Each rule is machine-checkable — the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
+  "description": "16 non-negotiable rules applied to all production code. Each rule is machine-checkable — the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
 
   "rules": {
     "assertionDensity": {
@@ -87,6 +87,20 @@
       "description": "Design for determinism. Given the same inputs and same state, produce the same outputs. Seed randomness. Log seeds. Reproduce bugs from a git commit + seed.",
       "check": "Verify all RNG is seeded and the seed is logged. Verify no time.Now() or equivalent in decision paths.",
       "severity": "block"
+    },
+    "noBooleanGates": {
+      "id": "TB-15",
+      "description": "No boolean-gated structs. A boolean field that controls whether sibling fields are meaningful is a missed sum type. Convert to a discriminated union with one variant per state. Applies across all languages: TS discriminated unions, Rust enums with data, Python Union types, Go interface type switches.",
+      "check": "For every struct/interface: if a boolean field named enabled/active/valid/ready/has*/is* controls the interpretation of >=1 sibling optional field (Option<T>, T | undefined, T | null), flag it. The struct must become a sum type with named variants. Invalid states are unrepresentable at compile time.",
+      "severity": "block",
+      "languages": ["rust", "typescript", "python", "go"]
+    },
+    "parseAtBoundary": {
+      "id": "TB-16",
+      "description": "Parse at the boundary. Raw untyped payloads (unknown, Record<string, unknown>, map[string]interface{}, loose JSON) must be parsed into closed domain types at the outermost execution boundary. Downstream internal functions must never accept untyped maps, perform runtime field-existence checks, or re-validate structure.",
+      "check": "Trace each unstructured data source (API response, file read, CLI arg, LLM output, tool invocation) to its consumption. If downstream code performs typeof/instanceof/field-existence checks on data that should have been parsed at the boundary, flag it. The parse step must produce a sum type with an error variant for each failure mode.",
+      "severity": "block",
+      "languages": ["rust", "typescript", "python", "go"]
     }
   },
 

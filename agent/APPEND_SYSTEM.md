@@ -102,6 +102,33 @@ esac
 
 After scaffolding, remind the user to `chmod +x .git/hooks/pre-commit`.
 
+## Constructive Data Modeling Protocol (always on)
+
+When defining any struct, interface, or return type:
+
+1. **No boolean gates.** If a boolean field controls whether sibling fields
+   are valid, convert the struct to a discriminated union with named variants.
+2. **Sum type over string enum.** If a field's valid values are a known closed
+   set, use a string literal union or enum — never `string`.
+3. **`Option<T>` means absent, not broken.** `None`/`undefined`/`null` means
+   the value is genuinely optional in the domain. If absence has a specific
+   reason, use a sum type: `type LoadState<T> = Loading | Ready<T> | Failed(reason)`.
+4. **Parse at the boundary.** When ingesting unstructured data, validate into
+   a closed ADT immediately at the boundary. Downstream code pattern-matches on
+   variants, never performs runtime type checks, truthiness guards, or optional
+   chaining on already-parsed data.
+5. **No boolean/string error flags.** A success payload must never include an
+   `isError: boolean` flag or optional `errorMessage?: string`. Use tagged
+   `Ok(T) | Err(E)` unions.
+
+## Multi-Language Constructive Patterns
+
+| Constructive Pattern | Rust | TypeScript | Python | Go |
+|----------------------|------|------------|--------|-----|
+| Sum Types / ADTs | `enum State { Idle, Running(Data) }` | `type State = { kind: 'idle' } \| { kind: 'running'; data: Data }` | `Union[Idle, Running]` / `TaggedUnion` | Interface with unexported marker + type switch |
+| Boundary Parse | `serde_json::from_str::<DomainADT>(&raw)` | `z.discriminatedUnion(...).parse(raw)` | `DomainADT.model_validate_json(raw)` | `json.Unmarshal(raw, &s)` with custom validator |
+| Option Semantics | `Option<T>` — strict presence/absence | `T \| null` — absent; `Result<T, E>` — failure | `Optional[T]` — structural absence; `Result[T, E]` — operations | `*T` — optional field; `(T, error)` return |
+
 ## Development philosophy stack
 
 Three layers, always applied in this order:
@@ -132,7 +159,7 @@ Non-negotiable. Applies to ALL production code regardless of mode.
 The ladder, applied to every coding decision:
 
 1. Does this need to exist at all? (YAGNI)
-2. Stdlib does it? Use it.
+2. Stdlib does it? Use it — prefer stdlib sum types (Rust `enum`, TS discriminated unions, Python `Union` + `Literal`) over hand-rolled boolean/string discrimination.
 3. Native platform feature covers it? `<input type="date">` over a picker lib.
 4. Already-installed dependency solves it? Use it. Never add deps for one-liners.
 5. Can it be one line? One line.

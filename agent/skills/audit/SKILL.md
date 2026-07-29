@@ -61,6 +61,10 @@ When checking section 1 (Type safety), look for these language-specific red flag
 - `as` casts, `any` types, `!` non-null assertions, `@ts-ignore`, `@ts-expect-error`
 - `unknown` cast directly to a concrete type without validation
 - Optional chaining chains that silently swallow errors
+- Structs with a boolean field that gates ≥1 sibling optional field (TB-15 violation)
+- `T | undefined` where `undefined` encodes >1 distinct condition (parse error, not found, timeout, etc.)
+- String unions used where a discriminated union with `kind`/`tag` field would prevent typos
+- Success payloads containing `isError: boolean` or optional `errorMessage?: string` (TB-03 violation)
 
 **Python:**
 - Bare `except:` or `except Exception:` that swallows errors
@@ -73,16 +77,26 @@ When checking section 1 (Type safety), look for these language-specific red flag
 - `unsafe` blocks, raw pointer derefs, `transmute`
 - `as` casts that silently truncate (e.g. `u64 as u32`)
 - `todo!()` or `unimplemented!()` left in non-WIP code
+- `bool` fields on structs that toggle behavior of sibling `Option<T>` fields — use an enum variant per state (TB-15)
+- `Option<T>` returned from a function where `None` means "one of several things went wrong" — use `Result<T, ErrorEnum>`
+- Struct fields typed as bare `String` where a closed enum is known at compile time
 
 **Go:**
 - Bare `interface{}` or `any` where a concrete type exists
 - Error silently ignored (`_ = err` or just not assigning)
 - Nil pointer/map/slice access without guard
 - Type assertion without ok check: `x.(Type)` instead of `x, ok := y.(Type)`
+- `bool` fields on structs that gate sibling fields — use an interface with unexported marker + type switch (TB-15)
+- `interface{}` or `any` returned from a parse function — return a concrete sum type
 
 **General (all languages):**
 - Null/nil/None propagation through code paths without explicit handling
 - Implicit type coercion between numeric types (float↔int, signed↔unsigned)
+- Boolean-gated structs — a `bool` field that gates the meaning of sibling fields (TB-15)
+- `Option<T>` / `T | null` used to encode operation failure instead of domain absence
+- `Record<string, unknown>` / `map[string]interface{}` in internal function signatures — parse at boundary (TB-16)
+- String fields where the valid values are a known closed set — use a sum type or enum
+- Success payloads with `isError: boolean` flags — use tagged `Ok | Err` union (TB-03)
 
 ## Pass 1 — Adversarial Deep Audit
 
@@ -195,6 +209,13 @@ Work through each category in order.
 - Security concerns: injection, privilege escalation, data leakage, CSRF, XSS?
 - Anything that contradicts the project's documented invariants in `CLAUDE.md` or similar?
 - Does the change introduce new dependencies? Are they necessary? Any supply-chain concerns?
+
+#### 10. Constructive modeling (RP-02.5 / TB-15 / TB-16)
+
+- **Boolean gates**: scan interface/type definitions. If a struct contains a `boolean` field AND one or more optional fields (`?`, `Option<T>`), flag as TB-15 violation. Demand refactoring into a discriminated union.
+- **Late parsing**: scan internal function signatures. If a function accepts a generic dictionary (`Record<string, unknown>`, `Any`, `map[string]interface{}`) AND performs internal key checks (`if 'key' in obj:`), flag as TB-16 violation. Demand parsing at the entry boundary.
+- **Error flag antipattern**: if a success payload includes an `isError: boolean` flag or optional `errorMessage?: string`, flag as TB-03 violation. Demand tagged `Ok(T) | Err(E)` union.
+- **Option abuse**: if `Option<T>` / `T | null` / `T | undefined` encodes operation failure rather than domain absence, flag it. Operation failures must return explicit `Result<T, E>`.
 
 ### Pass 1 report format
 
