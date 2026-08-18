@@ -17,22 +17,24 @@
         "fallbacks": ["google/gemini-2.5-flash"]
       },
       "low": {
-        "model": "deepseek/deepseek-v4-pro",
-        "thinking": "low"
+        "model": "deepseek/deepseek-v4-flash",
+        "thinking": "low",
+        "fallbacks": ["deepseek/deepseek-v4-pro"]
       }
     },
     "cheap": {
       "high": {
-        "model": "deepseek/deepseek-v4-pro",
-        "thinking": "medium"
+        "model": "deepseek/deepseek-v4-flash",
+        "thinking": "high",
+        "fallbacks": ["deepseek/deepseek-v4-pro"]
       },
       "medium": {
-        "model": "deepseek/deepseek-v4-pro",
-        "thinking": "low"
+        "model": "deepseek/deepseek-v4-flash",
+        "thinking": "medium"
       },
       "low": {
-        "model": "deepseek/deepseek-v4-pro",
-        "thinking": "off"
+        "model": "deepseek/deepseek-v4-flash",
+        "thinking": "low"
       }
     }
   }

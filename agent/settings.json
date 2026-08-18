@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.82.1",
-  "defaultProvider": "openai",
-  "defaultModel": "deepseek-v4-pro",
+  "lastChangelogVersion": "0.84.2",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "high",
   "theme": "vanilla-amoled",
   "hideThinkingBlock": true,
@@ -20,7 +20,8 @@
     "git:github.com/DietrichGebert/ponytail",
     "npm:@upstash/context7-pi",
     "npm:@yeliu84/pi-model-router",
-    "npm:@tungthedev/pi-extensions"
+    "npm:@tungthedev/pi-extensions",
+    "git:github.com/eko24ive/pi-ask"
   ],
   "editor": {
     "fixedEditor": true

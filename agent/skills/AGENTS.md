@@ -48,19 +48,27 @@ require explicit invocation.
 | Skill | Invocation | Triggers On | Has Scripts |
 |-------|-----------|-------------|-------------|
 | `adr` | `/skill:adr` | Create and manage Architecture Decision Records; "write an ADR", "document this decision", new dependency or pattern introduction | no |
+| `appimage-integrate` | `/skill:appimage-integrate` | Install an AppImage into the desktop launcher; "set up this AppImage", "not launching from rofi" | no |
+| `cover-letter` | `/skill:cover-letter` | Write a job application cover letter from a pasted posting, grounded in real resume + past letters; "make me a cover letter", "help me apply to <job>" | no |
 | `anchor-init` | `/skill:anchor-init` | Scaffolding anchor tags for codebase navigation; "new" or "existing" project with language target | generate_manifest.py |
 | `anchor-verify` | `/skill:anchor-verify` | Validating anchor compliance on "staged" or "all" files | pre-commit hook |
 | `audit` | `/skill:audit` | Two-pass code audit; after implementing features, fixing multi-file bugs, or "audit this" | no |
 | `cloudflare-devops` | `/skill:cloudflare-devops` | Cloudflare deployments, wrangler, Pages/Workers, CI/CD, domain management, tunnel setup | no |
 | `diff-review` | `/skill:diff-review` | Visual HTML diff review of branches, commits, PRs, or working tree changes | no |
+| `ffmpeg-composite` | `/skill:ffmpeg-composite` | Hand-built ffmpeg composite builds and filtergraph debugging; custom cut/assemble/overlay video, concat errors | no |
 | `graphify` | `/skill:graphify` | Codebase analysis, architecture questions, file relationships; especially if graphify-out/ exists | no |
 | `handoff` | `/skill:handoff` | "write a handoff", "summarise this session", wrapping up a session | no |
 | `humanizer` | `/skill:humanizer` | Removing AI-generated writing patterns from text; editing/reviewing for natural voice | no |
 | `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
+| `onchain` | `/skill:onchain` | On-chain wallet/token forensics for hidden alpha and connections; triggers on "analyze this wallet", "trace this token", "who is behind X", "money trail", "dev wallet analysis", "is this token safe" on Ethereum, ETH-adjacent chains, or Solana | no |
+| `prolong` | `/skill:prolong` | Programmatic memory for long-horizon tasks; single structured log appended to and retrieved with grep; long tasks, multi-session work, big refactors | no |
+| `project-orientation` | `/skill:project-orientation` | Orient into a project and await instructions; "study the project/codebase", fresh-session context loading | no |
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
 | `ste-writing` | `/skill:ste-writing` | Rewrite prose in ASD-STE100 Simplified Technical English to remove AI slop; two modes: strict (procedures) and STE-flavored (general prose). Triggers on "ste", "STE", "de-slop", "anti-slop", "make this not sound like AI", "clean up this doc". | ste_lint.py |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |
+| `video-render-qa` | `/skill:video-render-qa` | Verify a rendered video against its design; "check the render", post-render QA, frame/pixel/OCR/audio checks | no |
+| `yt-dlp-download` | `/skill:yt-dlp-download` | YouTube downloads with 403 player-client recovery; "download this YouTube video", "grab the audio from this link" | no |
 | `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before vox plan | no |
 | `vox` | `/skill:vox plan` → `/skill:vox build` | Spec-driven development with TDD checkpoints; two-step pipeline from spec to code | no |
 
