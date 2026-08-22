@@ -3,7 +3,7 @@ name: ffmpeg-composite
 description: >
   Build a composite video with a hand-written ffmpeg filtergraph: timeline
   segments, glitch effects, text/image overlays, and concat. Triggers when a
-  video needs a custom cut/assemble/overlay build that the n0x-content cutlist
+  video needs a custom cut/assemble/overlay build that the scythe cutlist
   pipeline does not cover, or when debugging ffmpeg filtergraph errors
   ("concat", "filtergraph", "filter_complex" in the error).
 allowed-tools: bash, read, write, edit

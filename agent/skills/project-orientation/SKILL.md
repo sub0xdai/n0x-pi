@@ -47,7 +47,7 @@ current branch and dirty state.
 ## Phase 4 - Domain conventions
 
 - For content/video projects: inventory the naming conventions of past outputs
-  (e.g. `n0x-video-N`, per-project `assets/` dirs). Follow them unless told
+  (e.g. `scythe-video-N`, per-project `assets/` dirs). Follow them unless told
   otherwise.
 - For code projects: note language, test runner, and verification commands from
   the docs read above.

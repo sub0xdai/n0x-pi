@@ -59,7 +59,7 @@ require explicit invocation.
 | `graphify` | `/skill:graphify` | Codebase analysis, architecture questions, file relationships; especially if graphify-out/ exists | no |
 | `handoff` | `/skill:handoff` | "write a handoff", "summarise this session", wrapping up a session | no |
 | `humanizer` | `/skill:humanizer` | Removing AI-generated writing patterns from text; editing/reviewing for natural voice | no |
-| `n0x-content` | `/skill:n0x-content` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "n0x-content" | yes: n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
+| `scythe` | `/skill:scythe` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "scythe" | yes: scythe_build.sh, scythe_bootstrap.sh, scythe_ingest.sh, scythe_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `onchain` | `/skill:onchain` | On-chain wallet/token forensics for hidden alpha and connections; triggers on "analyze this wallet", "trace this token", "who is behind X", "money trail", "dev wallet analysis", "is this token safe" on Ethereum, ETH-adjacent chains, or Solana | no |
 | `prolong` | `/skill:prolong` | Programmatic memory for long-horizon tasks; single structured log appended to and retrieved with grep; long tasks, multi-session work, big refactors | no |

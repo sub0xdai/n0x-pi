@@ -26,7 +26,7 @@
 
 ### Naming Convention
 
-Scripts use unprefixed names. Group related scripts by prefix (e.g., `n0x_*`, `setup_*`).
+Scripts use unprefixed names. Group related scripts by prefix (e.g., `scythe_*`, `setup_*`).
 
 ```
 ~/dotfiles/scripts/<name>.sh   — all scripts, agent or human
@@ -37,7 +37,7 @@ A skill named `<name>` expects its companion scripts at:
 
 Example:
 - Skill: `vox` → scripts: `~/dotfiles/scripts/vox_plan.sh`, `~/dotfiles/scripts/vox_checkpoint.sh`
-- Skill: `n0x-content` → scripts: `~/dotfiles/scripts/n0x_bootstrap.sh`, `~/dotfiles/scripts/n0x_render.sh`
+- Skill: `scythe` → scripts: `~/dotfiles/scripts/scythe_bootstrap.sh`, `~/dotfiles/scripts/scythe_render.sh`
 
 ### The Extension Boundary (Control vs. Execution)
 
@@ -145,7 +145,7 @@ Then restart from step 2.
 | `/cover-letter` | Skill | Write a job application cover letter from a pasted posting, grounded in the user's real resume and past cover letters. Triggers on "make me a cover letter", "help me apply to <job>", pasted job postings. | (none) |
 | `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. Self-contained HTML file. Use for reviewing branches, commits, PRs, or working tree changes. | (none) |
 | `/ffmpeg-composite` | Skill | Build composite videos with hand-written ffmpeg filtergraphs: timeline segments, glitch effects, text/image overlays, concat with uniform normalization. Triggers on custom cut/assemble/overlay builds and filtergraph/concat debugging. | (none) |
-| `/n0x-content` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the n0x-content pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "n0x-content", "n0x video". | n0x_build.sh, n0x_bootstrap.sh, n0x_ingest.sh, n0x_render.sh |
+| `/scythe` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the scythe pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "scythe", "scythe video". | scythe_build.sh, scythe_bootstrap.sh, scythe_ingest.sh, scythe_render.sh |
 | `/onchain` | Skill | On-chain wallet/token forensics for hidden alpha and connections. Use when asked to analyze a wallet, trace a token, find who is behind X, follow a money trail, or investigate a token launch on Ethereum, ETH-adjacent chains, or Solana. | (none) |
 | `/project-orientation` | Skill | Orient into a project directory and await instructions. Triggers on "study the project", "study the codebase", or fresh-session context loading in an unfamiliar repo. | (none) |
 | `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. Use when the user asks to show something "in Neovim", requests an annotated code review, guided walkthrough, or error markers in their editor. | (none) |
@@ -177,7 +177,7 @@ Then restart from step 2.
 | `/brilliance` | Prompt | Code review for brilliance — polish changes until they're elegant, bulletproof, and leave reviewers with nothing to say but "LGTM" | project-context, review-policy, review-result |
 | `/grill-me` | Prompt | Deep-dive interrogation — drill into every aspect of a plan or design, one question at a time, until shared understanding is reached | project-context, decision-tree, spec |
 | `/grill-with-docs` | Prompt | Grill-me + ubiquitous language refinement + ADR writing. For existing codebases. | project-context, glossary, adr, decision-tree, spec |
-| `/n0x-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the n0x-content renderer | cutlist.schema.json, filter-effect-matrix.json (in n0x-content project) |
+| `/scythe-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the scythe renderer | cutlist.schema.json, filter-effect-matrix.json (in scythe project) |
 | `/tigerbeetle` | Prompt | TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths | coding-standard |
 
 <!-- INDEX_END -->

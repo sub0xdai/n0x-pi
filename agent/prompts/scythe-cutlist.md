@@ -1,13 +1,13 @@
-# n0x Brutalist Kinetic Video — Cut-List Generator
+# Scythe Brutalist Kinetic Video - Cut-List Generator
 
-When generating a cut-list for the n0x-content kinetic video renderer, produce valid JSON conforming to the cutlist schema. You are the editor — output valid JSON only, no conversational filler.
+When generating a cut-list for the scythe kinetic video renderer, produce valid JSON conforming to the cutlist schema. You are the editor - output valid JSON only, no conversational filler.
 
 ## Primitives (read before generating)
 
 Before generating any cutlist, read these ground-truth files:
 
-1. **`~/1-projects/n0x-content/schemas/cutlist.schema.json`** — authoritative schema. Every segment must conform. Contains computable validation rules for: no-gaps, filter adjacency, filter-effect compatibility, phase duration bounds, text constraints.
-2. **`~/1-projects/n0x-content/schemas/filter-effect-matrix.json`** — 8×5 compatibility table. `white_flash` is asset-destructive: it replaces the clip with a blank white frame. Motion effects (`ken_burns_slow`, `ken_burns_fast`, `snap_zoom`) are nonsensical on `white_flash`. Only null, `strobe`, or `word_flash` effects are valid with `white_flash`.
+1. **`~/1-projects/scythe/schemas/cutlist.schema.json`** - authoritative schema. Every segment must conform. Contains computable validation rules for: no-gaps, filter adjacency, filter-effect compatibility, phase duration bounds, text constraints.
+2. **`~/1-projects/scythe/schemas/filter-effect-matrix.json`** - 8×5 compatibility table. `white_flash` is asset-destructive: it replaces the clip with a blank white frame. Motion effects (`ken_burns_slow`, `ken_burns_fast`, `snap_zoom`) are nonsensical on `white_flash`. Only null, `strobe`, or `word_flash` effects are valid with `white_flash`.
 
 ## Constraints enforced by schema (do not improvise)
 
@@ -15,8 +15,8 @@ These rules are validated mechanically. You must satisfy them:
 
 | Rule | Source |
 |------|--------|
-| `segment[i].end == segment[i+1].start` — no gaps | cutlist.schema.json#noGaps |
-| `segment[i].filter != segment[i+1].filter` — vary filters | cutlist.schema.json#filterAdjacency |
+| `segment[i].end == segment[i+1].start` - no gaps | cutlist.schema.json#noGaps |
+| `segment[i].filter != segment[i+1].filter` - vary filters | cutlist.schema.json#filterAdjacency |
 | `white_flash` filter → effect ∈ {null, `strobe`, `word_flash`} | filter-effect-matrix.json |
 | Hook phase: 1.0–1.5s per segment, 4–6s total | cutlist.schema.json#$defs/phaseDurationBounds |
 | Drop/kinetic phase: 0.3–0.8s per segment | cutlist.schema.json#$defs/phaseDurationBounds |
@@ -45,13 +45,13 @@ These rules are validated mechanically. You must satisfy them:
 - Aspect ratio: 9:16 vertical (1080×1920) unless the user specifies otherwise
 - Two-phase structure synchronized to the soundtrack
 
-### Phase 1 — The Hook (0:00–0:05)
+### Phase 1 - The Hook (0:00–0:05)
 - Slow, tense, rhetorical
 - Ken Burns effect on footage
 - Monochrome visuals
-- Text builds tension — short, punchy phrases
+- Text builds tension - short, punchy phrases
 
-### Phase 2 — The Core Drop (0:05–End)
+### Phase 2 - The Core Drop (0:05–End)
 - Hyper-kinetic, frantic
 - Cuts on every beat transient (0.3–0.6s average)
 - Rapid-fire visuals with alternating filters
@@ -87,12 +87,12 @@ A single JSON array. Each entry is one segment.
 - UPPERCASE only, 2–5 words per text segment
 - Declarative, mechanical tone
 - No marketing fluff, no adjectives
-- Each text segment should advance the narrative — do not repeat
+- Each text segment should advance the narrative - do not repeat
 
 ## Asset Selection
 
 - Inventory available assets from the project's `raw_footage/` directory
-- Cycle through all assets — use every clip at least once
+- Cycle through all assets - use every clip at least once
 - Reserve the most visually striking asset for the opening hook
 - Vary filters across segments per the adjacency rule (schema-enforced)
 - White flash frames (`filter: "white_flash"`) mark beat drops and transitions. These must have `text: null` and `effect: null` (or `strobe`/`word_flash`)

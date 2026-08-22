@@ -21,7 +21,9 @@
     "npm:@upstash/context7-pi",
     "npm:@yeliu84/pi-model-router",
     "npm:@tungthedev/pi-extensions",
-    "git:github.com/eko24ive/pi-ask"
+    "git:github.com/eko24ive/pi-ask",
+    "npm:pi-mcp-adapter",
+    "npm:@ff-labs/pi-fff"
   ],
   "editor": {
     "fixedEditor": true
