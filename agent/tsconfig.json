@@ -1,0 +1,48 @@
+{
+  "//": "Editor-only typechecking for ~/.pi/agent/extensions/. Pi does not read this file;",
+  "//2": "it transpiles extensions itself and erases the type-only imports. noEmit is set so",
+  "//3": "nothing can ever be written from here. Paths are absolute because this tree is",
+  "//4": "machine-local (see AGENTS.md). The @mariozechner/* specifiers that the extensions",
+  "//5": "import are the deprecated scope name; npm points to @earendil-works/*, which is",
+  "//6": "what is installed and what the running pi is. Both are mapped below.",
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "target": "es2023",
+    "lib": [
+      "es2023"
+    ],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@types"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@mariozechner/pi-coding-agent": [
+        "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent"
+      ],
+      "@mariozechner/pi-ai": [
+        "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai"
+      ],
+      "@mariozechner/pi-agent-core": [
+        "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-agent-core"
+      ],
+      "@mariozechner/pi-tui": [
+        "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-tui"
+      ],
+      "typebox": [
+        "/home/m0xu/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/typebox"
+      ]
+    }
+  },
+  "include": [
+    "extensions/**/*.ts"
+  ],
+  "//7": "typebox is pi's own dependency; it is mapped rather than installed so the editor sees the same copy the runtime uses."
+}

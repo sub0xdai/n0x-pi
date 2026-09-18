@@ -154,6 +154,7 @@ Then restart from step 2.
 | `/video-render-qa` | Skill | Verify a rendered video against its design: ffprobe sanity, frame extraction at key timestamps, pixel statistics, OCR of overlays, audio levels. Triggers on "check the render", "verify the video", post-render QA. | (none) |
 | `/yt-dlp-download` | Skill | Download YouTube audio/video with yt-dlp including HTTP 403 player-client recovery (default/android/tv/ios ladder). Triggers on "download this YouTube video", "grab the audio from this link". | (none) |
 | `/vox` | Skill | >- | (none) |
+| `/typesafe-ai` | Skill | Build with TypeSafe System One / Jev: typed Choice, Score, and Noul judgments in place of prompt-and-parse. Keeps workflow and thresholds in code, model supplies the judgment. Triggers on "use TypeSafe", "use Jev", "typed judgment", "replace prompt-and-parse", or when a feature needs programmable common sense. Reads live docs from docs.typesafe.ai/llms.txt. | (none) |
 
 ## Primitives
 
