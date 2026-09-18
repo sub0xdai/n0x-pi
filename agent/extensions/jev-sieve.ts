@@ -43,8 +43,10 @@
  *     the line range in the stub; it travels alone and fails open.
  *
  * The band thresholds default to winnow's calibrated drop point: a block is
- * hidden only below 0.10, and everything from 0.10 to 0.50 is kept because it is
- * uncertain. Raise the drop point only with a replay, per section 8.3.
+ * hidden only when the probability it is needed falls to 0.10 or below, and
+ * everything from there to 0.50 is kept because it is uncertain. Lower this only
+ * with a replay of real decisions, per section 8.3. The band is computed here,
+ * not read from the script's envelope, so this is the single source of truth.
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -147,7 +149,25 @@ export function decide(judged: Judged): Action {
   return { kind: "keep", judged, why: "needed" };
 }
 
-/** Accept either the band we asked for or a bare probability, capped at a keep. */
+/** Decimal probabilities meet a decimal threshold, so the boundary tests allow a
+ *  hair of float representation error. 0.3 - 0.2 is 0.09999999999999998 in binary
+ *  floating point, which otherwise pushes a noul of exactly 0.10 out of the hide
+ *  band and makes the documented boundary untrue. */
+const BOUNDARY_EPSILON = 1e-9;
+
+/** The band is derived here from the probability and never taken from the
+ *  envelope's own band field. The script's default banding is not this
+ *  extension's policy, and letting the envelope win made the sieve hide blocks
+ *  that had a 55% chance of being needed. One source of truth: the constants
+ *  above, which is also what shadow calibration tunes. */
+export function bandFor(noul: number, threshold: number, margin: number): Band {
+  if (noul <= threshold - margin + BOUNDARY_EPSILON) return "no";
+  if (noul >= threshold + margin - BOUNDARY_EPSILON) return "yes";
+  return "uncertain";
+}
+
+/** A usable verdict, or null when the envelope carries no probability for this
+ *  block. The envelope's `band` is deliberately ignored; see bandFor. */
 export function verdictFor(
   envelope: Envelope,
   blockId: string,
@@ -157,10 +177,7 @@ export function verdictFor(
   if (!v) return null;
   const noul = typeof v.noul === "number" && Number.isFinite(v.noul) ? v.noul : null;
   if (noul === null) return null;
-  if (v.band === "yes" || v.band === "no" || v.band === "uncertain") {
-    return { band: v.band, noul };
-  }
-  return { band: "uncertain", noul };
+  return { band: bandFor(noul, THRESHOLD, MARGIN), noul };
 }
 
 /** Build the request body: one shared state, one path-referencing question per block.
