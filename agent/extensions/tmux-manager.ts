@@ -142,7 +142,7 @@ export default function (pi: ExtensionAPI) {
           }
           const command = rest.join(" ") || "bash";
           await execTmux(["new-session", "-d", "-s", sessionName, command]);
-          ctx.ui.notify(`✓ Created '${sessionName}'  $ ${command}`, "success");
+          ctx.ui.notify(`✓ Created '${sessionName}'  $ ${command}`, "info");
           break;
         }
         case "attach": {
@@ -159,7 +159,7 @@ export default function (pi: ExtensionAPI) {
             return;
           }
           await execTmux(["kill-session", "-t", sessionName]);
-          ctx.ui.notify(`✓ Killed '${sessionName}'`, "success");
+          ctx.ui.notify(`✓ Killed '${sessionName}'`, "info");
           break;
         }
         case "send": {
@@ -168,7 +168,7 @@ export default function (pi: ExtensionAPI) {
             return;
           }
           await execTmux(["send-keys", "-t", sessionName, rest.join(" "), "Enter"]);
-          ctx.ui.notify(`✓ Sent to '${sessionName}'`, "success");
+          ctx.ui.notify(`✓ Sent to '${sessionName}'`, "info");
           break;
         }
         case "capture": {

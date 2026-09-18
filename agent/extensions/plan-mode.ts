@@ -69,7 +69,7 @@ ${planState.steps
           planState.currentStep = 0;
           planState.planFile = await resolvePlanFile();
           await savePlan();
-          ctx.ui.notify(`Plan mode: ON  (file: ${planState.planFile})`, "success");
+          ctx.ui.notify(`Plan mode: ON  (file: ${planState.planFile})`, "info");
           ctx.ui.notify("Use /plan add <description> to add steps", "info");
           break;
 
@@ -92,7 +92,7 @@ ${planState.steps
           };
           planState.steps.push(step);
           await savePlan();
-          ctx.ui.notify(`Added step: ${step.description}`, "success");
+          ctx.ui.notify(`Added step: ${step.description}`, "info");
           break;
         }
 
@@ -106,7 +106,7 @@ ${planState.steps
           await savePlan();
           ctx.ui.notify(
             `Step completed! ${planState.currentStep}/${planState.steps.length}`,
-            "success"
+            "info"
           );
           break;
 
