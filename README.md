@@ -19,10 +19,14 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 | `comment` | Opens the last response in `$EDITOR` so I can edit before sending |
 | `tmux-manager` | Background jobs in tmux, callable by the agent |
 | `notifications` | Pings my desktop when a task finishes |
-| `herdr-agent-state` | Agent state tracker for the Herdr platform |
-| `powerline-footer` | Custom footer rendering for the TUI status bar |
+| `herdr-agent-state` | Reports agent state to the Herdr platform over its socket |
+| `jev-sieve` | Judges large tool results with Jev and stubs out the blocks the task does not need |
 
 ## Skills
+
+25 skills in `agent/skills/`, 6 in `~/.agents/skills/`, plus the package skills
+(`ponytail`, `context7-docs`, `ask-user`, `mcp-scripting`). The full index, with each
+skill's companion scripts, is in [lattice](agent/lattice.md).
 
 **Code and review:**
 `vox` — plan and build from specs.
@@ -31,10 +35,10 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 `nuclear-review` — thermonuclear maintainability audit.
 `diff-review` — visual HTML diff with architecture diagrams.
 `shannon` — annotate code in Neovim via RPC.
-`librarian` — library internals with source links.
+`security-audit` - find exploitable security bugs with real impact.
 
 **Structure and knowledge:**
-`anchor:init`, `anchor:verify` — @anchor tags and pre-commit enforcement.
+`anchor-init`, `anchor-verify` - @anchor tags and pre-commit enforcement.
 `adr` — architecture decision records.
 `graphify` — codebase to knowledge graph.
 `vault-context` — search Obsidian vault before coding decisions.
@@ -42,7 +46,7 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 
 **Infra and media:**
 `cloudflare-devops` — Workers/Pages, tunnels, CI/CD.
-`n0x-content` — brutalist kinetic promo videos.
+`scythe` - brutalist kinetic promo videos.
 
 **Meta:**
 `handoff` — session summary for the next agent.
@@ -56,19 +60,19 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 `/grill-with-docs` — grill-me plus glossary refinement plus ADRs.
 `/brilliance` — iterate until nothing is left to flag.
 `/tigerbeetle` — load the coding standard explicitly.
-`/n0x-cutlist` — video cut-list spec for n0x-content.
+`/scythe-cutlist` - video cut-list spec for scythe.
 
 ## Guardrails (always on)
 
-- **anchor:verify** blocks commits with un-annotated files. It auto-syncs the manifest.
+- **anchor-verify** blocks commits with un-annotated files. It auto-syncs the manifest.
 - **TigerBeetle** enforces assertion density, typed errors, and zero tech debt.
 - **Emission gate** runs `__check.sh` to scan for line width and forbidden tokens. The AI then self-checks all 21 rules. Every code block needs a `[VERIFIED]` receipt. A missing receipt means the agent skipped the gate.
 
 ## Workflow
 
 ```
-New project:       anchor:init → vox plan → vox build → anchor:verify
-Existing code:     anchor:init → graphify → librarian → diff-review
+New project:       anchor-init → vox plan → vox build → anchor-verify
+Existing code:     anchor-init → graphify → context7-docs → diff-review
 Feature work:      vox plan → vox build → /grill-me → /brilliance → diff-review
 Session end:       handoff
 ```

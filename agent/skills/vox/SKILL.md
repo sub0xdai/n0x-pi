@@ -124,6 +124,49 @@ Those only exist in delta specs.
 
 ---
 
+## Judgments and audits
+
+Two helpers, both run from the repository root. Neither writes to the repo.
+
+`~/dotfiles/scripts/vox_jev.sh check <change>` is mechanical. It audits checkpoint
+completion, missing `**Verification**` lines, scenario markers, requirements with no
+scenario, delta headers left in living specs, and coverage markers left in the
+archive. It exits 1 and names the offenders. Do not audit this bookkeeping by
+reading files; run the script and quote its output.
+
+`vox_jev.sh gaps | slices | coverage` return Jev judgments. They are advisory.
+
+| Subcommand | One question per | Asks |
+|---|---|---|
+| `gaps <change>` | delta Scenario | is this behavior already in the code? |
+| `slices <change>` | checkpoint | vertical slice or horizontal layer? |
+| `coverage <change> <CP-N>` | delta Scenario | does this CP's test exercise it? |
+
+Rules, in order of importance:
+
+- **You adjudicate.** A judgment is a prompt to look, never a verdict. `GAP` means go
+  read the code, not that the code is missing. `HORIZONTAL LAYER` means re-read the
+  checkpoint.
+- **Never let Jev write the plan.** It does not choose checkpoints, size them, or name
+  risks. Those are the multi-factor judgments it is documented to be bad at. Giving it
+  the tier decision rather than the distinction is the failure mode to avoid.
+- **Read the reported confidence.** `slices` prints `c=` and appends
+  `treat as no signal` below 0.2. A near-zero confidence is not a weak vote, it is no
+  vote. Absence of a signal is not a signal.
+- **Noul carries no separate confidence.** The probability is the signal: `band=no` is
+  a gap or an uncovered scenario, `band=yes` is satisfied, `uncertain` means read it
+  yourself.
+- **The representation is the limit.** Each judgment is only as good as the state the
+  script assembled: the requirement's SHALL statement, the Scenario's GIVEN/WHEN/THEN,
+  and the code the requirement's own names point at. A confident verdict on thin
+  evidence is not evidence.
+- **If Jev is unavailable the script says so and exits 2.** Proceed without the
+  judgment. Never let a missing judgment stop the run, and never read its absence as a
+  clean result.
+- **If the script is missing, say so and do the audit by hand.** Do not silently skip it.
+
+---
+
 ## Plan Mode
 
 Triggered by `/skill:vox plan <spec-name>`. No code is written.
@@ -181,6 +224,16 @@ Produce a table: requirement → current state → gap.
 Treat each Scenario as a testable unit — the gap isn't closed until every scenario
 in the delta is verified against the code.
 
+Before reading the files yourself, ask what is already there:
+
+    ~/dotfiles/scripts/vox_jev.sh gaps <spec-name>
+
+One Noul per Scenario, all in a single request. Take `GAP` and `uncertain` rows as
+your reading list; spot check the `satisfied` rows that matter. Quote the table, then
+fill the gap analysis from what you actually read. A `satisfied` verdict built on an
+empty evidence list means the requirement's own names did not find any code, which is
+a finding in itself.
+
 **4. Task decomposition**
 Break the gaps into **vertical checkpoints** (NOT horizontal layers):
 - Wrong: "all migrations" → "all endpoints" → "all UI"
@@ -191,6 +244,15 @@ Each checkpoint must be:
 - Independently committable
 - Sized to ~1-3 hours of focused work
 - Stated as a contract: "Given X, when Y, then Z, verified by `<command>`"
+
+Before writing the plan, check the slicing:
+
+    ~/dotfiles/scripts/vox_jev.sh slices <spec-name>
+
+`HORIZONTAL LAYER` means the checkpoint is one layer across many behaviors and cannot
+be verified on its own. Re-slice it. Low confidence means the checkpoint's Touches and
+Tasks do not make its shape identifiable either way: sharpen them, or judge it
+yourself. Never drop a checkpoint on Jev's word alone.
 
 **5. Write the plan**
 Write to the change directory's `IMPLEMENTATION_PLAN.md`.
@@ -305,6 +367,14 @@ Run the project's standard verification commands (from constitution.md or CLAUDE
   Each Scenario gets exactly one marker — if a later CP re-verifies the same
   Scenario, do not add a second marker.)
 
+  Before writing the markers, check what this CP actually tests:
+
+      ~/dotfiles/scripts/vox_jev.sh coverage <spec-name> CP-N
+
+  `NOT COVERED` means no test in this CP's Touches line asserts that scenario.
+  Either add the test or do not write the marker. A marker is a claim, and archive
+  mode holds every scenario to exactly one.
+
 **9. Stop. Do not start the next CP.**
 - Summarize what changed (files + lines).
 - Suggest commit message from the plan.
@@ -329,13 +399,15 @@ Migrate it to `changes/<spec-name>/` first, then re-run archive." and exit.
 ### Steps
 
 **1. Verify all CPs complete**
-- Read `.specify/changes/<spec-name>/IMPLEMENTATION_PLAN.md`.
-- Every checkpoint must be marked ✅.
-- Every Scenario in every delta spec must have a `<!-- vox:covered CP-N -->` marker
-  on the line immediately following its Scenario block. Search across all
-  `.specify/changes/<spec-name>/specs/*/spec.md` files.
-- If any Scenario is missing its marker, stop and report the exact Scenario name,
-  file, and line number.
+Run the mechanical audit and quote its output:
+
+    ~/dotfiles/scripts/vox_jev.sh check <spec-name>
+
+It verifies that every checkpoint is marked ✅, that every checkpoint has a
+`**Verification**` line, that every Scenario in every delta spec owns exactly one
+`<!-- vox:covered CP-N -->` marker, and that every Requirement owns at least one
+Scenario. It exits 1 and lists the offending names on failure.
+If it fails, stop and report. Do not merge a delta that fails the audit.
 
 **2. Merge deltas into living specs**
 For each domain directory under `.specify/changes/<spec-name>/specs/`:

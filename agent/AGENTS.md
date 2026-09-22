@@ -46,7 +46,7 @@ Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
 
 ### Runtime Configuration (`settings.json`)
 
-- Default model: DeepSeek v4 Pro (via OpenAI provider), thinking level: high
+- Default model: DeepSeek v4 flash (via OpenAI provider), thinking level: high
 - Theme: vanilla-amoled, thinking blocks hidden
 - Boxed editor with fixed editor mode
 - Eight installed pi packages
@@ -55,14 +55,23 @@ Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
 
 | Package | Provides |
 |---------|----------|
-| `pi-web-access` | web_search, fetch_content, code_search tools + librarian skill |
+| `pi-web-access` | web_search, source_check, fetch_content, get_search_content tools, plus the curator layer |
 | `pi-blackboard-theme` | Blackboard and Blackboard Pro themes |
 | `pi-ansi-themes` (git) | ANSI theme collection |
 | `pi-themes` (git) | Theme collection |
 | `ponytail` (git) | Ponytail skill family (ponytail, ponytail-audit, ponytail-review, ponytail-debt, ponytail-gain, ponytail-help) |
-| `@upstash/context7-pi` | Context7 documentation lookup (resolve-library-id, query-docs) |
+| `@upstash/context7-pi` | Context7 documentation lookup (resolve-library-id, query-docs) plus the context7-docs skill |
 | `@yeliu84/pi-model-router` | Model routing between providers |
-| `@tungthedev/pi-extensions` | Boxed editor with extensible status row |
+| `@tungthedev/pi-extensions` | Boxed editor with extensible status row, and Task subagents |
+| `pi-mcp-adapter` | mcp and mcpScript tools plus the mcp-scripting skill |
+| `@ff-labs/pi-fff` | ffgrep and fffind tools |
+| `eko24ive/pi-ask` (git) | ask_user tool plus the ask-user skill |
+| `vim-motions-pi` | Vim keybindings in the editor. Replaces the editor component, so it competes with the boxed editor; built against the deprecated `@mariozechner/*` scope |
+
+`pi list` is the source of truth for what is registered. Pi reconciles `settings.json`
+against installed packages on startup, so a package present in `npm/package.json` can
+appear in `settings.json` without an explicit `pi install`. Read `pi list` rather than
+trusting the array to be stable.
 
 ## Work Guidance
 

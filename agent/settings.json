@@ -1,17 +1,12 @@
 {
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.86.1",
   "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-flash",
+  "defaultModel": "deepseek-flash",
   "defaultThinkingLevel": "high",
   "theme": "vanilla-amoled",
   "hideThinkingBlock": true,
+  "quietStartup": true,
   "enableInstallTelemetry": true,
-  "workingVibe": "zen",
-  "bashMode": {
-    "toggleShortcut": "ctrl+b",
-    "transcriptMaxLines": 5000,
-    "transcriptMaxBytes": 1048576
-  },
   "packages": [
     "npm:pi-web-access",
     "git:github.com/leblancfg/pi-ansi-themes",
@@ -23,7 +18,8 @@
     "npm:@tungthedev/pi-extensions",
     "git:github.com/eko24ive/pi-ask",
     "npm:pi-mcp-adapter",
-    "npm:@ff-labs/pi-fff"
+    "npm:@ff-labs/pi-fff",
+    "npm:vim-motions-pi"
   ],
   "editor": {
     "fixedEditor": true

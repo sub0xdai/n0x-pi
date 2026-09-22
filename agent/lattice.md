@@ -140,21 +140,31 @@ Then restart from step 2.
 
 | Invocation | Type | Description | Scripts |
 |------------|------|-------------|---------|
-| `/adr` | Skill | Create and manage Architecture Decision Records (ADRs) with the Nygard template format. Use when asked to "write an ADR", "document this decision", "capture this architecture choice", or when encountering a new dependency, new architectural pattern, or hard-to-reverse choice. | (none) |
-| `/appimage-integrate` | Skill | Install an AppImage so it launches from rofi/the desktop launcher: extract, install .desktop and icon, fix Exec line, test launch. Triggers on "set up this AppImage", "install <app>.AppImage", "not launching from rofi". | (none) |
-| `/cover-letter` | Skill | Write a job application cover letter from a pasted posting, grounded in the user's real resume and past cover letters. Triggers on "make me a cover letter", "help me apply to <job>", pasted job postings. | (none) |
-| `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. Self-contained HTML file. Use for reviewing branches, commits, PRs, or working tree changes. | (none) |
-| `/ffmpeg-composite` | Skill | Build composite videos with hand-written ffmpeg filtergraphs: timeline segments, glitch effects, text/image overlays, concat with uniform normalization. Triggers on custom cut/assemble/overlay builds and filtergraph/concat debugging. | (none) |
-| `/scythe` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the scythe pipeline. Triggers on "generate a video", "make a promo video", "create a marketing video", "brutalist video", "kinetic video", "scythe", "scythe video". | scythe_build.sh, scythe_bootstrap.sh, scythe_ingest.sh, scythe_render.sh |
-| `/onchain` | Skill | On-chain wallet/token forensics for hidden alpha and connections. Use when asked to analyze a wallet, trace a token, find who is behind X, follow a money trail, or investigate a token launch on Ethereum, ETH-adjacent chains, or Solana. | (none) |
-| `/project-orientation` | Skill | Orient into a project directory and await instructions. Triggers on "study the project", "study the codebase", or fresh-session context loading in an unfamiliar repo. | (none) |
-| `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. Use when the user asks to show something "in Neovim", requests an annotated code review, guided walkthrough, or error markers in their editor. | (none) |
-| `/ste-writing` | Skill | Rewrite prose in ASD-STE100 Simplified Technical English to remove "AI slop". Two modes: strict (procedures/safety) and STE-flavored (general prose). Complements humanizer — STE prevents slop, humanizer removes it after. Use when asked to de-slop text, make docs clear, or enforce a controlled writing style. | ste_lint.py |
-| `/vault-context` | Skill | Search Obsidian vault (`sub0x_vault/`) for relevant knowledge before coding decisions. Use when the agent needs domain context, encounters an unfamiliar area, or before vox plan on a spec. Triggers on "what do I know about X", "check my notes on Y". | (none) |
-| `/video-render-qa` | Skill | Verify a rendered video against its design: ffprobe sanity, frame extraction at key timestamps, pixel statistics, OCR of overlays, audio levels. Triggers on "check the render", "verify the video", post-render QA. | (none) |
-| `/yt-dlp-download` | Skill | Download YouTube audio/video with yt-dlp including HTTP 403 player-client recovery (default/android/tv/ios ladder). Triggers on "download this YouTube video", "grab the audio from this link". | (none) |
-| `/vox` | Skill | >- | (none) |
-| `/typesafe-ai` | Skill | Build with TypeSafe System One / Jev: typed Choice, Score, and Noul judgments in place of prompt-and-parse. Keeps workflow and thresholds in code, model supplies the judgment. Triggers on "use TypeSafe", "use Jev", "typed judgment", "replace prompt-and-parse", or when a feature needs programmable common sense. Reads live docs from docs.typesafe.ai/llms.txt. | (none) |
+| `/adr` | Skill | Create and manage Architecture Decision Records (ADRs). | (none) |
+| `/anchor-init` | Skill | Scaffolds anchor tag infrastructure and generates the initial master manifest map. | (none) |
+| `/anchor-verify` | Skill | Validates compliance of modified or staged files against system anchor policies. | (none) |
+| `/appimage-integrate` | Skill | Install an AppImage so it launches from the desktop launcher (rofi, dmenu, application menu): extract, install .desktop and icon, fix the Exec line, test launch. | (none) |
+| `/audit` | Skill | Two-pass code audit: adversarial deep review followed by standard second opinion. | (none) |
+| `/cloudflare-devops` | Skill | Automated bootstrap engine for Cloudflare deployments via wrangler and cloudflared. | (none) |
+| `/cover-letter` | Skill | Write a job application cover letter from a pasted job posting, grounded in the user's real resume and past cover letters. | (none) |
+| `/diff-review` | Skill | Generate a visual HTML diff review — before/after architecture comparison with code review analysis, KPI dashboard, Mermaid diagrams, and structured Good/Bad/Ugly/Questions. | (none) |
+| `/ffmpeg-composite` | Skill | Build a composite video with a hand-written ffmpeg filtergraph: timeline segments, glitch effects, text/image overlays, and concat. | (none) |
+| `/graphify` | Skill | any input (code, docs, papers, images, video) → knowledge graph → clustered communities → HTML + JSON + GRAPH_REPORT.md. | (none) |
+| `/handoff` | Skill | Write a handoff document summarising the current conversation so a fresh agent can continue the work. | (none) |
+| `/humanizer` | Skill | Remove signs of AI-generated writing from text. | (none) |
+| `/nuclear-review` | Skill | Run an extremely strict maintainability review for abstraction quality, giant files, and spaghetti-condition growth. | (none) |
+| `/onchain` | Skill | On-chain wallet and token forensics to find hidden alpha and connections. | (none) |
+| `/project-orientation` | Skill | Orient into a project directory and await instructions. | (none) |
+| `/prolong` | Skill | Programmatic memory for long-horizon tasks. | (none) |
+| `/scythe` | Skill | Generate brutalist kinetic marketing/promo videos for any project using the scythe pipeline. | scythe_bootstrap.sh,scythe_build.sh scythe_ingest.sh,scythe_render.sh |
+| `/shannon` | Skill | Interact with Neovim via RPC to annotate code, navigate files, and do walkthroughs. | (none) |
+| `/ste-writing` | Skill | Rewrite prose (docs, READMEs, PR descriptions, error messages, release notes, comments — never code) into ASD-STE100 Simplified Technical English to remove "AI slop". | (none) |
+| `/teach` | Skill | Teach the user a new skill or concept. | (none) |
+| `/typesafe-ai` | Skill | Build AI-powered software with TypeSafe: small units of AI intelligence you can use like programming primitives. | (none) |
+| `/vault-context` | Skill | Search Obsidian vault for relevant knowledge before coding decisions. | (none) |
+| `/video-render-qa` | Skill | Verify a rendered video against its intended design: codec/resolution sanity, frame extraction at key timestamps, pixel statistics, OCR of text overlays, and audio levels. | (none) |
+| `/vox` | Skill | Spec-driven development — gap analysis, task decomposition (plan), TDD checkpoint execution (build), and delta archive (archive). | vox_jev.sh |
+| `/yt-dlp-download` | Skill | Download YouTube audio or video with yt-dlp, including recovery from the common HTTP 403 / player-client failures. | (none) |
 
 ## Primitives
 
@@ -169,16 +179,20 @@ Then restart from step 2.
 | `coding-standard.schema.json` | Constraint | tigerbeetle |
 | `review-policy.schema.json` | Constraint | brilliance |
 | `check.schema.json` | Constraint | all code emission |
+## Extensions
+
+Runtime hooks are indexed in `extensions/AGENTS.md`, where each one declares the
+lattice criterion it satisfies. Not duplicated here; one source per table.
 
 ## Prompts
 
 | Invocation | Type | Description | Primitives Referenced |
 |------------|------|-------------|----------------------|
-| `/brainstorm` | Prompt | Guided brainstorming mode — turn a rough idea into a fully-formed design through collaborative dialogue. No code, just design. | project-context, spec |
+| `/brainstorm` | Prompt | Guided brainstorming mode — turn a rough idea into a fully-formed design through collaborative dialogue. | project-context, spec |
 | `/brilliance` | Prompt | Code review for brilliance — polish changes until they're elegant, bulletproof, and leave reviewers with nothing to say but "LGTM" | project-context, review-policy, review-result |
 | `/grill-me` | Prompt | Deep-dive interrogation — drill into every aspect of a plan or design, one question at a time, until shared understanding is reached | project-context, decision-tree, spec |
-| `/grill-with-docs` | Prompt | Grill-me + ubiquitous language refinement + ADR writing. For existing codebases. | project-context, glossary, adr, decision-tree, spec |
-| `/scythe-cutlist` | Prompt | Brutalist kinetic video cut-list specification — aesthetic rules, timing discipline, filter/effect vocabulary, and JSON output format for the scythe renderer | cutlist.schema.json, filter-effect-matrix.json (in scythe project) |
+| `/grill-with-docs` | Prompt | Align before you build — grill-me interrogation combined with active ubiquitous language refinement. | project-context, glossary, adr, decision-tree, spec |
+| `/scythe-cutlist` | Prompt | Emit a cut-list for the scythe kinetic renderer as schema-valid JSON. | cutlist.schema.json, filter-effect-matrix.json (in scythe project) |
 | `/tigerbeetle` | Prompt | TigerBeetle engineering philosophy — safety, determinism, and zero-cost abstraction applied to all code paths | coding-standard |
 
 <!-- INDEX_END -->

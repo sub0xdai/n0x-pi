@@ -1,3 +1,11 @@
+---
+description: >
+  Emit a cut-list for the scythe kinetic renderer as schema-valid JSON. Details
+  the aesthetic, timing, filter, and text rules the cutlist schema enforces, and
+  the field list a segment must carry. Use when generating or repairing a
+  cutlist for the scythe video pipeline.
+---
+
 # Scythe Brutalist Kinetic Video - Cut-List Generator
 
 When generating a cut-list for the scythe kinetic video renderer, produce valid JSON conforming to the cutlist schema. You are the editor - output valid JSON only, no conversational filler.

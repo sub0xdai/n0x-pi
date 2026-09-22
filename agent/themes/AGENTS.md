@@ -47,8 +47,6 @@ Current: **vanilla-amoled** (set in `~/.pi/agent/settings.json`)
 - Themes are purely visual — no behavioral side effects
 - Do not edit package themes in `npm/node_modules/` or `git/`
 - To switch themes: use `/settings` in interactive mode or edit `settings.json` → `theme`
-- Custom powerline footer theming goes in
-  `~/.pi/agent/extensions/powerline-footer/theme.json`
 
 ## Verification
 

@@ -49,15 +49,30 @@ Extensions from pi packages live in `~/.pi/agent/npm/node_modules/` or
 | `comment.ts` | TUI/UI Manipulation (#2) | Reads last assistant response and injects `#`-prefixed comment into editor via `ctx.ui.setEditorText()` |
 | `notifications.ts` | Lifecycle Interception (#1) | Hooks `tool_execution_start/end` and `agent_end` to send desktop and OSC 777 terminal notifications |
 | `plan-mode.ts` | Lifecycle Interception (#1) | Registers `/plan` command and hooks `tool_call` to gate destructive operations when plan mode is active |
+| `jev-sieve.ts` | Lifecycle Interception (#1) | Hooks `tool_result` to judge large read/bash/grep results block by block and replace confident-irrelevant blocks with a cache-backed stub; the judgment runs in `~/dotfiles/scripts/jev.sh` |
 | `tmux-manager.ts` | Lifecycle Interception (#1) | Registers tmux tool (tmux_new_session, capture_pane, send_keys, kill_session) for tmux session management |
-| `powerline-footer/` | TUI/UI Manipulation (#2) | (from pi-powerline-footer package) Custom powerline-style footer with git info, token stats, shortcuts |
+| `herdr-agent-state.ts` | Persistent Transport (#3) | Reports agent state to the Herdr platform over `HERDR_SOCKET_PATH`, inert unless `HERDR_ENV=1` and a pane id are set. Vendor-managed: reinstalling the Herdr integration overwrites the file, so add hooks beside it rather than editing it |
 
 ### Package-Provided Extensions (active via settings.json)
 
 | Package | Extension | Purpose |
 |---------|-----------|---------|
-| `pi-web-access` | web tools | Registers `web_search`, `fetch_content`, `code_search`, `get_search_content` tools |
-| `@tungthedev/pi-extensions` | boxed editor | Floating detached input box with extensible status row and fixed editor mode |
+| `pi-web-access` | web tools | Registers `web_search`, `source_check`, `fetch_content`, `get_search_content`, plus the WebSearch/WebSummary/FetchUrl shims and the curator layer |
+| `@tungthedev/pi-extensions` | boxed editor, subagents | Floating detached input box with extensible status row and fixed editor mode; Task subagents writing to `~/.pi/subagents/sessions/` |
+| `pi-mcp-adapter` | MCP gateway | Registers `mcp` and `mcpScript`, plus the mcp-scripting skill |
+| `@ff-labs/pi-fff` | path and content search | Registers `ffgrep` and `fffind`; frecency and history stores live in `agent/fff/` |
+| `eko24ive/pi-ask` | ask gate | Registers `ask_user` and the ask-user skill; keymaps and model settings in `eko24ive-pi-ask.json` |
+| `@upstash/context7-pi` | docs lookup | Registers `resolve-library-id` and `query-docs`, plus the context7-docs skill |
+| `@yeliu84/pi-model-router` | model routing | Per-turn model selection, configured in `agent/model-router.json` |
+| `pi-blackboard-theme`, `pi-ansi-themes`, `pi-themes` | none | Ship themes only |
+| `ponytail` | none | Ships 6 skills, no extension code |
+| `vim-motions-pi` | vim keybindings | Registers `VimEditor` through `ctx.ui.setEditorComponent` on `session_start`, the same event the boxed editor uses, and it is last in `settings.json`, so it takes the slot. Neither editor composes with the other: `VimEditor` and `CodexBoxedEditor` both extend the base `CustomEditor` and neither class is exported, so load order only decides which one is lost. `VimEditor` imports from `@mariozechner/pi-coding-agent@0.73.1`, a hoisted duplicate, while the running core is 0.87.0 |
+
+`pi list` is the source of truth for what is registered. Pi reconciles `settings.json`
+against installed packages on startup, so the array is not stable across runs.
+
+Also sitting in this directory but not an extension: `eko24ive-pi-ask.json`, which is
+package config.
 
 ## Work Guidance
 
