@@ -10,3 +10,7 @@ agent/pi-fff/
 # Backup / stale files
 *.bak
 agent/pi-tui-crash.log
+
+# Python venv for the pre-commit scrubber
+.venv/
+__pycache__/
