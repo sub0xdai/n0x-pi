@@ -3,8 +3,8 @@
 Scope: what Jev is, and where it plausibly attaches to `~/.pi/`.
 
 Subject: TypeSafe System One models, `POST /v1/systemone`, model `jev-1.13.0`.
-Source: docs.typesafe.ai (introduction, quickstart, primitives, system-one, state, confidence, patterns, models, api, sdk, use-case-map), plus fourteen third-party projects in section 8, read at README and commit level.
-Status: preliminary. No credential exists in this tree, so nothing here has been executed. Every external number in section 8 is quoted from the project that measured it, not reproduced here.
+Source: docs.typesafe.ai (introduction, quickstart, primitives, system-one, state, confidence, patterns, models, api, sdk, use-case-map, model-jaggedness/jev-1.13), plus the framework integration pages in section 8.7, plus fourteen third-party projects in section 8, read at README and commit level.
+Status: the sieve is live and nothing else is. A credential now exists at `~/.config/typesafe/credentials.env` (mode 600) and `~/dotfiles/scripts/jev.sh` is written, so 387 documents have been judged in shadow mode since 2026-09-18. Sections 5, 8.6 and the appendix carry statements made before that and the status line supersedes them. Section 9 records what the log shows. Every external number in section 8 is quoted from the project that measured it, not reproduced here.
 
 ## 1. What Jev is
 
@@ -65,7 +65,7 @@ It also matches the constructive data modeling rule already enforced here: a `No
 
 | Idea | Concrete hook in this tree | Verdict |
 |------|---------------------------|---------|
-| Model router | `agent/npm/node_modules/@yeliu84/pi-model-router/extensions/routing.ts:389-476`, `runClassifier()` prompts gemini-2.5-flash for two text lines and does `tierLine.toLowerCase().startsWith('tier:')` | **Strongest fit.** Replace a text-prompt-and-parse loop with `Choice{high, medium, low}`. Cheaper at $0.042 vs ~$0.30 per Mtok input, and the classifier can no longer return garbage. |
+| Model router | `agent/npm/node_modules/@yeliu84/pi-model-router/extensions/routing.ts:389-476`, `runClassifier()` prompts gemini-2.5-flash for two text lines and does `tierLine.toLowerCase().startsWith('tier:')` | **Strongest fit, but not as a tier picker.** Ask semantic properties of the task directly (`Choice` over "does this need repository-wide reasoning", "does it need sustained multi-step tool use") and keep the tier rule in code. Asking for the tier makes the model infer both what kind of task this is and how the metrics trade off, which is the anti-pattern jev-tip.md names. Cheaper at $0.042 vs ~$0.30 per Mtok input, and the classifier can no longer return unparseable text. |
 | Agent guardrail | `agent/extensions/plan-mode.ts:144-157`, `pi.on("tool_call")`, currently a human confirm on every `write`/`edit`/`bash` | Good fit as an **additional** signal, never as a replacement. This is a trust boundary; keep the human confirm. Section 8.3 has the worked version: shadow first, then a bounded action - halve, never veto. |
 | Skill picker | 26 skill directories under `agent/skills/` plus package skills, selected today by in-context description matching | Strong fit. One `Choice` over skill names with an `other` option. The `skill_suggestion` cookbook does the two-stage version: rank all, then judge the top few with full text. |
 | Writing linter | `agent/skills/ste-writing/` with `~/dotfiles/scripts/ste_lint.py`, plus `humanizer` and `/ste-writing` | Fit, but `ste_lint.py` is mechanical. Jev adds the semantic layer only, not the rule matching. |
@@ -73,8 +73,33 @@ It also matches the constructive data modeling rule already enforced here: a `No
 | Semantic search / reranker | No reranking layer exists today | New capability, not a replacement. |
 | Ticket triage | Nothing in the tree | No current hook. |
 | Corpus map-reduce | Nothing in the tree | No current hook. |
-| Live UI | `agent/extensions/powerline-footer/`, `herdr-agent-state.ts`, `notifications.ts` | Plausible for footer state, but only if a small-state call proves fast enough. The measured third-party range is 150 ms to 2.5 s, tracking state size and batch size. See section 8.3. |
+| Live UI | `agent/extensions/herdr-agent-state.ts`, `notifications.ts`, and the editor status row `@tungthedev/pi-extensions` renders | Plausible for footer state, but only if a small-state call proves fast enough. The measured third-party range is 150 ms to 2.5 s, tracking state size and batch size. See section 8.3. |
 | RAG filter | No RAG pipeline here | N/A. |
+
+### 3.1 Constraints the model publishes about itself
+
+`jev-1.13` ships a jaggedness list (`docs.typesafe.ai/model-jaggedness/jev-1.13`, reviewed 2026-09-17).
+Several entries rule a design out before it is built, so they belong above the hook mapping rather than after it.
+The page's own "Instead" column is the operative part, and these are its consequences here.
+
+| Published failure mode | Consequence in this tree |
+|---|---|
+| **Indirection.** A property of a property, or several hops, costs accuracy. The remedy given is to identify the relevant parts of state **by name**. | A question must name its own subject by state path. |
+| The same entry's remedy applies to pinning. | Pinning an instrument does not mean byte-identical questions. The template holds still and the referent moves. Counter-example measured in section 9. |
+| **Structural invariants.** The model is "extremely consistent", so semantically similar inputs get quantitatively similar outputs. | N identical questions produce N identical answers. Flat readings are documented behaviour, not a defect to debug. |
+| **Math, counting, dates.** Not a calculator, does not count reliably, reads dates as text. | Anything a regex or parser can compute stays in code. Never ask for a count; ask one question per item and sum in code, which is what the docs' counting example does. |
+| **Large state full of irrelevant detail.** Accuracy falls as unrelated content grows. | Batching a whole document plus the task into one request competes with context rot. Measure the cost of batching rather than assuming it is free. |
+| **Literal reading.** It answers the question written, not the one intended. | Put boundary cases in `criteria`. When you catch yourself explaining what you meant, that explanation was the missing half of the instruction. |
+| **Adversarial content.** State is data and is not treated as hostile. | Tool output is state. A sieve over file contents feeds the model text this repo does not control. |
+| **Generation.** Not a text model. | Extraction is a `Choice` over candidates found in code, never a request for the value. |
+
+Two confidence rules from the same page bear on anything that reads a threshold:
+
+- A `Noul` carries no separate confidence, so the probability is the signal.
+- A `Choice` or `Score` confidence is a margin from the threshold **actually used**, not a probability the answer is right, so changing a threshold silently re-scales every confidence reading.
+
+Reading raw `noul` and banding locally, which `jev.sh` and the sieve both do, is insulated from the second rule.
+It also makes the band the only thing a calibration tunes, which is why section 8.2 item 5 puts the number and not the classification at the centre.
 
 ## 4. The constraint that decides the design
 
@@ -94,9 +119,9 @@ One script plus existing hooks covers it.
 
 ## 5. Blockers
 
-1. **No credentials.** `agent/auth.json` contains `deepseek`, `google`, `openrouter`, `radius`. There is no `typesafe` entry and no `TYPESAFE_API_KEY` in the environment.
+1. **~~No credentials.~~ Cleared 2026-09-18.** The key lives at `~/.config/typesafe/credentials.env`, mode 600, outside the repo, never in argv. `agent/auth.json` is not where it goes, and still holds `deepseek`, `google`, `openrouter`.
 2. **The cheapest win is not free.** `classifierModel` in `agent/model-router.json` is a configuration value, but `runClassifier()` speaks the pi model stream protocol, not the TypeSafe HTTP protocol. It needs a code change inside an installed package, which `pi install`/`remove` will overwrite.
-3. **Latency is unverified locally, and the range is wide.** External measurements run from 150 ms to 2.5 s depending on state size and batch size, with 0.5-2.5 s reported for a four-question batch against a larger state. The 9 Hz decision loop in OneVOneJev is the other end of that range and must use a deliberately small state. So the live-UI idea is viable only in the small-state case, and that is the case to measure before any footer work starts. See section 8.3.
+3. **Latency is still unverified locally, and the range is wide.** External measurements run from 150 ms to 2.5 s depending on state size and batch size, with 0.5-2.5 s reported for a four-question batch against a larger state. The 9 Hz decision loop in OneVOneJev is the other end of that range and must use a deliberately small state. A 227 ms median is quoted elsewhere, but it is not on the vendor's page or Pydantic's and stays third-party. So the live-UI idea is viable only in the small-state case, and that is the case to measure before any footer work starts. See sections 8.3 and 8.7.
 4. **Rate limits are shared across all callers.** 1,200 req/min is generous for personal use, but a per-keystroke linter would consume it quickly. Batch questions into one request instead. Every external project that fans out - winnow, jev-ultrafast, OneVOneJev - batches into a single request. Treat batching as the required call shape, not an optimization on top of it. prism paces at about 30 req/min through a single choke point because the quota is unpublished, which is a better default than trusting 1,200/min.
 
 ## 6. Suggested order
@@ -271,19 +296,87 @@ The ecosystem is scripts plus hooks, and the hooks exist only where a harness ev
 
 ### 8.6 Revised order
 
+Status 2026-09-22: item 1 is done, and item 5 shipped before items 2 and 3, which is the inversion item 5 was written to prevent. Item 5's own gate - "only if steps 2 and 3 show the judgments are worth trusting" - was not met. Section 9 has the measurements.
+
 1. Get a key, then write `~/dotfiles/scripts/jev.sh`.
    Batch questions into one request, emit a stable JSON envelope, expose threshold and uncertain-band flags, and fail open with the failure distinguishable from a verdict.
    semdecide's `--json` shape is the one to copy: `verdict`, `probability`, `confidence`, `threshold`, `model`, `usage`.
    Read the key from an env file outside the repo, mode 600, as semdecide and winnow both do.
    Give it a 2 s choke point and a 429 breaker from the start, following section 8.3, rather than trusting the documented 1,200/min.
    Measure one round trip and a batch of four against a realistic state, since section 8.3 shows the batch case is the slow one.
-2. Swap the router classifier.
+2. Swap the router classifier's judgment, not its policy.
+   `runClassifier()` gets semantic-property questions asked directly, and the tier
+   rule stays in code beside the deterministic facts already in `model-router.json`.
+   Do not ask for the tier. A `Choice{high, medium, low}` over task text plus model
+   metrics makes the model recover the decision model for you: which kind of task
+   this is, and how latency and retry rate trade against it. jev-tip.md names that
+   as the mistake, and section 8.2 item 6 already says to keep policy in code, so
+   this step previously contradicted it.
    Still the cheapest win, and still a patch that a reinstall clobbers.
-   Calibrate the gate against a labeled replay of this tree's own turns instead of starting at 0.5, using the tune-then-validate split in section 8.3.
+   Calibrate the combination rule, not the classification, against a labeled replay
+   of this tree's own turns instead of starting at 0.5, using the tune-then-validate
+   split in section 8.3.
 3. Skill picker.
    Latency is not the constraint here, because the same shape already runs at 9 Hz elsewhere.
 4. Guardrail as a second gate behind the human confirm in `plan-mode.ts`.
 5. Context GC on `tool_result`, only if steps 2 and 3 show the judgments are worth trusting.
+
+### 8.7 The framework layer, and a second-hand summary that got the names wrong
+
+Framework support landed between 2026-09-17 and 2026-09-20, after section 8 was compiled.
+A second-hand summary of it circulates with two class names that do not exist, so this section records what the vendor and framework pages actually say.
+
+| Thing | The summary's version | The source's version |
+|---|---|---|
+| LangChain middleware | `ModelRoutingMiddleware`, `ToolRiskGatingMiddleware` | `ModelRouterMiddleware` and `AutoModeMiddleware`. Neither name in the summary exists. |
+| LangChain package | `langchain-typesafe[experimental]` | Correct, and alpha: `0.0.1a1`-`0.0.1a3`, MIT, 2026-09-17 to 09-20. |
+| Model routing granularity | "swaps the primary model before execution" | Classifies the latest human message **once per agent run**, and stores the whole `ChoiceAnswer` in agent state. Per run, not per turn. |
+| Tool risk gating | "injects an error and blocks execution" | True as `AutoModeMiddleware`, and the default is a **veto**: a call at or above the risk threshold returns an error `ToolMessage`. It applies only to tools listed explicitly by name. |
+| Pydantic AI | `TypeSafeModel` | Correct. Each `output_type` field becomes one question in one request, and `provider_details['confidence']` is a margin from the threshold in use, not a probability the answer is right. |
+| Vercel | "an experimental evaluation interface" | `experimental_evaluate` in AI SDK 7+, or the TypeSafe-compatible base URL `https://ai-gateway.vercel.sh/typesafe` with `POST /typesafe/v1/systemone`, sharing the vendor's request, response and error shapes. |
+| `SkillsMiddleware` | presented as part of the TypeSafe package | Not in the package docs. The `SkillsMiddleware` in LangChain's own documentation belongs to `deepagents`. Unverified. |
+| 227 ms median latency | quoted as a vendor benchmark | Not on the Pydantic page. Third-party only, so section 1 and section 5 item 3 stand. |
+
+Two things to take from the framework layer, one to refuse, and one to defer.
+
+- **Take the explicit tool allowlist.** `AutoModeMiddleware` gates only the tools it is handed by name, which is a better shape than gating everything. It can be copied into any `tool_call` gate here without copying the verdict.
+- **Take `FallbackModel(fallback_on=...)`.** It reads the response, so the cheap model answers what it can and an LLM takes the rest. That is the mechanism behind section 8.2 item 4, with the standing caveat from `jev-codex-router` that a bar set too high eats most of the savings.
+- **Refuse the veto default.** The doctrine here, taken from prism, is "halve, never veto" plus fail-open. A framework that blocks the turn by default imports a failure mode this tree already rejected, on a judgment with no local calibration.
+- **Defer the AI Gateway base URL.** `jev.sh` reads `JEV_ENDPOINT`, so pointing at Gateway is a swap with no code change. It also inserts a billing middleman into a working integration, which waits until unified spend or tracing is worth more than that.
+
+## 9. What the sieve measured
+
+The sieve is the one Jev integration that runs, so it is the only place with local evidence.
+`~/.cache/jev/sieve.jsonl` holds 387 judged documents and 1,938 block verdicts across two instrument generations, all in shadow mode, every document batched into a single pass.
+The input total is 1.43 M characters, about 1.5 cents at $0.042 per million input tokens.
+
+| | Earlier (asked by state path) | Later (asked by question key) |
+|---|---|---|
+| Documents / blocks | 119 / 540 | 268 / 1,394 |
+| `noul` range | 0.04 - 0.93 | 0.12 - 0.55 |
+| Standard deviation within one document | 0.063 | **0.008** |
+| Blocks at or below the 0.10 hide line | 29 | **0** |
+| Bands | 29 no / 352 uncertain / 159 yes | 0 no / 1,380 uncertain / 14 yes |
+
+The later question referred to "the state block whose id is this question's key".
+Question ids are the caller's handle and are not sent to the model, so all N sibling questions arrived identical.
+Section 3.1 predicts the result twice over: indirection costs accuracy, and semantically similar inputs get quantitatively similar answers.
+
+The later instrument therefore measured the document, not the block, while the decision it drove is per block.
+`on` mode would have hidden nothing, because nothing reached the band, and lowering the threshold to compensate would have hidden roughly half the blocks on a signal with no separation.
+The question id is now `sieve.noul.v2` and the text names `blocks[i].text` again.
+The threshold stays where it is until a labeled replay exists.
+
+Three consequences worth keeping.
+
+1. **The instrument version belongs in the log.** The earlier generation recorded no question id at all, and the later one recorded `sieve.noul.v1` while its question text had already changed. Both are why the id now bumps on any wording change.
+2. **A calibration cannot survive an instrument change.** Bumping the question invalidates every reading taken before it, including the readings that argued for the bump. That is the point of the field, not a side effect.
+3. **Shadow earns the same labels as `on` and risks nothing.** A recall is the only free label the harness has, and it is biased: a hide the agent never notices leaves no record. So the read-back rate is a lower bound on false negatives, not an estimate.
+
+Two changes follow from that and are now in place.
+
+- **Shadow caches the candidate blocks.** Both modes write the text of every block the band marked `no`; only the replacement is `on`-only. Shadow therefore builds a labeling dataset without ever mutating context, which is what breaks the circularity of "labels need `on`, `on` needs labels".
+- **`jev_sieve_report.sh` is a gate, not a report.** It groups by instrument version and prints a verdict: `NOT READY` when there is nothing cached or too few candidates, `READY TO LABEL` when the sample is large enough, and `QUALIFIED` versus `NOT QUALIFIED` once `on`-mode read-backs exist, against a Wilson one-sided 95% upper bound on the false-negative rate. `--samples` prints the labeling worklist, joined to the instrument version, `namedInTask`, and the reading, so a hand label can be stratified by the field that predicts it.
 
 ## Appendix: reference shapes
 
@@ -337,10 +430,25 @@ The second block is illustrative. Shapes are from the API reference; the exact n
 - `https://docs.typesafe.ai/models`
 - `https://docs.typesafe.ai/api`
 - `https://docs.typesafe.ai/sdk`
+- `https://docs.typesafe.ai/model-jaggedness/jev-1.13`
+
+Framework pages read 2026-09-22, for section 8.7:
+
+- `https://pypi.org/project/langchain-typesafe/`
+- `https://pydantic.dev/docs/ai/models/typesafe/`
+- `https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe`
+
+Surfaced in search and consistent with those, but not read in full: the `langchain-typesafe` release notes, `ai-sdk.dev/docs/ai-sdk-core/evaluation`, `vercel.com/docs/ai-gateway/modalities/evaluation`, and a third-party summary carrying the 227 ms figure and the two wrong middleware names.
 
 Local files read: `agent/lattice.md`, `agent/settings.json`, `agent/model-router.json`, `agent/extensions/plan-mode.ts`, `agent/extensions/notifications.ts`, `agent/scripts/__check.sh`, `agent/npm/node_modules/@yeliu84/pi-model-router/extensions/routing.ts`, `agent/git/github.com/eko24ive/pi-ask/skills/ask-user/SKILL.md`, `neuro-symbolic-audit.md`, `README.md`.
 
-Added when section 8 was compiled: `agent/primitives/` (nine `.schema.json` files), `agent/auth.json`, the extension event list and the `tool_result` and `context` handler contracts in `pi-coding-agent/docs/extensions.md`, and `~/dotfiles/scripts/` (no `jev.sh` yet).
+Added when section 8 was compiled: `agent/primitives/` (nine `.schema.json` files), `agent/auth.json`, the extension event list and the `tool_result` and `context` handler contracts in `pi-coding-agent/docs/extensions.md`, and `~/dotfiles/scripts/`, which then held no `jev.sh` and has held one since 2026-09-18.
+
+Added after the sieve shipped: `~/.pi/jev-tip.md`, whose metrology argument drives section 8.6 item 2. It holds that the instrument is the tuple (model, state representation, question), that those must be pinned before any reading is comparable, and that a judgment can be correct relative to a bad representation while the decision built on it is wrong. The sieve's versioned state and its recall label follow from that.
+
+Added when section 9 was compiled: `~/.cache/jev/sieve.jsonl` (read as data), `~/dotfiles/scripts/jev_sieve_report.sh`, `agent/extensions/jev-sieve.ts` at `HEAD` and in the working tree, `agent/skills/typesafe-ai/SKILL.md` (TypeSafe's own agent skill, restored verbatim, whose load-bearing line is "Question IDs are for code and are not sent to the model"), `~/dotfiles/scripts/jev.sh`, and `~/dotfiles/scripts/vox_jev.sh`.
+
+Two runnable checks sit at the repo root, outside `agent/extensions/` so pi never loads them: `jev-sieve.check.ts` for the pure logic (35 assertions) and `jev-sieve.e2e.check.ts` for the impure half (10 assertions, against a stub `JEV_SH` in a temp directory). The second exists because the invariant it guards fails silently: if shadow stops caching, the gate above blames a flat instrument instead of a cache gate.
 
 ### Appendix: external repositories read
 

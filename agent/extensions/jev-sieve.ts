@@ -22,13 +22,23 @@
  *
  * Modes (JEV_SIEVE):
  *   off     do nothing
- *   shadow  judge and log, never modify                                  (default)
- *   on      judge and replace confident-irrelevant blocks with a stub
+ *   shadow  judge, log, and cache the candidate blocks, never modify     (default)
+ *   on      shadow, plus replace confident-irrelevant blocks with a stub
  *
  * Tuning (env): JEV_SIEVE_MIN_CHARS, JEV_SIEVE_BLOCK_LINES,
  * JEV_SIEVE_THRESHOLD, JEV_SIEVE_MARGIN, JEV_SIEVE_TOOLS,
  * JEV_SIEVE_MAX_BATCH_CHARS, JEV_SIEVE_QUEUE, JEV_SIEVE_TASK_CHARS,
- * JEV_SH, JEV_CACHE_DIR.
+ * JEV_SIEVE_MODEL, JEV_SH, JEV_CACHE_DIR.
+ *
+ * Learning loop. The log at $JEV_CACHE_DIR/sieve.jsonl holds two entry kinds:
+ *   decision  every judgment, carrying the instrument versions that produced it
+ *   recall    the agent reading a replaced block back out of the cache
+ * A recall is the one free ground-truth label available inside the harness: it
+ * means the hide was wrong. Both modes write the block text for every block the
+ * band marked `no`, so shadow builds the dataset the threshold gets calibrated
+ * on. Only `on` names a stub, so only `on` can produce a recall, and a shadow
+ * sample has to be labeled by hand. ~/dotfiles/scripts/jev_sieve_report.sh is the
+ * gate over both: it reads the samples and the labels and prints a verdict.
  *
  * Two shapes that used to lose data:
  *   - A burst of parallel results is queued, not dropped. pi runs sibling tool
@@ -91,6 +101,23 @@ const TOOLS = envStr("JEV_SIEVE_TOOLS", "read,bash,grep,ffgrep,fffind")
   .filter(Boolean);
 
 const JEV_TIMEOUT_MS = 20_000;
+
+/** A judgment is only as good as the instrument that produced it, and the
+ *  instrument is the tuple (model, state representation, question). These pin all
+ *  three. Any change to the state shape, the question text, or the model is a
+ *  deliberate bump, so judgments from before it are never silently averaged with
+ *  judgments after it. See ~/.pi/jev-tip.md on qualifying the instrument.
+ *
+ *  Question history. v1 named the block by question key, which is the caller's
+ *  handle and is never sent to the model, so every sibling question arrived
+ *  identical and so did the answers. v2 names the block path. */
+export const STATE_SCHEMA = "sieve.state.v2";
+export const QUESTION_ID = "sieve.noul.v2";
+
+/** Pinned, and overridable only to run the model-rollover A/B deliberately.
+ *  `jev-latest` moves under the log, and the model is the one member of the
+ *  instrument tuple a floating alias leaves unpinned. */
+export const MODEL = envStr("JEV_SIEVE_MODEL", "jev-1.13.0");
 
 export type Band = "yes" | "no" | "uncertain";
 export type SieveMode = "off" | "shadow" | "on";
@@ -180,27 +207,73 @@ export function verdictFor(
   return { band: bandFor(noul, THRESHOLD, MARGIN), noul };
 }
 
+/** What the agent asked for, which is the strongest deterministic evidence about
+ *  whether the output matters. `namedInTask` states the one relationship between
+ *  the request and the task that code can observe outright; the model still
+ *  decides what to do with it. */
+export interface Request {
+  readonly tool: string;
+  readonly target: string;
+  readonly namedInTask: boolean;
+}
+
+/** True when the request names something the task also names. This is the
+ *  deterministically observable half of "was this asked for on purpose", which
+ *  the state previously left to be inferred from the task text alone. A whole
+ *  result from a deliberately targeted read is the case that produced confident
+ *  "not needed" answers on source the agent had explicitly asked for.
+ *  ponytail: substring test on basenames; loosen only if the recall labels show
+ *  it missing. */
+export function targetNamedInTask(target: string, task: string): boolean {
+  const hay = task.toLowerCase();
+  return target
+    .split(/[\s'"`;|&()[\]{}]+/)
+    .map((token) => token.replace(/[.,:]+$/, ""))
+    .filter((token) => token.includes("/") || /\.[A-Za-z]\w{0,6}$/.test(token))
+    .map((token) => (token.split("/").pop() ?? token).toLowerCase())
+    .some((base) => base.length > 2 && hay.includes(base));
+}
+
+/** A fixed template with one interpolated referent: the path of the block this
+ *  question is about. The template holds still, so every reading comes from the
+ *  same instrument. The referent moves, because a question that does not name its
+ *  own block cannot be answered about that block.
+ *
+ *  Naming the path follows TypeSafe's own fan-out example (`items[i]`) and their
+ *  guidance for indirection: identify the relevant parts of state by name.
+ *  Measured cost of not doing it, over 1,278 judged blocks: within-document
+ *  standard deviation 0.008, range 0.12-0.55, and no block ever reached the hide
+ *  band. Nothing variable travels in the question except the referent, so the
+ *  question text still does not change with the task. */
+export function instructionFor(index: number): string {
+  return (
+    "The agent is working on the task in `task`. Is the content of " +
+    `\`blocks[${index}].text\` needed to complete that task? ` +
+    "Answer yes only if it carries information the task depends on."
+  );
+}
+
 /** Build the request body: one shared state, one path-referencing question per block.
  *  The path index is the position within this batch, which is why batches carry
  *  their own subset of blocks. */
 export function buildSpec(
   task: string,
   blocks: readonly Block[],
-  source: { readonly tool: string; readonly target: string },
+  source: Request,
 ): string {
   const questions: Record<string, unknown> = {};
   blocks.forEach((b, index) => {
-    questions[b.id] = {
-      type: "noul",
-      instructions:
-        `The agent is working on the task in \`task\`. Is the content of ` +
-        `\`blocks[${index}].text\` needed to complete that task? ` +
-        `Answer yes only if it carries information the task depends on.`,
-    };
+    questions[b.id] = { type: "noul", instructions: instructionFor(index) };
   });
   return JSON.stringify({
-    state: { task, source, blocks: blocks.map((b) => ({ id: b.id, text: b.text })) },
-    model: "jev-latest",
+    state: {
+      schema: STATE_SCHEMA,
+      question: QUESTION_ID,
+      task,
+      request: source,
+      blocks: blocks.map((b) => ({ id: b.id, text: b.text })),
+    },
+    model: MODEL,
     questions,
   });
 }
@@ -244,7 +317,7 @@ export function reindex(blocks: readonly Block[]): Block[] {
 export function buildBatches(
   task: string,
   blocks: readonly Block[],
-  source: { readonly tool: string; readonly target: string },
+  source: Request,
   maxBatchChars: number,
 ): Batch[] {
   const budget = maxBatchChars - SCAFFOLD_CHARS - task.length - source.target.length;
@@ -408,6 +481,17 @@ export function singleText(content: unknown): { text: string; index: number } | 
   return { text, index };
 }
 
+/** The cache filename for a block the sieve replaced, or null when the target
+ *  is not a read-back. The filename already carries session, block id, and line
+ *  range, so a recall joins straight back to the decision that produced it.
+ *  ponytail: the agent can also recover by re-running the original command, which
+ *  this does not label. Add it only if the recall rate looks implausibly low. */
+export function recallPath(target: string): string | null {
+  const escaped = BLOCK_CACHE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = target.match(new RegExp(`${escaped}/([\\w.-]+\\.txt)`));
+  return match ? match[1] : null;
+}
+
 async function cacheBlocks(
   sessionId: string,
   actions: readonly Action[],
@@ -472,6 +556,20 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_result", async (event, ctx) => {
     if (mode === "off") return;
     if (event.isError) return;
+
+    const session = ctx.sessionManager.getSessionId();
+    const target = String(
+      (event.input as { file_path?: string; path?: string; command?: string })?.file_path ??
+        (event.input as { path?: string })?.path ??
+        (event.input as { command?: string })?.command ??
+        "",
+    ).slice(0, 300);
+
+    // The label for an earlier decision, emitted before any early return: a recall
+    // is a wrong hide, and a recall is usually too short to clear MIN_CHARS.
+    const recalled = recallPath(target);
+    if (recalled) await log({ ts: Date.now(), kind: "recall", session, file: recalled });
+
     if (!TOOLS.includes(event.toolName)) return;
 
     const found = singleText(event.content);
@@ -480,19 +578,25 @@ export default function (pi: ExtensionAPI) {
     const blocks = splitBlocks(found.text, BLOCK_LINES);
     if (blocks.length < 2) return;
 
-    const session = ctx.sessionManager.getSessionId();
     const task = recentTask(ctx.sessionManager.getBranch(), TASK_CHARS);
-    const target = String(
-      (event.input as { file_path?: string; path?: string; command?: string })?.file_path ??
-        (event.input as { path?: string })?.path ??
-        (event.input as { command?: string })?.command ??
-        "",
-    ).slice(0, 300);
+    const request: Request = {
+      tool: event.toolName,
+      target,
+      namedInTask: targetNamedInTask(target, task),
+    };
 
-    const batches = buildBatches(task, blocks, { tool: event.toolName, target }, MAX_BATCH_CHARS);
+    const batches = buildBatches(task, blocks, request, MAX_BATCH_CHARS);
     if (batches.length === 0) {
       const result = "no-budget";
-      await log({ ts: Date.now(), session, mode, tool: event.toolName, target, result });
+      await log({
+        ts: Date.now(),
+        kind: "decision",
+        session,
+        mode,
+        result,
+        target,
+        tool: event.toolName,
+      });
       return;
     }
 
@@ -514,6 +618,7 @@ export default function (pi: ExtensionAPI) {
     if (judged === null) {
       await log({
         ts: Date.now(),
+        kind: "decision",
         session,
         mode,
         tool: event.toolName,
@@ -526,7 +631,15 @@ export default function (pi: ExtensionAPI) {
     }
     if (judged.length === 0) {
       const result = "no-judgment";
-      await log({ ts: Date.now(), session, mode, tool: event.toolName, target, result });
+      await log({
+        ts: Date.now(),
+        kind: "decision",
+        session,
+        mode,
+        result,
+        target,
+        tool: event.toolName,
+      });
       return;
     }
 
@@ -534,6 +647,10 @@ export default function (pi: ExtensionAPI) {
     const hides = actions.filter((a) => a.kind === "hide").length;
     await log({
       ts: Date.now(),
+      kind: "decision",
+      schema: STATE_SCHEMA,
+      question: QUESTION_ID,
+      namedInTask: request.namedInTask,
       session,
       mode,
       tool: event.toolName,
@@ -551,14 +668,20 @@ export default function (pi: ExtensionAPI) {
       })),
     });
 
-    if (mode !== "on" || hides === 0) return;
+    if (hides === 0) return;
 
+    // The block text is written in both modes. Shadow's job is to produce the
+    // dataset the threshold is calibrated on, and a judgment whose block text was
+    // never kept cannot be labeled after the fact. Only the mutation is `on`-only.
+    // ponytail: samples accumulate with no retention, and a superseded instrument's
+    // samples sit beside the current one. Prune by question id when disk matters.
     let paths: Map<string, string>;
     try {
       paths = await cacheBlocks(session, actions);
     } catch {
       return;
     }
+    if (mode !== "on") return;
     const source = `${event.toolName}${target ? ` ${target}` : ""}`;
     const next = applySieve(found.text, actions, paths, source);
     if (next === found.text) return;
