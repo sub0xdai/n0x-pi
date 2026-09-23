@@ -4,7 +4,8 @@ My pi config. The agent knows where everything lives, follows a coding standard,
 and checks its own output before showing it to me.
 
 - [Lattice](agent/lattice.md) — directory layout, naming rules, the extension litmus test
-- [TigerBeetle](agent/prompts/tigerbeetle.md) — 14 coding rules, always enforced
+- [TigerBeetle](agent/prompts/tigerbeetle.md) — 17 coding rules, always enforced
+- [jev-sieve](jev-sieve.md) - design record for the Jev context sieve (its comments, moved out of the source)
 - [Vox](agent/skills/vox/SKILL.md) — spec to plan to TDD checkpoints
 - [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) — lazy-first, simplest solution that works
 - [Primitives](agent/primitives/) — 9 typed schemas (ADR, Spec, DecisionTree, Glossary, CodingStandard, ReviewPolicy, ReviewResult, ProjectContext, Check). Structured ground truth for prompts and the emission gate.
@@ -20,7 +21,7 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 | `tmux-manager` | Background jobs in tmux, callable by the agent |
 | `notifications` | Pings my desktop when a task finishes |
 | `herdr-agent-state` | Reports agent state to the Herdr platform over its socket |
-| `jev-sieve` | Judges large tool results with Jev and stubs out the blocks the task does not need |
+| `jev-sieve` | Judges large tool results with Jev and stubs out the blocks the task does not need. Off by default, and no result leaves the machine until it clears the egress denylist |
 
 ## Skills
 
@@ -66,7 +67,8 @@ skill's companion scripts, is in [lattice](agent/lattice.md).
 
 - **anchor-verify** blocks commits with un-annotated files. It auto-syncs the manifest.
 - **TigerBeetle** enforces assertion density, typed errors, and zero tech debt.
-- **Emission gate** runs `__check.sh` to scan for line width and forbidden tokens. The AI then self-checks all 21 rules. Every code block needs a `[VERIFIED]` receipt. A missing receipt means the agent skipped the gate.
+- **No comments (TB-17)** - no explanation, banner, docblock, or commented-out code. Only `@waiver`, `@anchor`/`@tags`, and `ponytail:` survive, because a tool reads them.
+- **Emission gate** runs `__check.sh` to scan for line width, forbidden tokens, and comments. The AI then self-checks all 21 semantic rules. Every code block needs a `[VERIFIED]` receipt. A missing receipt means the agent skipped the gate.
 
 ## Workflow
 

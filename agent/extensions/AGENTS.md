@@ -29,7 +29,7 @@ Execution Plane Leakage and must be flagged.
 
 ### Creation Rules
 
-- New extensions must declare which criterion they satisfy in a comment at the top
+- New extensions must declare which criterion they satisfy in this file's extension table
 - General-purpose CLI wrappers go to `~/dotfiles/scripts/__<name>.sh`, not extensions
 - Extensions register tools only when justified by lifecycle/UI/transport criteria
 - Never duplicate a native pi tool as an extension tool
@@ -49,7 +49,7 @@ Extensions from pi packages live in `~/.pi/agent/npm/node_modules/` or
 | `comment.ts` | TUI/UI Manipulation (#2) | Reads last assistant response and injects `#`-prefixed comment into editor via `ctx.ui.setEditorText()` |
 | `notifications.ts` | Lifecycle Interception (#1) | Hooks `tool_execution_start/end` and `agent_end` to send desktop and OSC 777 terminal notifications |
 | `plan-mode.ts` | Lifecycle Interception (#1) | Registers `/plan` command and hooks `tool_call` to gate destructive operations when plan mode is active |
-| `jev-sieve.ts` | Lifecycle Interception (#1) | Hooks `tool_result` to judge large read/bash/grep results block by block and replace confident-irrelevant blocks with a cache-backed stub; the judgment runs in `~/dotfiles/scripts/jev.sh` |
+| `jev-sieve.ts` | Lifecycle Interception (#1) | Hooks `tool_result` to judge large read/bash/grep results block by block and replace confident-irrelevant blocks with a cache-backed stub; the judgment runs in `~/dotfiles/scripts/jev.sh`. Defaults to `off`, and a result whose path, content, or task names a secret is never sent, never cached, and never modified |
 | `tmux-manager.ts` | Lifecycle Interception (#1) | Registers tmux tool (tmux_new_session, capture_pane, send_keys, kill_session) for tmux session management |
 | `herdr-agent-state.ts` | Persistent Transport (#3) | Reports agent state to the Herdr platform over `HERDR_SOCKET_PATH`, inert unless `HERDR_ENV=1` and a pane id are set. Vendor-managed: reinstalling the Herdr integration overwrites the file, so add hooks beside it rather than editing it |
 
