@@ -1,13 +1,6 @@
-/**
- * jev-sieve.check.ts - the one runnable check for the sieve's pure logic.
- *
- *   node ~/.pi/jev-sieve.check.ts
- *
- * It lives here rather than in extensions/ so pi never loads it as an extension.
- * Node strips the types itself; no test framework, no dependencies.
- */
 import assert from "node:assert/strict";
 import {
+  DEFAULT_MODE,
   MODEL,
   STATE_SCHEMA,
   QUESTION_ID,
@@ -15,6 +8,7 @@ import {
   buildBatches,
   buildSpec,
   decide,
+  egressFor,
   applySieve,
   recallPath,
   splitBlocks,
@@ -25,7 +19,6 @@ import {
   type Request,
 } from "./agent/extensions/jev-sieve.ts";
 
-// splitBlocks numbers from line 1 and drops blank blocks.
 const blocks = splitBlocks("a\nb\nc\nd\ne", 2);
 assert.deepEqual(
   blocks.map((b) => [b.id, b.from, b.to]),
@@ -38,19 +31,15 @@ assert.deepEqual(
 );
 assert.equal(splitBlocks("a\nb", 0).length, 0, "a zero block size is not a crash");
 
-// bandFor keeps the uncertain middle and holds the documented 0.10 boundary
-// against float representation error.
 assert.equal(bandFor(0.09, 0.3, 0.2), "no");
 assert.equal(bandFor(0.1, 0.3, 0.2), "no", "0.3 - 0.2 is 0.09999999999999998");
 assert.equal(bandFor(0.2, 0.3, 0.2), "uncertain");
 assert.equal(bandFor(0.5, 0.3, 0.2), "yes");
 
-// An uncertain or needed block is never hidden.
 assert.equal(decide({ block: blocks[0], noul: 0.2, band: "uncertain" }).kind, "keep");
 assert.equal(decide({ block: blocks[0], noul: 0.5, band: "yes" }).kind, "keep");
 assert.equal(decide({ block: blocks[0], noul: 0.1, band: "no" }).kind, "hide");
 
-// namedInTask is the deterministic half of "was this asked for on purpose".
 assert.equal(
   targetNamedInTask("sed -n '1,5p' crates/router/src/exchange_api.rs", "fix exchange_api.rs"),
   true,
@@ -58,16 +47,11 @@ assert.equal(
 assert.equal(targetNamedInTask("/repo/src/journal_service.rs", "read the spec"), false);
 assert.equal(targetNamedInTask("", "fix anything"), false, "an empty target names nothing");
 
-// recallPath finds a replaced block being read back, by read or by bash.
 assert.equal(recallPath("/home/m0xu/.cache/jev/blocks/s1-b0-1-25.txt"), "s1-b0-1-25.txt");
 assert.equal(recallPath("cat /home/m0xu/.cache/jev/blocks/s1-b0-1-25.txt"), "s1-b0-1-25.txt");
 assert.equal(recallPath("/home/m0xu/.cache/jev/sieve.jsonl"), null);
 assert.equal(recallPath("/tmp/unrelated.txt"), null);
 
-// The instrument is pinned: versioned state, a pinned model, and one question per
-// block that names its own block path. The template holds still; only the
-// referent moves. A question that does not name its own block gets answered about
-// no block in particular, which is what flattened the v1 readings.
 const request: Request = { tool: "read", target: "/repo/exchange_api.rs", namedInTask: true };
 const spec = JSON.parse(buildSpec("fix exchange_api.rs", blocks, request));
 assert.equal(spec.state.schema, STATE_SCHEMA);
@@ -99,8 +83,6 @@ assert.ok(
   "no task text in the question",
 );
 
-// Every block survives into exactly one pass, and a single unsliceable line
-// travels alone instead of looping.
 const many: Block[] = Array.from({ length: 20 }, (_, i) => ({
   id: `b${i}`,
   from: i * 25 + 1,
@@ -114,9 +96,6 @@ assert.equal(ids.length, many.length, "every block is judged");
 assert.equal(splitToFit({ id: "b0", from: 1, to: 1, text: "y".repeat(5000) }, 1000).length, 1);
 assert.ok(passes.length > 1, "this fixture splits into several passes");
 
-// A question's named path is the position its own block holds in that pass's own
-// state array. A split into several passes is where that alignment can drift, so
-// the fixture is chosen to split.
 const drift = passes.flatMap((pass) => {
   const parsed = JSON.parse(pass.spec);
   return pass.blocks.flatMap((block, index) => {
@@ -126,8 +105,6 @@ const drift = passes.flatMap((pass) => {
 });
 assert.deepEqual(drift, [], "each pass's questions name their own positions in that pass");
 
-// A hidden block is replaced by a stub naming the exact range to read back, and
-// everything outside it is left verbatim.
 const judged: Judged = {
   block: { id: "b0", from: 1, to: 2, text: "l1\nl2" },
   noul: 0.05,
@@ -142,4 +119,28 @@ const sieved = applySieve(
 assert.ok(sieved.includes("offset=1 limit=2"), "the stub names the line range");
 assert.ok(sieved.includes("l3") && !sieved.includes("l2"), "only the hidden range is replaced");
 
-console.log("jev-sieve: 35 assertions pass");
+assert.equal(DEFAULT_MODE, "off", "the sieve sends nothing until it is switched on");
+const fakeKey = "api" + "_key = " + '"abcdef1234567890"';
+const fakeDsn = "postgres" + "://user:pw@host/db";
+assert.equal(egressFor("/repo/.env", "x", "t").kind, "deny", "a dotenv path never leaves");
+assert.equal(egressFor("cat ~/.ssh/id_rsa", "x", "t").kind, "deny");
+assert.equal(egressFor("sed -n '1,9p' key.pem", "x", "t").kind, "deny");
+assert.equal(egressFor("/repo/wallet-notes.md", "x", "t").kind, "deny");
+assert.equal(
+  egressFor("/repo/src/main.rs", "-----BEGIN OPENSSH PRIVATE KEY-----", "t").kind,
+  "deny",
+);
+assert.equal(egressFor("/repo/src/main.rs", "aws AKIAIOSFODNN7EXAMPLE here", "t").kind, "deny");
+assert.equal(egressFor("/repo/src/main.rs", fakeKey, "t").kind, "deny");
+assert.equal(egressFor("/repo/src/main.rs", fakeDsn, "t").kind, "deny");
+assert.equal(
+  egressFor("/repo/src/main.rs", "let x = 1;", "ghp_abcdefghijklmnopqrstuvwxyz12").kind,
+  "deny",
+  "a secret in the task text is denied too, because the task travels as state",
+);
+assert.equal(egressFor("/repo/src/main.rs", "let x = 1;", "fix the router").kind, "allow");
+assert.equal(egressFor("README.md", "# hi\nplain text", "read the readme").kind, "allow");
+const denied = egressFor("/repo/.env", "x", "t");
+assert.ok(denied.kind === "deny" && denied.reason.length > 0, "a denial names its rule");
+
+console.log("jev-sieve: pure checks pass");

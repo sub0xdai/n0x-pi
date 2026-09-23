@@ -1,20 +1,13 @@
-/**
- * jev-sieve.e2e.check.ts - the one runnable check for the sieve's impure half.
- *
- *   node ~/.pi/jev-sieve.e2e.check.ts
- *
- * jev-sieve.check.ts covers the pure logic. This covers the part that touches the
- * filesystem and a subprocess, and it exists for one invariant: shadow mode must
- * cache the block text of every hide candidate while leaving the content alone. If
- * that breaks, shadow silently stops producing a dataset and the calibration gate
- * blames a flat instrument instead of a cache gate, which is a misleading diagnosis
- * rather than a visible failure.
- *
- * Node strips the types itself. JEV_SH points at a stub, so there is no network and
- * no API key. Everything lives in a temp directory and is removed at the end.
- */
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -22,8 +15,6 @@ const root = mkdtempSync(join(tmpdir(), "jev-sieve-e2e-"));
 const cacheDir = join(root, "cache");
 const stub = join(root, "jev-stub.sh");
 
-// A judge that marks every block `no`. The noul is what the extension bands on, so
-// 0.05 lands under the 0.10 hide line without any envelope band in the way.
 writeFileSync(
   stub,
   `#!/bin/sh
@@ -70,8 +61,6 @@ const ctx = {
 
 const returned = await handler(event, ctx);
 
-// The shadow invariant, both halves. Nothing is returned, so the content the agent
-// sees is byte-identical to what the tool produced, and the text is on disk anyway.
 assert.equal(returned, undefined, "shadow must not modify the tool result");
 assert.equal(
   (event.content[0] as { text: string }).text,
@@ -92,10 +81,34 @@ assert.ok(
   "the stub judge put every block in the hide band",
 );
 
-// The gate reads exactly these files, so a candidate that is not cached is a
-// candidate the labeler cannot see.
+const denied = {
+  toolName: "bash",
+  isError: false,
+  input: { command: "cat /repo/.env" },
+  content: [{ type: "text", text }],
+};
+assert.equal(await handler(denied, ctx), undefined, "a denied result is never modified");
+
+const logText = readFileSync(process.env.JEV_SIEVE_LOG, "utf8");
+const lines = logText.trim().split("\n");
+const skip = JSON.parse(lines[lines.length - 1]);
+assert.equal(skip.result, "egress-denied", "the denial is logged as its own outcome");
+assert.equal(skip.reason, "env-file", "the log names the rule that fired");
+assert.equal(readdirSync(join(cacheDir, "blocks")).length, 3, "a denied result caches nothing");
+assert.ok(!logText.includes("exchange_api.rs"), "the log carries no path or command line");
+
 const first = readFileSync(join(cacheDir, "blocks", cached[0]), "utf8");
 assert.ok(first.startsWith("line "), "the cached text is the block text");
+assert.equal(
+  statSync(join(cacheDir, "blocks")).mode & 0o777,
+  0o700,
+  "the block cache directory is private",
+);
+assert.equal(
+  statSync(join(cacheDir, "blocks", cached[0])).mode & 0o777,
+  0o600,
+  "cached block text is private",
+);
 
 rmSync(root, { recursive: true, force: true });
-console.log("jev-sieve e2e: 10 assertions pass");
+console.log("jev-sieve e2e: checks pass");

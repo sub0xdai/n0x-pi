@@ -1,72 +1,10 @@
-/**
- * jev-sieve.ts - Jev-judged context sieve for large tool results.
- *
- * Every large read/bash/grep result is judged block by block before it enters
- * context. Blocks the judge is confident are irrelevant to the current task are
- * replaced with a short stub naming a file that holds the full text. Nothing is
- * lost: the agent can read the file back, including with an offset and limit.
- *
- * Why this surface: context is the one resource a judgment can actually save.
- * See ~/.pi/typesafe-jev-assessment.md section 8.3 for the method and the
- * projects it is taken from.
- *
- * Discipline, taken from prism-liquidity-agent's three-commit arc:
- *   - shadow first: log the decision, change nothing, calibrate later
- *   - bounded action: hide a block, never drop the result or refuse the tool
- *   - fail open: no key, timeout, or parse failure leaves the result untouched
- *   - never resolve uncertainty: an uncertain block is kept verbatim
- *
- * Two safety rules are not configurable, following winnow:
- *   - a result flagged as an error is never altered
- *   - a block whose probability is uncertain is kept
- *
- * Modes (JEV_SIEVE):
- *   off     do nothing
- *   shadow  judge, log, and cache the candidate blocks, never modify     (default)
- *   on      shadow, plus replace confident-irrelevant blocks with a stub
- *
- * Tuning (env): JEV_SIEVE_MIN_CHARS, JEV_SIEVE_BLOCK_LINES,
- * JEV_SIEVE_THRESHOLD, JEV_SIEVE_MARGIN, JEV_SIEVE_TOOLS,
- * JEV_SIEVE_MAX_BATCH_CHARS, JEV_SIEVE_QUEUE, JEV_SIEVE_TASK_CHARS,
- * JEV_SIEVE_MODEL, JEV_SH, JEV_CACHE_DIR.
- *
- * Learning loop. The log at $JEV_CACHE_DIR/sieve.jsonl holds two entry kinds:
- *   decision  every judgment, carrying the instrument versions that produced it
- *   recall    the agent reading a replaced block back out of the cache
- * A recall is the one free ground-truth label available inside the harness: it
- * means the hide was wrong. Both modes write the block text for every block the
- * band marked `no`, so shadow builds the dataset the threshold gets calibrated
- * on. Only `on` names a stub, so only `on` can produce a recall, and a shadow
- * sample has to be labeled by hand. ~/dotfiles/scripts/jev_sieve_report.sh is the
- * gate over both: it reads the samples and the labels and prints a verdict.
- *
- * Two shapes that used to lose data:
- *   - A burst of parallel results is queued, not dropped. pi runs sibling tool
- *     calls from one assistant message concurrently, so two large reads land at
- *     once. They run in arrival order, one Jev call at a time. The line is
- *     bounded by JEV_SIEVE_QUEUE (default 8) and overflow is logged as
- *     queue-full rather than vanishing.
- *   - A document too large for one request is judged in several passes, and a
- *     block that alone exceeds the budget is sliced by lines. A giant result is
- *     therefore never handed back to the agent unjudged. The one exception is a
- *     single line longer than the budget, which cannot be sliced without losing
- *     the line range in the stub; it travels alone and fails open.
- *
- * The band thresholds default to winnow's calibrated drop point: a block is
- * hidden only when the probability it is needed falls to 0.10 or below, and
- * everything from there to 0.50 is kept because it is uncertain. Lower this only
- * with a replay of real decisions, per section 8.3. The band is computed here,
- * not read from the script's envelope, so this is the single source of truth.
- */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { spawn } from "node:child_process";
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { appendFile, chmod, mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-/** Treat an empty env var as unset. `Number("")` is 0, which would silently
- *  turn an empty tuning var into the most aggressive setting. */
 function envStr(name: string, fallback: string): string {
   const raw = process.env[name];
   return raw === undefined || raw === "" ? fallback : raw;
@@ -83,7 +21,8 @@ const CACHE_DIR = envStr("JEV_CACHE_DIR", join(HOME, ".cache/jev"));
 const BLOCK_CACHE = join(CACHE_DIR, "blocks");
 const LOG_FILE = join(CACHE_DIR, "sieve.jsonl");
 
-const MODE = envStr("JEV_SIEVE", "shadow");
+export const DEFAULT_MODE = "off";
+const MODE = envStr("JEV_SIEVE", DEFAULT_MODE);
 const MIN_CHARS = envNum("JEV_SIEVE_MIN_CHARS", 1500);
 const BLOCK_LINES = envNum("JEV_SIEVE_BLOCK_LINES", 25);
 const THRESHOLD = envNum("JEV_SIEVE_THRESHOLD", 0.3);
@@ -91,8 +30,9 @@ const MARGIN = envNum("JEV_SIEVE_MARGIN", 0.2);
 const TASK_CHARS = envNum("JEV_SIEVE_TASK_CHARS", 4000);
 const MAX_BATCH_CHARS = envNum("JEV_SIEVE_MAX_BATCH_CHARS", 100_000);
 const MAX_QUEUE = envNum("JEV_SIEVE_QUEUE", 8);
+const RETENTION_DAYS = envNum("JEV_SIEVE_RETENTION_DAYS", 14);
+const EXTRA_DENY = envStr("JEV_SIEVE_DENY", "");
 
-/** Room for the task, the source, the question wrappers, and JSON punctuation. */
 const SCAFFOLD_CHARS = 2000;
 const BLOCK_OVERHEAD_CHARS = 320;
 const TOOLS = envStr("JEV_SIEVE_TOOLS", "read,bash,grep,ffgrep,fffind")
@@ -102,21 +42,9 @@ const TOOLS = envStr("JEV_SIEVE_TOOLS", "read,bash,grep,ffgrep,fffind")
 
 const JEV_TIMEOUT_MS = 20_000;
 
-/** A judgment is only as good as the instrument that produced it, and the
- *  instrument is the tuple (model, state representation, question). These pin all
- *  three. Any change to the state shape, the question text, or the model is a
- *  deliberate bump, so judgments from before it are never silently averaged with
- *  judgments after it. See ~/.pi/jev-tip.md on qualifying the instrument.
- *
- *  Question history. v1 named the block by question key, which is the caller's
- *  handle and is never sent to the model, so every sibling question arrived
- *  identical and so did the answers. v2 names the block path. */
 export const STATE_SCHEMA = "sieve.state.v2";
 export const QUESTION_ID = "sieve.noul.v2";
 
-/** Pinned, and overridable only to run the model-rollover A/B deliberately.
- *  `jev-latest` moves under the log, and the model is the one member of the
- *  instrument tuple a floating alias leaves unpinned. */
 export const MODEL = envStr("JEV_SIEVE_MODEL", "jev-1.13.0");
 
 export type Band = "yes" | "no" | "uncertain";
@@ -129,25 +57,21 @@ export interface Block {
   readonly text: string;
 }
 
-/** A verdict for one block, as returned by the script's local banding. */
 export interface Judged {
   readonly block: Block;
   readonly noul: number;
   readonly band: Band;
 }
 
-/** What the sieve decided to do with one block. No booleans gate the fields. */
 export type Action =
   | { readonly kind: "hide"; readonly judged: Judged }
   | { readonly kind: "keep"; readonly judged: Judged; readonly why: "needed" | "uncertain" };
 
-/** The script's envelope. Parsed at the boundary into a closed set. */
 export type Envelope =
   | { readonly status: "ok"; readonly verdicts: Record<string, { band?: string; noul?: number }> }
   | { readonly status: "disabled" }
   | { readonly status: "error"; readonly reason: string };
 
-/** Split text into fixed-size line blocks, numbered from line 1. */
 export function splitBlocks(text: string, linesPerBlock: number): Block[] {
   if (!Number.isFinite(linesPerBlock) || linesPerBlock < 1) return [];
   const lines = text.split("\n");
@@ -165,36 +89,20 @@ export function splitBlocks(text: string, linesPerBlock: number): Block[] {
   return blocks;
 }
 
-/**
- * Keep a block only when the judge is confident it is not needed. Anything
- * uncertain is kept, which is the rule winnow hard-codes and makes the drop
- * threshold the only tunable in the path.
- */
 export function decide(judged: Judged): Action {
   if (judged.band === "no") return { kind: "hide", judged };
   if (judged.band === "uncertain") return { kind: "keep", judged, why: "uncertain" };
   return { kind: "keep", judged, why: "needed" };
 }
 
-/** Decimal probabilities meet a decimal threshold, so the boundary tests allow a
- *  hair of float representation error. 0.3 - 0.2 is 0.09999999999999998 in binary
- *  floating point, which otherwise pushes a noul of exactly 0.10 out of the hide
- *  band and makes the documented boundary untrue. */
 const BOUNDARY_EPSILON = 1e-9;
 
-/** The band is derived here from the probability and never taken from the
- *  envelope's own band field. The script's default banding is not this
- *  extension's policy, and letting the envelope win made the sieve hide blocks
- *  that had a 55% chance of being needed. One source of truth: the constants
- *  above, which is also what shadow calibration tunes. */
 export function bandFor(noul: number, threshold: number, margin: number): Band {
   if (noul <= threshold - margin + BOUNDARY_EPSILON) return "no";
   if (noul >= threshold + margin - BOUNDARY_EPSILON) return "yes";
   return "uncertain";
 }
 
-/** A usable verdict, or null when the envelope carries no probability for this
- *  block. The envelope's `band` is deliberately ignored; see bandFor. */
 export function verdictFor(
   envelope: Envelope,
   blockId: string,
@@ -207,23 +115,71 @@ export function verdictFor(
   return { band: bandFor(noul, THRESHOLD, MARGIN), noul };
 }
 
-/** What the agent asked for, which is the strongest deterministic evidence about
- *  whether the output matters. `namedInTask` states the one relationship between
- *  the request and the task that code can observe outright; the model still
- *  decides what to do with it. */
+export type Egress =
+  | { readonly kind: "allow" }
+  | { readonly kind: "deny"; readonly reason: string };
+
+const DENY_PATH: readonly (readonly [string, RegExp])[] = [
+  ["env-file", /\.env/i],
+  ["credential", /credential|secret|\.netrc|\.npmrc|\.pypirc|\.git-credentials|htpasswd/i],
+  ["private-key", /id_rsa|id_ed25519|id_ecdsa|\.pem|\.key|\.p12|\.pfx|\.p8|private[_-]?key/i],
+  ["keystore", /keystore|\.kdbx|\.jks|\.asc\b/i],
+  ["cloud", /\.aws|\.ssh|\.gnupg|kubeconfig|\.tfstate|\.tfvars|service[_-]?account/i],
+  ["wallet", /wallet|mnemonic|seed[_-]?phrase/i],
+  ["docker-config", /\.docker[/\\]config/i],
+];
+
+const DENY_CONTENT: readonly (readonly [string, RegExp])[] = [
+  ["private-key-block", /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
+  ["aws-key", /\b(A3T[A-Z0-9]|AKIA|ASIA)[A-Z0-9]{16}\b/],
+  ["github-token", /\bgh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}/],
+  ["slack-token", /\bxox[abprs]-[A-Za-z0-9-]{10,}/],
+  ["provider-key", /\bsk-[A-Za-z0-9_-]{20,}/],
+  ["jwt", /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\./],
+  ["bearer", /authorization:\s*bearer\s+\S+/i],
+  ["assigned-secret",
+   /(password|passwd|api[_-]?key|secret|token)\s*[:=]\s*["']?[A-Za-z0-9_+/.=-]{8,}/i],
+  ["conn-string", /\b(mongodb|postgres(ql)?|mysql|redis|amqp):\/\/[^\s'"]*:[^\s'"]*@/],
+  ["basic-auth-url", /https?:\/\/[^\s:/@]+:[^\s/@]+@/],
+];
+
+let extraCache: readonly (readonly [string, RegExp])[] | null = null;
+
+function extraDenies(): readonly (readonly [string, RegExp])[] {
+  if (extraCache) return extraCache;
+  const out: (readonly [string, RegExp])[] = [];
+  for (const raw of EXTRA_DENY.split(",").map((s) => s.trim()).filter(Boolean)) {
+    try {
+      out.push([raw, new RegExp(raw, "i")]);
+    } catch {
+      process.stderr.write(`jev-sieve: ignoring invalid JEV_SIEVE_DENY pattern: ${raw}\n`);
+    }
+  }
+  extraCache = out;
+  return extraCache;
+}
+
+export function egressFor(target: string, text: string, task: string): Egress {
+  const inPath = DENY_PATH.find(([, re]) => re.test(target));
+  if (inPath) return { kind: "deny", reason: inPath[0] };
+  const inText = DENY_CONTENT.find(([, re]) => re.test(text));
+  if (inText) return { kind: "deny", reason: inText[0] };
+  const inTask = DENY_CONTENT.find(([, re]) => re.test(task));
+  if (inTask) return { kind: "deny", reason: `task:${inTask[0]}` };
+  const custom = extraDenies().find(
+    ([, re]) => re.test(target) || re.test(text) || re.test(task),
+  );
+  if (custom) return { kind: "deny", reason: `custom:${custom[0]}` };
+  return { kind: "allow" };
+}
+
 export interface Request {
   readonly tool: string;
   readonly target: string;
   readonly namedInTask: boolean;
 }
 
-/** True when the request names something the task also names. This is the
- *  deterministically observable half of "was this asked for on purpose", which
- *  the state previously left to be inferred from the task text alone. A whole
- *  result from a deliberately targeted read is the case that produced confident
- *  "not needed" answers on source the agent had explicitly asked for.
- *  ponytail: substring test on basenames; loosen only if the recall labels show
- *  it missing. */
+// ponytail: substring test on basenames; loosen only if the recall labels show it missing.
 export function targetNamedInTask(target: string, task: string): boolean {
   const hay = task.toLowerCase();
   return target
@@ -234,17 +190,6 @@ export function targetNamedInTask(target: string, task: string): boolean {
     .some((base) => base.length > 2 && hay.includes(base));
 }
 
-/** A fixed template with one interpolated referent: the path of the block this
- *  question is about. The template holds still, so every reading comes from the
- *  same instrument. The referent moves, because a question that does not name its
- *  own block cannot be answered about that block.
- *
- *  Naming the path follows TypeSafe's own fan-out example (`items[i]`) and their
- *  guidance for indirection: identify the relevant parts of state by name.
- *  Measured cost of not doing it, over 1,278 judged blocks: within-document
- *  standard deviation 0.008, range 0.12-0.55, and no block ever reached the hide
- *  band. Nothing variable travels in the question except the referent, so the
- *  question text still does not change with the task. */
 export function instructionFor(index: number): string {
   return (
     "The agent is working on the task in `task`. Is the content of " +
@@ -253,9 +198,6 @@ export function instructionFor(index: number): string {
   );
 }
 
-/** Build the request body: one shared state, one path-referencing question per block.
- *  The path index is the position within this batch, which is why batches carry
- *  their own subset of blocks. */
 export function buildSpec(
   task: string,
   blocks: readonly Block[],
@@ -278,15 +220,11 @@ export function buildSpec(
   });
 }
 
-/** One request's worth of blocks. Passes run in order and are merged by id. */
 export interface Batch {
   readonly blocks: readonly Block[];
   readonly spec: string;
 }
 
-/** Split a block in half by lines until it fits. A single line is returned as is:
- *  there is no safe way to slice it and still name a line range the agent can
- *  read back, and returning it unchanged is what makes this terminate. */
 export function splitToFit(block: Block, maxChars: number): Block[] {
   if (block.text.length <= maxChars) return [block];
   const lines = block.text.split("\n");
@@ -307,13 +245,10 @@ export function splitToFit(block: Block, maxChars: number): Block[] {
   return [...splitToFit(head, maxChars), ...splitToFit(tail, maxChars)];
 }
 
-/** Reassign ids in document order so every judgeable unit has a unique key. */
 export function reindex(blocks: readonly Block[]): Block[] {
   return blocks.map((b, index) => ({ ...b, id: `b${index}` }));
 }
 
-/** Slice a document into as many requests as the budget needs, in order.
- *  Every block survives into exactly one batch, so nothing goes unjudged. */
 export function buildBatches(
   task: string,
   blocks: readonly Block[],
@@ -353,7 +288,6 @@ export function stubFor(block: Block, path: string, noul: number, source: string
   );
 }
 
-/** Replace the hidden blocks with stubs, leaving kept blocks verbatim. */
 export function applySieve(
   text: string,
   actions: readonly Action[],
@@ -377,7 +311,6 @@ export function applySieve(
     }
     const { judged } = hit.action;
     out.push(stubFor(judged.block, hit.path, judged.noul, source));
-    // Skip through the hidden range: the loop's own increment lands on to + 1.
     n = judged.block.to;
   }
   return out.join("\n");
@@ -391,7 +324,6 @@ function isEnvelope(value: unknown): value is Envelope {
   return v.status === "ok" && typeof (value as { verdicts?: unknown }).verdicts === "object";
 }
 
-/** One call, all blocks, one round trip. Never throws: every failure returns null. */
 export async function runJev(body: string): Promise<Envelope | null> {
   return new Promise((resolve) => {
     let settled = false;
@@ -418,9 +350,6 @@ export async function runJev(body: string): Promise<Envelope | null> {
       return;
     }
     let out = "";
-    // The child may exit before reading all of stdin, which raises EPIPE on
-    // write. Unhandled, that takes the whole process down, so swallow it and
-    // let close decide the outcome.
     stdin.on("error", () => {});
     stdout.on("data", (chunk: Buffer) => {
       out += chunk.toString("utf8");
@@ -444,7 +373,6 @@ export async function runJev(body: string): Promise<Envelope | null> {
   });
 }
 
-/** Recent user text, which is the closest thing to "the current task". */
 export function recentTask(entries: readonly unknown[], maxChars: number): string {
   const parts: string[] = [];
   for (let i = entries.length - 1; i >= 0 && parts.join(" ").length < maxChars; i--) {
@@ -467,7 +395,6 @@ export function recentTask(entries: readonly unknown[], maxChars: number): strin
   return parts.reverse().join("\n").slice(-maxChars);
 }
 
-/** The single text block of a result, or null when the shape is not that simple. */
 export function singleText(content: unknown): { text: string; index: number } | null {
   if (!Array.isArray(content)) return null;
   const texts: number[] = [];
@@ -481,11 +408,7 @@ export function singleText(content: unknown): { text: string; index: number } | 
   return { text, index };
 }
 
-/** The cache filename for a block the sieve replaced, or null when the target
- *  is not a read-back. The filename already carries session, block id, and line
- *  range, so a recall joins straight back to the decision that produced it.
- *  ponytail: the agent can also recover by re-running the original command, which
- *  this does not label. Add it only if the recall rate looks implausibly low. */
+// ponytail: re-running the command also recovers the text, unlabeled; add if recall looks low.
 export function recallPath(target: string): string | null {
   const escaped = BLOCK_CACHE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = target.match(new RegExp(`${escaped}/([\\w.-]+\\.txt)`));
@@ -499,14 +422,37 @@ async function cacheBlocks(
   const paths = new Map<string, string>();
   const hidden = actions.filter((a): a is Action & { kind: "hide" } => a.kind === "hide");
   if (hidden.length === 0) return paths;
-  await mkdir(BLOCK_CACHE, { recursive: true });
+  await mkdir(BLOCK_CACHE, { recursive: true, mode: 0o700 });
   for (const action of hidden) {
     const { block } = action.judged;
     const path = join(BLOCK_CACHE, `${sessionId}-${block.id}-${block.from}-${block.to}.txt`);
-    await writeFile(path, block.text, "utf8");
+    await writeFile(path, block.text, { encoding: "utf8", mode: 0o600 });
     paths.set(block.id, path);
   }
   return paths;
+}
+
+async function pruneBlocks(): Promise<void> {
+  try {
+    await chmod(CACHE_DIR, 0o700);
+    await chmod(BLOCK_CACHE, 0o700);
+  } catch {}
+  if (RETENTION_DAYS <= 0) return;
+  const cutoff = Date.now() - RETENTION_DAYS * 86_400_000;
+  let names: string[];
+  try {
+    names = await readdir(BLOCK_CACHE);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    if (!name.endsWith(".txt")) continue;
+    const path = join(BLOCK_CACHE, name);
+    try {
+      const info = await stat(path);
+      if (info.mtimeMs < cutoff) await unlink(path);
+    } catch {}
+  }
 }
 
 async function log(entry: Record<string, unknown>): Promise<void> {
@@ -519,9 +465,6 @@ async function log(entry: Record<string, unknown>): Promise<void> {
 const MODES: readonly string[] = ["off", "shadow", "on"];
 export const mode: SieveMode = (MODES.includes(MODE) ? MODE : "off") as SieveMode;
 
-/** A bounded FIFO. Jobs run one at a time in arrival order, so a burst of
- *  parallel results is served rather than dropped, and the script's choke point
- *  is never stampeded. A full line returns null so the caller can log it. */
 export interface Queue {
   readonly depth: () => number;
   run<T>(job: () => Promise<T>): Promise<T> | null;
@@ -536,7 +479,6 @@ export function createQueue(limit: number): Queue {
       if (depth >= limit) return null;
       depth += 1;
       const settled = tail.then(job, job);
-      // Both arms release the slot, so one failing job cannot wedge the line.
       tail = settled.then(
         () => {
           depth -= 1;
@@ -552,6 +494,7 @@ export function createQueue(limit: number): Queue {
 
 export default function (pi: ExtensionAPI) {
   const queue = createQueue(MAX_QUEUE);
+  void pruneBlocks();
 
   pi.on("tool_result", async (event, ctx) => {
     if (mode === "off") return;
@@ -565,8 +508,6 @@ export default function (pi: ExtensionAPI) {
         "",
     ).slice(0, 300);
 
-    // The label for an earlier decision, emitted before any early return: a recall
-    // is a wrong hide, and a recall is usually too short to clear MIN_CHARS.
     const recalled = recallPath(target);
     if (recalled) await log({ ts: Date.now(), kind: "recall", session, file: recalled });
 
@@ -579,6 +520,23 @@ export default function (pi: ExtensionAPI) {
     if (blocks.length < 2) return;
 
     const task = recentTask(ctx.sessionManager.getBranch(), TASK_CHARS);
+
+    const egress = egressFor(target, found.text, task);
+    if (egress.kind === "deny") {
+      await log({
+        ts: Date.now(),
+        kind: "decision",
+        session,
+        mode,
+        tool: event.toolName,
+        chars: found.text.length,
+        blocks: blocks.length,
+        result: "egress-denied",
+        reason: egress.reason,
+      });
+      return;
+    }
+
     const request: Request = {
       tool: event.toolName,
       target,
@@ -594,14 +552,11 @@ export default function (pi: ExtensionAPI) {
         session,
         mode,
         result,
-        target,
         tool: event.toolName,
       });
       return;
     }
 
-    // Every pass for one document runs in a single queue slot, so two documents
-    // do not interleave their passes.
     const judged = await queue.run(async () => {
       const out: Judged[] = [];
       for (const batch of batches) {
@@ -622,7 +577,6 @@ export default function (pi: ExtensionAPI) {
         session,
         mode,
         tool: event.toolName,
-        target,
         result: "queue-full",
         pending: queue.depth(),
         blocks: blocks.length,
@@ -637,7 +591,6 @@ export default function (pi: ExtensionAPI) {
         session,
         mode,
         result,
-        target,
         tool: event.toolName,
       });
       return;
@@ -654,7 +607,6 @@ export default function (pi: ExtensionAPI) {
       session,
       mode,
       tool: event.toolName,
-      target,
       chars: found.text.length,
       blocks: blocks.length,
       passes: batches.length,
@@ -670,11 +622,7 @@ export default function (pi: ExtensionAPI) {
 
     if (hides === 0) return;
 
-    // The block text is written in both modes. Shadow's job is to produce the
-    // dataset the threshold is calibrated on, and a judgment whose block text was
-    // never kept cannot be labeled after the fact. Only the mutation is `on`-only.
-    // ponytail: samples accumulate with no retention, and a superseded instrument's
-    // samples sit beside the current one. Prune by question id when disk matters.
+    // ponytail: samples never pruned; a superseded instrument's samples sit beside the current one.
     let paths: Map<string, string>;
     try {
       paths = await cacheBlocks(session, actions);
