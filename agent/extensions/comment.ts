@@ -58,14 +58,14 @@ function editWithExternalEditor(initialText: string): string {
         try {
             fs.unlinkSync(tmpFile);
         } catch {
-            // Ignore cleanup errors
         }
     }
 }
 
 export default function (pi: ExtensionAPI) {
     pi.registerCommand("comment", {
-        description: "Open the last assistant message in $EDITOR and load the result into the editor",
+        description:
+            "Open the last assistant message in $EDITOR and load the result into the editor",
         handler: async (_args, ctx) => {
             if (!ctx.hasUI) {
                 ctx.ui.notify("comment requires interactive mode", "error");
@@ -74,12 +74,17 @@ export default function (pi: ExtensionAPI) {
 
             const lastAssistantText = getLastAssistantText(ctx.sessionManager.getBranch());
             if (!lastAssistantText) {
-                ctx.ui.notify("No completed assistant message found on the current branch", "error");
+                ctx.ui.notify(
+                    "No completed assistant message found on the current branch",
+                    "error"
+                );
                 return;
             }
 
             try {
-                const editedText = editWithExternalEditor(formatQuotedEditorText(lastAssistantText));
+                const editedText = editWithExternalEditor(
+                    formatQuotedEditorText(lastAssistantText)
+                );
                 ctx.ui.setEditorText(editedText);
                 ctx.ui.notify("Loaded edited quoted assistant text into the editor", "info");
             } catch (error) {
