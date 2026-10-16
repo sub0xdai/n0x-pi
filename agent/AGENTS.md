@@ -56,9 +56,6 @@ Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
 | Package | Provides |
 |---------|----------|
 | `pi-web-access` | web_search, source_check, fetch_content, get_search_content tools, plus the curator layer |
-| `pi-blackboard-theme` | Blackboard and Blackboard Pro themes |
-| `pi-ansi-themes` (git) | ANSI theme collection |
-| `pi-themes` (git) | Theme collection |
 | `ponytail` (git) | Ponytail skill family (ponytail, ponytail-audit, ponytail-review, ponytail-debt, ponytail-gain, ponytail-help) |
 | `@upstash/context7-pi` | Context7 documentation lookup (resolve-library-id, query-docs) plus the context7-docs skill |
 | `@yeliu84/pi-model-router` | Model routing between providers |

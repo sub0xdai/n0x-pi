@@ -9,9 +9,6 @@
   "enableInstallTelemetry": true,
   "packages": [
     "npm:pi-web-access",
-    "git:github.com/leblancfg/pi-ansi-themes",
-    "git:github.com/lulucatdev/pi-themes",
-    "npm:pi-blackboard-theme",
     "git:github.com/DietrichGebert/ponytail",
     "npm:@upstash/context7-pi",
     "npm:@yeliu84/pi-model-router",
@@ -20,8 +17,5 @@
     "npm:pi-mcp-adapter",
     "npm:@ff-labs/pi-fff",
     "npm:vim-motions-pi"
-  ],
-  "editor": {
-    "fixedEditor": true
-  }
+  ]
 }

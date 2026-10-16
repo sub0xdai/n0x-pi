@@ -13,7 +13,7 @@ Three numbers describe the whole harness:
 | Layer | Count | What it is |
 |---|---|---|
 | system prompt | 2 | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
-| control plane | 8 extensions + 12 packages | lifecycle hooks that act on the agent loop |
+| control plane | 7 extensions + 9 packages | lifecycle hooks that act on the agent loop |
 | execution plane | 24 skills + 6 prompts | text the model follows |
 | documentation plane | 10 primitives + 6 AGENTS.md | JSON schemas and DOX contracts describing the above |
 | mechanical plane | 2 scripts + 1 hook | `__check.sh` and the Presidio pre-commit scrub |
@@ -27,7 +27,7 @@ flowchart TB
     SP["system prompt<br/>APPEND_SYSTEM.md plus AGENTS.md DOX root"]
 
     subgraph LOCAL["local control plane - ~/.pi/agent"]
-        EXT["extensions/ 8 loaded<br/>comment, context-usage,<br/>herdr-agent-state, jev-sieve, notifications,<br/>plan-mode, state-guard, tmux-manager"]
+        EXT["extensions/ 7 loaded<br/>comment, herdr-agent-state, jev-sieve,<br/>notifications, plan-mode, state-guard, tmux-manager"]
         SCR["scripts/__check.sh<br/>mechanical emission gate"]
     end
 
@@ -48,7 +48,7 @@ flowchart TB
     subgraph PKG["12 installed packages"]
         PA["pi-web-access<br/>@upstash/context7-pi<br/>@ff-labs/pi-fff<br/>@tungthedev/pi-extensions<br/>pi-mcp-adapter"]
         PB["ponytail<br/>git:pi-ask<br/>@yeliu84/pi-model-router"]
-        PC["3 theme packages<br/>vim-motions-pi"]
+        PC["vim-motions-pi"]
     end
 
     P --> SET
@@ -144,11 +144,11 @@ table is still a proposal.
 ```mermaid
 flowchart TB
     SP["system prompt<br/>APPEND_SYSTEM.md: one TigerBeetle section, one Ponytail section"]
-    subgraph CTL["control plane - 5 extensions"]
+    subgraph CTL["control plane"]
         E1["state-guard<br/>cannot be talked out of it"]
         E2["notifications"]
         E3["tmux-manager"]
-        E4["context-usage"]
+        E4["gone: context-usage.ts<br/>vim owns the editor slot"]
         E5["plan-mode"]
     end
     subgraph PL["execution plane"]
@@ -180,7 +180,9 @@ flowchart TB
 | **5 primitives** | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. `spec.schema.json` (5) and `coding-standard` (3) are the only ones with real readers. |
 | **3 extensions** | `comment.ts` exists to paste a `#`-prefixed comment into the editor; `jev-sieve.ts` calls a local model to censor tool output, with a cache and a retention policy; `plan-mode.ts` writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
 | **Not a cut: `herdr-agent-state.ts`** | Used occasionally, so it stays. It is also vendor-managed: its own header says `installed by herdr` and `reinstalling or updating the integration overwrites this file`, so removing it from here would not survive that integration anyway. The map keeps it out of the cut list on purpose, because a stale proposal is the drift this pass exists to remove. |
-| **5 packages** | Three theme packages for one active theme (`vanilla-amoled`); `vim-motions-pi` is documented as competing with the boxed editor for the same `session_start` slot, so exactly one of them works; `@yeliu84/pi-model-router` duplicates the model choice already in `settings.json` plus `model-router.json`. |
+| **CUT, done: 3 theme packages** | Whole packages removed: `pi-ansi-themes`, `pi-themes`, `pi-blackboard-theme`. The active theme `vanilla-amoled` is a local file in `themes/`, so none of the three shipped anything in use. |
+| **Kept, by decision: `model-router`** | Per-turn routing through `model-router.json`. Removing it would make `settings.json` the only model authority; you kept it, so `settings.json` and `model-router.json` both stay. |
+| **Resolved: the editor slot** | `vim-motions-pi` loads last, so it wins `setEditorComponent` and the boxed editor never installs. Dropping the boxed editor is not an option: `@tungthedev/pi-extensions` also provides the Task subagents, todos, goal, workspace, mermaid, and shell. So vim keeps the slot, and `context-usage.ts` plus `settings.json`'s `editor` block are gone, because only `@tungthedev` listens for the event `context-usage.ts` emitted. |
 | **duplicate docs** | `primitives/`, `lattice.md`, 6 `AGENTS.md` files, and `extensions/AGENTS.md` all restate boundaries that the system prompt also states. Three of them were already out of date (`extensions/AGENTS.md` lacked `context-meter.ts`; `lattice.md` lacked the state-guard). |
 
 ### Keep, and make it the spine
