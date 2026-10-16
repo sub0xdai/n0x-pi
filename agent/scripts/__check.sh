@@ -13,6 +13,12 @@ if [[ ! -f "$FILE" ]]; then
   exit 0
 fi
 
+case "$FILE" in
+  *.md|*.markdown|*.mdx)
+    echo "[]"
+    exit 0 ;;
+esac
+
 add_violation() {
   local rule="$1" line="$2" msg="$3"
   if (( COUNT >= CAP )); then

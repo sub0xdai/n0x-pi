@@ -162,6 +162,21 @@ OUTPUT=$("$CHECK" "$T4_NONE")
 assert_eq "T-4: unknown extension skips the comment rule" "" "$(rule_lines TB-17 "$OUTPUT")"
 rm "$T4_NONE"
 
+T4_MD=$(mktemp --suffix=.md)
+cat > "$T4_MD" <<'MD'
+# Prose is not code
+
+A rule description may name a prohibited token, and a table row cannot wrap.
+
+| rule | note |
+|------|------|
+| TB-10 | no TODO, FIXME, HACK, XXX in code |
+| TB-09 | a markdown table row with a deliberately long sentence that runs past one hundred columns |
+MD
+OUTPUT=$("$CHECK" "$T4_MD")
+assert_eq "T-4: markdown is not graded as code" "[]" "$OUTPUT"
+rm "$T4_MD"
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 if [[ "$FAIL" -gt 0 ]]; then
