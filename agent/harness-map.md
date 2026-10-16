@@ -16,7 +16,7 @@ candidates from the merge incident. Delete them once reviewed.
 | Layer | Count | What it is |
 |---|---|---|
 | system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
-| control plane | 7 extensions + 9 packages | code that acts on the agent loop |
+| control plane | 7 extensions + 8 packages | code that acts on the agent loop |
 | execution plane | 24 skills + 6 prompts | text the model follows |
 | documentation plane | 9 primitives + 6 `AGENTS.md` + `lattice.md` | schemas and DOX contracts describing the rest |
 | mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
@@ -33,7 +33,7 @@ flowchart TB
     SET["settings.json"]
     subgraph CTL["control plane"]
         EXT["extensions 7"]
-        PKG["packages 9"]
+        PKG["packages 8"]
     end
     subgraph EXE["execution plane"]
         SK["skills 24"]
@@ -60,16 +60,16 @@ flowchart TB
 | Box | Members |
 |---|---|
 | extensions 7 | `comment`, `herdr-agent-state`, `jev-sieve`, `notifications`, `plan-mode`, `state-guard`, `tmux-manager` |
-| packages 9 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `pi-mcp-adapter`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
+| packages 8 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
 | skills 24 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `video-render-qa`, `vox`, `yt-dlp-download` |
 | prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
 | primitives 9 | `adr`, `check`, `coding-standard`, `decision-tree`, `glossary`, `project-context`, `review-policy`, `review-result`, `spec` |
 
-One box is a lie: `pi-mcp-adapter` is declared in `settings.json` with nothing installed behind it.
-`npm/node_modules/pi-mcp-adapter` is gone while a dangling `npm/node_modules/.bin/pi-mcp-adapter`
-symlink to `../pi-mcp-adapter/cli.js` remains, and pi reacted to the declaration by writing
-`extensions: ["-builtin:mcp"]` into `settings.json`, which switches off pi's own MCP support. No
-MCP tools exist in a session.
+MCP was broken when this map was drawn and is fixed now. `npm:pi-mcp-adapter` was declared with
+nothing installed behind it, so pi wrote `extensions: ["-builtin:mcp"]` into `settings.json` and
+switched off its own MCP support. The declaration is gone, the `-builtin:mcp` line is gone, and
+the `kitesurf` chrome-devtools server was migrated from `~/.pi/.mcp.json`, a path pi 1.3.0 does
+not read, to `agent/mcp.json`, where it connects with 32 tools.
 
 ## 2. The gate chain
 
@@ -97,8 +97,11 @@ re-edit, and an unfinished turn gets exactly one continuation.
 
 Where this can still fail:
 
-- The gate runs on `edit` and `write` only. A file created by a `bash` heredoc is never inspected.
-  This is the largest remaining hole.
+- A shell write is blocked before it happens when the command redirects into a gated file outside
+  `/tmp` (`cat > a.ts`, `sed -i`, `tee`, `dd of=`). Indirect writes that a regex cannot see get
+  caught after the fact: a git fingerprint is taken before every bash call and re-read after it, and
+  any file whose size or mtime advanced is gated.
+- That second boundary only works inside a git repository, and only for file types the gate knows.
 - The gate is regex, so it sees tokens rather than intent. `@waiver` is the release valve.
 - The semantic step is the model grading itself, in the same context that wrote the code.
 - The pre-commit hook is the only gate that runs after the agent has stopped.
@@ -157,26 +160,25 @@ flowchart TB
         D3["3 theme packages"]
         D4["the .tmp protocol"]
         D5["4 drifting rule copies"]
+        D6["the phantom MCP package"]
     end
     subgraph O["Still open"]
-        O1["pi-mcp-adapter"]
         O2["3 extensions"]
         O3["5 primitives"]
         O4["the docs plane"]
-        O5["bash files ungated"]
+        O5["shell gate limits"]
     end
     D -.->|"next"| O
 ```
 
 | Open item | Evidence |
 |---|---|
-| `pi-mcp-adapter` | Declared, package directory absent, dangling bin symlink, `builtin:mcp` disabled by pi in response. Install it or delete the declaration. |
 | `comment.ts` | Exists to paste a `#`-prefixed comment into the editor. |
 | `jev-sieve.ts` | Calls a local model to censor tool output, with a cache and a retention policy. No evidence it runs. |
 | `plan-mode.ts` | Writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
 | 5 primitives | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. |
 | docs plane | `lattice.md` plus 6 `AGENTS.md` files restate boundaries the system prompt already states. Three were stale before this session. |
-| bash files ungated | The `tool_result` handler sees `edit` and `write`. A `bash` heredoc writes a file nothing inspects. |
+| shell boundary limits | Indirect writes are detected only inside a git repo, and the gate cannot see a file whose extension it does not know. |
 
 Two decisions recorded so the next pass does not re-litigate them:
 

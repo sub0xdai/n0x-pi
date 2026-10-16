@@ -71,9 +71,9 @@
   <rect x="541.4398333333334" y="235.8" width="116.791" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="599.8353333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">extensions 7</text>
 </g>
-<g class="node" data-id="PKG" data-label="packages 9" data-shape="rectangle">
+<g class="node" data-id="PKG" data-label="packages 8" data-shape="rectangle">
   <rect x="686.2308333333333" y="235.8" width="110.863" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="741.6623333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">packages 9</text>
+  <text x="741.6623333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">packages 8</text>
 </g>
 <g class="node" data-id="SK" data-label="skills 24" data-shape="rectangle">
   <rect x="264.3178333333334" y="235.8" width="90.11499999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />

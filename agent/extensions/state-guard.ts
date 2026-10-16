@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
-import { existsSync, realpathSync } from "node:fs";
-import { homedir } from "node:os";
+import { existsSync, realpathSync, statSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import type {
@@ -30,6 +30,8 @@ type Outcome =
 const INITIAL: Observed = { read: new Set(), dirty: new Set(), violations: {}, nudged: false };
 
 const GATE = join(homedir(), ".pi", "agent", "scripts", "__check.sh");
+
+const RUN_OPTIONS = { encoding: "utf8" as const, timeout: 15_000 };
 
 const runGate = promisify(execFile);
 
@@ -154,7 +156,7 @@ function writtenPath(event: ToolResultEvent): string | undefined {
 
 async function gateViolations(file: string): Promise<string[]> {
   try {
-    const { stdout } = await runGate(GATE, [file], { timeout: 15_000 });
+    const { stdout } = await runGate(GATE, [file], RUN_OPTIONS);
     const parsed: unknown = JSON.parse(stdout);
     if (!Array.isArray(parsed)) return [`the gate did not return a list for ${file}`];
     return parsed.map((item) => {
@@ -168,8 +170,112 @@ async function gateViolations(file: string): Promise<string[]> {
   }
 }
 
+const MAX_SHELL_GATED = 10;
+
+const GATED_SUFFIX = new RegExp(
+  "\\.(ts|tsx|js|jsx|mjs|cjs|sh|bash|py|rb|rs|go|java|c|cc|cpp|h|hpp|swift|kt" +
+    "|json|jsonl|md|toml|yml|yaml|sql|conf)([\\s\"';)|]|$)"
+);
+
+const IN_PLACE_EDIT = /\b(?:sed|perl)\s+-[a-zA-Z]*i|\bdd\b[^|;&]*\bof=|\btruncate\s+/;
+
+const TEMP_PREFIXES = ["/tmp/", "/dev/null", "/dev/stdout", "/dev/stderr", "/var/folders/"];
+
+function isTemporary(target: string): boolean {
+  const environmentTmp = tmpdir();
+  const prefixes = environmentTmp ? [...TEMP_PREFIXES, `${environmentTmp}/`] : TEMP_PREFIXES;
+  return prefixes.some((prefix) => target.startsWith(prefix));
+}
+
+function shellWriteTargets(command: string): string[] {
+  const targets: string[] = [];
+  const redirect = /(?:^|[\s;&|()])(>>?)\s*("([^"]+)"|'([^']+)'|([^\s|;&>()]+))/g;
+  for (const match of command.matchAll(redirect)) {
+    const target = match[3] ?? match[4] ?? match[5];
+    if (target) targets.push(target);
+  }
+  const tee = /\btee\b\s*(?:-a\s*)?("([^"]+)"|'([^']+)'|([^\s|;&>()]+))/g;
+  for (const match of command.matchAll(tee)) {
+    const target = match[2] ?? match[3] ?? match[4];
+    if (target) targets.push(target);
+  }
+  if (IN_PLACE_EDIT.test(command) && GATED_SUFFIX.test(command)) targets.push(command);
+  return targets;
+}
+
+function shellWriteBlock(command: string, cwd: string): string | undefined {
+  for (const target of shellWriteTargets(command)) {
+    if (!GATED_SUFFIX.test(target)) continue;
+    if (target.includes("$(")) continue;
+    const absolute = isAbsolute(target) ? target : resolve(cwd, target);
+    if (isTemporary(absolute)) continue;
+    const head = `State invariant violation: bash writing ${target} is not gated.`;
+    return `${head} Use the edit or write tool so state-guard can verify the change.`;
+  }
+  return undefined;
+}
+
+const FINGERPRINT_STATUS = /^\s*(\S{1,2})\s+(.+)$/;
+
+async function gitFingerprint(cwd: string): Promise<Map<string, string> | undefined> {
+  try {
+    const { stdout } = await runGate("git", ["status", "--porcelain", "-uall"], {
+      ...RUN_OPTIONS,
+      cwd,
+    });
+    const print = new Map<string, string>();
+    for (const line of stdout.split("\n")) {
+      const parsed = FINGERPRINT_STATUS.exec(line);
+      if (!parsed) continue;
+      const raw = parsed[2].trim();
+      const path = raw.includes(" -> ") ? raw.slice(raw.indexOf(" -> ") + 4) : raw;
+      const full = resolve(cwd, path.replace(/^"|"$/g, ""));
+      try {
+        const info = statSync(full);
+        print.set(full, `${parsed[1]}|${info.size}|${info.mtimeMs}`);
+      } catch {
+        print.set(full, `${parsed[1]}|deleted`);
+      }
+    }
+    return print;
+  } catch {
+    return undefined;
+  }
+}
+
+function advancedPaths(before: Map<string, string>, after: Map<string, string>): string[] {
+  const advanced: string[] = [];
+  for (const [path, fingerprint] of after) {
+    if (before.get(path) !== fingerprint) advanced.push(path);
+  }
+  return advanced;
+}
+
 export default function stateGuard(pi: ExtensionAPI) {
   let state: Observed = INITIAL;
+  const snapshots = new Map<string, Map<string, string>>();
+
+  async function gateShellSideEffects(event: ToolResultEvent, cwd: string): Promise<string[]> {
+    if (event.toolName !== "bash" && event.toolName !== "powershell") return [];
+    const before = snapshots.get(event.toolCallId);
+    snapshots.delete(event.toolCallId);
+    if (before === undefined) return [];
+    const after = await gitFingerprint(cwd);
+    if (after === undefined) return [];
+    const notes: string[] = [];
+    for (const path of advancedPaths(before, after).slice(0, MAX_SHELL_GATED)) {
+      if (isTemporary(path)) continue;
+      const violations = await gateViolations(path);
+      if (violations.length === 0) {
+        record(cwd, { kind: "clean", path });
+        continue;
+      }
+      record(cwd, { kind: "violated", path, detail: violations.join(" | ") });
+      notes.push(`[state-guard] bash changed ${path}, and __check.sh rejected it:`);
+      notes.push(...violations.map((violation) => `  ${violation}`));
+    }
+    return notes;
+  }
 
   function render(ctx: ExtensionContext): void {
     if (ctx.mode !== "tui") return;
@@ -194,6 +300,13 @@ export default function stateGuard(pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {
     const reason = blindMutation(state, ctx.cwd, event);
     if (reason !== undefined) return { block: true, reason };
+    if (event.toolName === "bash" || event.toolName === "powershell") {
+      const command = String((event.input as Record<string, unknown>).command ?? "");
+      const shellReason = shellWriteBlock(command, ctx.cwd);
+      if (shellReason !== undefined) return { block: true, reason: shellReason };
+      const fingerprint = await gitFingerprint(ctx.cwd);
+      if (fingerprint !== undefined) snapshots.set(event.toolCallId, fingerprint);
+    }
     return undefined;
   });
 
@@ -202,7 +315,12 @@ export default function stateGuard(pi: ExtensionAPI) {
     if (outcome !== undefined) record(ctx.cwd, outcome);
     render(ctx);
     const raw = event.isError ? undefined : writtenPath(event);
-    if (raw === undefined) return undefined;
+    if (raw === undefined) {
+      const shellTouched = await gateShellSideEffects(event, ctx.cwd);
+      if (shellTouched.length === 0) return undefined;
+      const text = shellTouched.join("\n");
+      return { content: [...event.content, { type: "text" as const, text }] };
+    }
     const full = normalizePath(ctx.cwd, raw);
     const violations = await gateViolations(full);
     if (violations.length === 0) {

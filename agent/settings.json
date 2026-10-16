@@ -14,11 +14,7 @@
     "npm:@yeliu84/pi-model-router",
     "npm:@tungthedev/pi-extensions",
     "git:github.com/eko24ive/pi-ask",
-    "npm:pi-mcp-adapter",
     "npm:@ff-labs/pi-fff",
     "npm:vim-motions-pi"
-  ],
-  "extensions": [
-    "-builtin:mcp"
   ]
 }

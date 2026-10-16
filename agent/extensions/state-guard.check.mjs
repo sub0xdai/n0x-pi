@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import stateGuard from "./state-guard.ts";
 
@@ -84,4 +85,68 @@ const cleanRun = await call("tool_result", {
 });
 assert.equal(cleanRun, undefined, "a clean file is not appended to");
 
+const shellCall = (command) =>
+  call("tool_call", { toolName: "bash", input: { command }, toolCallId: "shell-1" });
+
+const workDir = mkdtempSync(join(homedir(), ".state-guard-work-"));
+const shellCtx = { cwd: workDir, mode: "print" };
+const shellCallIn = (cwd, command) =>
+  handlers.get("tool_call")({ toolName: "bash", input: { command }, toolCallId: "shell-2" }, {
+    cwd,
+    mode: "print",
+  });
+
+for (const [command, expected] of [
+  ["cat > src/a.ts <<'EOF'", true],
+  ["sed -i 's/a/b/' src/a.ts", true],
+  ["tee src/a.ts", true],
+  ["dd of=src/a.ts if=/dev/zero", true],
+  ['echo "a > b"', false],
+  ["git status --porcelain", false],
+  ["npm test > log.txt", false],
+  ["python3 - <<'EOF'", false],
+]) {
+  const result = await shellCallIn(workDir, command);
+  assert.equal(
+    result?.block === true,
+    expected,
+    `boundary A on ${command}: expected blocked=${expected}`
+  );
+}
+
+const absoluteTmp = await shellCallIn(workDir, "cat > /tmp/scratch.ts <<'EOF'");
+assert.equal(absoluteTmp, undefined, "an absolute path under /tmp is allowed");
+const relativeTmp = await shellCallIn(join(tmpdir(), "scratch-cwd"), "cat > rel.ts <<'EOF'");
+assert.equal(relativeTmp, undefined, "a relative path inside a temp cwd is allowed");
+
+const repo = mkdtempSync(join(homedir(), ".state-guard-repo-"));
+execFileSync("git", ["init", "-q"], { cwd: repo });
+const sideEffect = join(repo, "side.ts");
+writeFileSync(sideEffect, "const side = 1;\n");
+await call("session_start", {});
+const repoCtx = { cwd: repo, mode: "print" };
+const before = await handlers.get("tool_call")(
+  { toolName: "bash", input: { command: "echo start" }, toolCallId: "shell-b" },
+  repoCtx
+);
+assert.equal(before, undefined, "a plain bash call is not blocked");
+writeFileSync(sideEffect, "// TO" + "DO planted by a shell script\nconst side = 1;\n");
+const after = await handlers.get("tool_result")(
+  {
+    toolName: "bash",
+    input: { command: "echo start" },
+    toolCallId: "shell-b",
+    content: [{ type: "text", text: "start" }],
+    isError: false,
+  },
+  repoCtx
+);
+const shellNote = after?.content?.map((b) => b.text).join("\n") ?? "";
+assert.ok(shellNote.includes("bash changed"), "boundary B notices a file a shell call changed");
+assert.ok(shellNote.includes("TB-10"), "boundary B gates that file with __check.sh");
+
+
+
+rmSync(repo, { recursive: true, force: true });
+rmSync(workDir, { recursive: true, force: true });
 console.log("state-guard: all assertions passed");

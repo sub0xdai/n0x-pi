@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1106.578 390.1" width="1106.578" height="390.1" style="--bg:#18181B;--fg:#FAFAFA;background:var(--bg)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1330.656 390.1" width="1330.656" height="390.1" style="--bg:#18181B;--fg:#FAFAFA;background:var(--bg)">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
   text { font-family: 'Inter', system-ui, sans-serif; }
@@ -27,58 +27,58 @@
   </marker>
 </defs>
 <g class="subgraph" data-id="D" data-label="Done this session">
-  <rect x="40" y="40" width="1026.578" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="40" y="40" width="1026.578" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="40" width="1250.656" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="40" width="1250.656" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
   <text x="52" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">Done this session</text>
 </g>
 <g class="subgraph" data-id="O" data-label="Still open">
-  <rect x="167.452" y="253.20000000000002" width="771.674" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="167.452" y="253.20000000000002" width="771.674" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <text x="179.452" y="267.20000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">Still open</text>
+  <rect x="367.818" y="253.20000000000002" width="595.02" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="367.818" y="253.20000000000002" width="595.02" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="379.818" y="267.20000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">Still open</text>
 </g>
-<polyline class="edge" data-from="D" data-to="O" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="next" points="553.289,136.9 553.289,253.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D" data-to="O" data-style="dotted" data-arrow-start="false" data-arrow-end="true" data-label="next" points="665.328,136.9 665.328,253.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
 <g class="edge-label" data-from="D" data-to="O" data-label="next">
-  <rect x="534.289" y="179.9" width="37.846000000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
-  <text x="553.212" y="195.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">next</text>
+  <rect x="646.328" y="179.9" width="37.846000000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="665.251" y="195.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">next</text>
 </g>
 <g class="node" data-id="D1" data-label="anchor: 2 skills, generator, hook" data-shape="rectangle">
   <rect x="231.17200000000003" y="84" width="230.164" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="346.254" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">anchor: 2 skills, generator, hook</text>
 </g>
 <g class="node" data-id="D2" data-label="context-meter, context-usage" data-shape="rectangle">
-  <rect x="489.336" y="84" width="210.15699999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="594.4145" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">context-meter, context-usage</text>
+  <rect x="713.414" y="84" width="210.15699999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="818.4925" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">context-meter, context-usage</text>
 </g>
 <g class="node" data-id="D3" data-label="3 theme packages" data-shape="rectangle">
   <rect x="56" y="84" width="147.172" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="129.586" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 theme packages</text>
 </g>
 <g class="node" data-id="D4" data-label="the .tmp protocol" data-shape="rectangle">
-  <rect x="727.4929999999999" y="84" width="135.31599999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="795.151" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">the .tmp protocol</text>
+  <rect x="951.5709999999999" y="84" width="135.31599999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1019.2289999999999" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">the .tmp protocol</text>
 </g>
 <g class="node" data-id="D5" data-label="4 drifting rule copies" data-shape="rectangle">
-  <rect x="890.809" y="84" width="159.769" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="970.6935" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">4 drifting rule copies</text>
+  <rect x="1114.887" y="84" width="159.769" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1194.7714999999998" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">4 drifting rule copies</text>
 </g>
-<g class="node" data-id="O1" data-label="pi-mcp-adapter" data-shape="rectangle">
-  <rect x="319.351" y="297.20000000000005" width="129.388" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="384.045" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">pi-mcp-adapter</text>
+<g class="node" data-id="D6" data-label="the phantom MCP package" data-shape="rectangle">
+  <rect x="489.336" y="84" width="196.07799999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="587.375" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">the phantom MCP package</text>
 </g>
 <g class="node" data-id="O2" data-label="3 extensions" data-shape="rectangle">
-  <rect x="476.73900000000003" y="297.20000000000005" width="116.79099999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="535.1345" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 extensions</text>
+  <rect x="538.242" y="297.20000000000005" width="116.79099999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="596.6374999999999" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 extensions</text>
 </g>
 <g class="node" data-id="O3" data-label="5 primitives" data-shape="rectangle">
-  <rect x="183.452" y="297.20000000000005" width="107.899" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="237.4015" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">5 primitives</text>
+  <rect x="683.0329999999999" y="297.20000000000005" width="107.899" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="736.9824999999998" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">5 primitives</text>
 </g>
 <g class="node" data-id="O4" data-label="the docs plane" data-shape="rectangle">
-  <rect x="621.53" y="297.20000000000005" width="126.42399999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="684.742" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">the docs plane</text>
+  <rect x="383.818" y="297.20000000000005" width="126.42399999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="447.03" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">the docs plane</text>
 </g>
-<g class="node" data-id="O5" data-label="bash files ungated" data-shape="rectangle">
-  <rect x="775.954" y="297.20000000000005" width="147.17200000000003" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="849.54" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">bash files ungated</text>
+<g class="node" data-id="O5" data-label="shell gate limits" data-shape="rectangle">
+  <rect x="818.932" y="297.20000000000005" width="127.90599999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="882.885" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">shell gate limits</text>
 </g>
 </svg>
