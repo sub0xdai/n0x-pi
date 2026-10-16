@@ -58,4 +58,30 @@ await mutate("edit", "a.ts");
 assert.equal((await settle())?.continue, true, "a failed check leaves the run dirty");
 assert.ok((await edit("b.ts"))?.reason.includes("b.ts"), "the block reason must name the file");
 
+const dirtyFile = join(cwd, "gate.ts");
+writeFileSync(dirtyFile, "// TO" + "DO: remove this\nconst x = 1;\n");
+const gated = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "gate.ts" },
+  content: [{ type: "text", text: "edited gate.ts" }],
+  isError: false,
+});
+const appended = gated?.content?.map((b) => b.text).join("\n") ?? "";
+assert.ok(appended.includes("TB-10"), "the gate failure is appended to the tool result");
+assert.ok(appended.includes("gate.ts"), "the appended failure names the file");
+const gateNudge = await settle();
+assert.ok(
+  gateNudge?.entries?.[0]?.content.includes("TB-10"),
+  "the settle nudge repeats the gate failure"
+);
+
+writeFileSync(dirtyFile, "const x = 1;\n");
+const cleanRun = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "gate.ts" },
+  content: [{ type: "text", text: "edited gate.ts" }],
+  isError: false,
+});
+assert.equal(cleanRun, undefined, "a clean file is not appended to");
+
 console.log("state-guard: all assertions passed");

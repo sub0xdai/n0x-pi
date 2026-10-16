@@ -271,19 +271,23 @@ Work happens in three phases, each permitting one class of effect.
 
 ## Emission Protocol (Zero-Defect Standard)
 
-Before emitting any code artifact, you MUST execute the dual-gate check protocol:
+The mechanical gate runs by itself now. `state-guard` runs `__check.sh` after every `edit` and
+`write`, appends the violations to the tool result, and keeps the file unverified until the gate
+passes. Do not write `.tmp` copies by hand and do not run `__check.sh` yourself: read what the
+append says and fix it. The gate covers source code (TB-09, TB-10, TB-17), Markdown (unclosed or
+unbalanced fences) and JSON (validity).
 
-1. Write modified code to a `.tmp` file. Never check against stale on-disk state.
-2. Run `~/dotfiles/scripts/__check.sh <file>.tmp` on all modified code.
-   Resolve any JSON violations.
-3. Perform a semantic self-check against the remaining TB and RP rules.
-   For each rule, produce a verdict: PASS, WAIVED (with reason), or FIXED (what changed).
-4. If any violation remains, fix the code and restart from step 1.
-5. If a violation persists after 3 correction attempts, halt.
-   Emit the failing code with `[VERIFIED: BLOCKED]` and request human intervention.
-6. If code violates a rule but warrants an exception, inject an inline waiver:
-   `// @waiver RULE-ID: brief justification`
-7. Overwrite the target file only after a verified pass.
+What remains yours is the part no script can do:
+
+1. Fix every mechanical violation the tool result reports, then re-edit the file. The gate runs
+   again on the new content.
+2. Perform the semantic self-check against the rules in
+   `primitives/coding-standard.schema.json`. For each rule, produce a verdict: PASS, WAIVED (with
+   reason), or FIXED (what changed).
+3. If a violation persists after 3 correction attempts, halt. Emit the failing code with
+   `[VERIFIED: BLOCKED]` and ask for human intervention.
+4. A rule that does not apply gets an inline waiver:
+   `// @waiver RULE-ID: brief justification`.
 
 You are strictly prohibited from emitting unchecked code.
 Every code block you output MUST be immediately followed by a one-line summary:

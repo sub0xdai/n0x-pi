@@ -1,16 +1,15 @@
 {
   "$id": "https://pi.agent/primitives/check",
   "title": "Code Emission Check Protocol",
-  "description": "Dual-gate enforcement protocol. Mechanical rules run via __check.sh. Semantic rules run via agent self-check. Code is not emitted until both gates pass.",
-
+  "description": "Enforcement protocol. Three mechanical rules run through __check.sh, which state-guard.ts calls on every edit and write. The fourteen semantic rules run through the agent self-check. Each rule carries its own enforcement in primitives/coding-standard.schema.json.",
   "ruleClassification": {
     "mechanical": {
-      "description": "Rules checked by __check.sh shell script. Language-agnostic text checks. TB-17 needs the file extension to pick the comment marker.",
-      "rules": ["TB-09", "TB-10", "TB-17"],
-      "runner": "~/dotfiles/scripts/__check.sh"
+      "description": "Rules enforced by __check.sh through state-guard.ts. Not listed here: each rule in primitives/coding-standard.schema.json carries enforcement and enforcedBy.",
+      "runner": "~/dotfiles/scripts/__check.sh",
+      "source": "primitives/coding-standard.schema.json (rules whose enforcement is mechanical)"
     },
     "semantic": {
-      "description": "Every rule in primitives/coding-standard.schema.json that is not in the mechanical list above. Not enumerated here, so the rule list has one home.",
+      "description": "Every rule in primitives/coding-standard.schema.json whose enforcement is semantic. Not enumerated here, so the rule list has one home.",
       "source": "primitives/coding-standard.schema.json",
       "runner": "agent self-check",
       "evaluationProtocol": {
@@ -19,14 +18,13 @@
       }
     }
   },
-
   "enforcementLoop": {
     "sequence": [
-      "1. Write modified code to a .tmp file (never check against stale on-disk state)",
-      "2. Run __check.sh <file>.tmp — resolve all mechanical violations",
-      "3. Run semantic self-check against all 21 semantic rules",
-      "4. If any violation remains: fix code, go to step 1",
-      "5. Only when both gates pass: overwrite target file, emit code"
+      "1. Edit or write the target file. state-guard.ts runs __check.sh on it and appends any violations to the tool result.",
+      "2. Fix every mechanical violation and re-edit. The gate runs again on the new content.",
+      "3. Run the semantic self-check against every rule marked semantic in primitives/coding-standard.schema.json.",
+      "4. If a violation persists after 3 correction attempts: halt, emit the code with [VERIFIED: BLOCKED], ask a human.",
+      "5. Finish only when the gate passes and every semantic rule has a verdict."
     ],
     "circuitBreaker": {
       "maxAttempts": 3,
@@ -37,7 +35,6 @@
       "description": "Drop failed intermediate reasoning traces from context. Only the final verified artifact and summary receipt survive in the active trace."
     }
   },
-
   "mechanicalRunner": {
     "path": "~/dotfiles/scripts/__check.sh",
     "canonicalStorage": "~/.pi/agent/scripts/__check.sh",
@@ -53,9 +50,23 @@
       "items": {
         "type": "object",
         "properties": {
-          "rule": {"type": "string", "enum": ["TB-09", "TB-10", "TB-17", "SYSTEM"]},
-          "line": {"type": "integer"},
-          "message": {"type": "string"}
+          "rule": {
+            "type": "string",
+            "enum": [
+              "TB-09",
+              "TB-10",
+              "TB-17",
+              "MD-01",
+              "JSON-01",
+              "SYSTEM"
+            ]
+          },
+          "line": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
         }
       },
       "overflowSentinel": {
@@ -65,20 +76,17 @@
       }
     }
   },
-
   "waiverProtocol": {
     "syntax": "// @waiver RULE-ID: justification",
     "scoping": "rule-scoped, not line-scoped. A waiver for TB-09 does not waive TB-10 on the same line.",
     "persistence": "Inline with code. Survives sessions. Dies when the code dies.",
     "reEvaluation": "Agent must re-evaluate waivers when surrounding code changes. If the justification no longer holds, flag it."
   },
-
   "emissionContract": {
     "summaryFormat": "[VERIFIED] Mechanical: {Pass|Fail} | Semantic: {Pass|Fail} | Waivers: {count}",
     "description": "Every code block emitted by the agent MUST be immediately followed by this one-line summary. Code without a [VERIFIED] line is a protocol breach.",
     "missingReceiptResponse": "The user sees no receipt line — a human-detectable protocol breach."
   },
-
   "failureModes": {
     "fm1_infiniteLoop": {
       "scenario": "Agent fails a check, fixes, fails again, loops.",
@@ -86,7 +94,7 @@
     },
     "fm2_ioDesync": {
       "scenario": "Agent runs __check.sh on stale on-disk file while holding modified code in memory.",
-      "mitigation": "Always write to .tmp first, check .tmp, overwrite target only on pass."
+      "mitigation": "Gone by construction: the gate runs on the written file inside the tool_result handler, so there is no in-memory copy to desync from."
     },
     "fm3_contextExhaustion": {
       "scenario": "Multiple fix iterations fill context, agent forgets primitives.",
@@ -98,7 +106,7 @@
     },
     "fm5_skipCheck": {
       "scenario": "Agent emits code without running check protocol.",
-      "mitigation": "Missing [VERIFIED] line is human-detectable protocol breach."
+      "mitigation": "Gone by construction: the model cannot skip a tool_result handler."
     },
     "fm6_malformedJson": {
       "scenario": "__check.sh produces invalid JSON.",

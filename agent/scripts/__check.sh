@@ -13,12 +13,6 @@ if [[ ! -f "$FILE" ]]; then
   exit 0
 fi
 
-case "$FILE" in
-  *.md|*.markdown|*.mdx)
-    echo "[]"
-    exit 0 ;;
-esac
-
 add_violation() {
   local rule="$1" line="$2" msg="$3"
   if (( COUNT >= CAP )); then
@@ -54,6 +48,40 @@ count_ticks() {
   done
   echo "$n"
 }
+
+md_fence_violations() {
+  awk '
+    /^```/ {
+      if (!in_fence) { in_fence=1; fence_line=NR; lang=$0; sub(/^```/, "", lang); sg=0; en=0 }
+      else {
+        if (lang ~ /mermaid/ && sg != en) {
+          printf "%d\tmermaid block opened here has %d subgraph and %d end\n", fence_line, sg, en
+        }
+        in_fence=0
+      }
+      next
+    }
+    in_fence && /^[[:space:]]*subgraph/ { sg++ }
+    in_fence && /^[[:space:]]*end[[:space:]]*$/ { en++ }
+    END { if (in_fence) printf "%d\tcode fence opened here is never closed\n", fence_line }
+  ' "$1"
+}
+
+case "$FILE" in
+  *.md|*.markdown|*.mdx)
+    while IFS=$'\t' read -r md_line md_msg; do
+      [[ -z "$md_line" ]] && continue
+      add_violation "MD-01" "$md_line" "$md_msg" || true
+    done < <(md_fence_violations "$FILE")
+    echo "[$VIOLATIONS]"
+    exit 0 ;;
+  *.json)
+    if ! jq empty "$FILE" 2>/dev/null; then
+      add_violation "JSON-01" 0 "Invalid JSON: jq empty rejected the file" || true
+    fi
+    echo "[$VIOLATIONS]"
+    exit 0 ;;
+esac
 
 FORBIDDEN='TODO|FIXME|HACK|XXX' # @waiver TB-09 @waiver TB-10: the detector's own pattern
 

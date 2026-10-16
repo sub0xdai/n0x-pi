@@ -2,117 +2,167 @@
   "$id": "https://pi.agent/primitives/coding-standard",
   "title": "TigerBeetle Coding Standard",
   "description": "17 non-negotiable rules applied to all production code. Each rule is machine-checkable - the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
-
   "rules": {
     "assertionDensity": {
       "id": "TB-01",
       "description": "Assertion density ≥ 2 per function. Assert preconditions before mutation. Assert postconditions after. Assert invariants at every boundary.",
       "check": "Count assert statements in function body. Must be >= 2 for every function longer than 5 lines. Functions <= 5 lines are exempt.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "noUnwrap": {
       "id": "TB-02",
       "description": "No .unwrap() in production code paths. Every fallible operation must be handled or explicitly propagated. Panic acceptable only for invariant violation (programmer error), never for runtime data.",
       "check": "Search for .unwrap(), .expect(), panic!() not preceded by an invariant assertion comment.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "typedErrors": {
       "id": "TB-03",
       "description": "Typed errors, not strings. Error types must be enumerated. Never return Result<(), &str> or equivalent. The caller must be able to match on the error variant.",
       "check": "Verify error return types are enum variants or typed error structs, never bare strings.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "pairAssert": {
       "id": "TB-04",
       "description": "Pair-assert before write AND after read. After writing data, immediately read it back and assert it matches what was written.",
       "check": "Every write operation must be followed by a read + assert within 5 lines. Hardware lies. File systems lie. Databases lie.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "noHotPathAlloc": {
       "id": "TB-05",
       "description": "No dynamic allocation on the hot path. Allocate once at initialization. The critical path must be allocation-free.",
       "check": "Identify hot paths (loops processing N items, request handlers). Verify no heap allocation inside them.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "batchOverIndividual": {
       "id": "TB-06",
       "description": "Batching over individual operations. Process N items in a batch. One network round-trip, one filesystem sync, one lock acquisition.",
       "check": "Verify that N operations use a single batch call, not N individual calls.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "controlDataPlaneSeparation": {
       "id": "TB-07",
       "description": "Control plane / data plane separation. O(1) decisions must live outside O(N) loops. Never mix metadata computation with record processing.",
       "check": "Verify that loop bodies contain only O(1) per-item logic. O(N) metadata computation runs before or after the loop.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "maxFunctionLines": {
       "id": "TB-08",
       "description": "Function length ≤ 70 lines. Hard limit. If a function exceeds this, extract a helper.",
       "check": "Count lines per function. Functions > 70 lines must be split.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "maxLineWidth": {
       "id": "TB-09",
       "description": "Line width ≤ 100 columns. Format aggressively. If a line wraps, restructure it.",
       "check": "Verify no line exceeds 100 characters.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "mechanical",
+      "enforcedBy": "scripts/__check.sh, run by state-guard.ts"
     },
     "noTechDebt": {
       "id": "TB-10",
       "description": "Zero technical debt. No TODO, no FIXME, no deprecated code left in tree, no commented-out blocks.",
       "check": "Search for TODO, FIXME, HACK, XXX, commented-out code blocks. None allowed.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "mechanical",
+      "enforcedBy": "scripts/__check.sh, run by state-guard.ts"
     },
     "unitsInNames": {
       "id": "TB-11",
       "description": "Units in variable names. latency_ms, timeout_sec, max_retries, buffer_bytes. Never latency, timeout, max, buffer.",
       "check": "Verify time, size, count variables have unit suffixes.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "singleSourceOfTruth": {
       "id": "TB-12",
       "description": "Single source of truth. Data lives in exactly one place. Derived state is computed on read, never stored.",
       "check": "Verify no derived state is persisted. Computed values are functions, not stored fields.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "explicitBoundaries": {
       "id": "TB-13",
       "description": "Explicit boundaries. Every module declares its public surface. Internal state is never leaked across module boundaries.",
       "check": "Verify module exports are explicit. No pub fields on structs with invariants.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "determinism": {
       "id": "TB-14",
       "description": "Design for determinism. Given the same inputs and same state, produce the same outputs. Seed randomness. Log seeds. Reproduce bugs from a git commit + seed.",
       "check": "Verify all RNG is seeded and the seed is logged. Verify no time.Now() or equivalent in decision paths.",
-      "severity": "block"
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "noBooleanGates": {
       "id": "TB-15",
       "description": "No boolean-gated structs. A boolean field that controls whether sibling fields are meaningful is a missed sum type. Convert to a discriminated union with one variant per state. Applies across all languages: TS discriminated unions, Rust enums with data, Python Union types, Go interface type switches.",
       "check": "For every struct/interface: if a boolean field named enabled/active/valid/ready/has*/is* controls the interpretation of >=1 sibling optional field (Option<T>, T | undefined, T | null), flag it. The struct must become a sum type with named variants. Invalid states are unrepresentable at compile time.",
       "severity": "block",
-      "languages": ["rust", "typescript", "python", "go"]
+      "languages": [
+        "rust",
+        "typescript",
+        "python",
+        "go"
+      ],
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "parseAtBoundary": {
       "id": "TB-16",
       "description": "Parse at the boundary. Raw untyped payloads (unknown, Record<string, unknown>, map[string]interface{}, loose JSON) must be parsed into closed domain types at the outermost execution boundary. Downstream internal functions must never accept untyped maps, perform runtime field-existence checks, or re-validate structure.",
       "check": "Trace each unstructured data source (API response, file read, CLI arg, LLM output, tool invocation) to its consumption. If downstream code performs typeof/instanceof/field-existence checks on data that should have been parsed at the boundary, flag it. The parse step must produce a sum type with an error variant for each failure mode.",
       "severity": "block",
-      "languages": ["rust", "typescript", "python", "go"]
+      "languages": [
+        "rust",
+        "typescript",
+        "python",
+        "go"
+      ],
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     },
     "noComments": {
       "id": "TB-17",
       "description": "No comments in code. Not an explanation, not a section banner, not a docblock (docstring, JSDoc, rustdoc, godoc), not commented-out code. A comment is a naming failure: it states what a name, a type, or a test should have stated. Three machine-read tokens survive, and only where their tool needs them: @waiver RULE-ID (read by __check.sh), @anchor and @tags (read by the anchor skills), ponytail: (read by the ponytail-debt harvest). Shebangs and toolchain directives survive because the compiler reads them.",
       "check": "Flag every line that starts with a comment marker for the file's language: // and /* */ for ts/js/rs/go/java/c, # for sh/py/rb/yaml/toml, -- for sql/lua/hs. Exempt @waiver, @anchor, @tags, ponytail:, shebangs, and toolchain directives (@ts-*, eslint, biome, nolint, go:build, noqa, type: ignore, pragma). Delete the rest rather than relocating it. Reasoning that must outlive the code goes in a ticket, an ADR, or a doc beside the source.",
       "severity": "block",
-      "languages": ["rust", "typescript", "javascript", "python", "go", "shell", "sql"]
+      "languages": [
+        "rust",
+        "typescript",
+        "javascript",
+        "python",
+        "go",
+        "shell",
+        "sql"
+      ],
+      "enforcement": "mechanical",
+      "enforcedBy": "scripts/__check.sh, run by state-guard.ts"
     }
   },
-
   "enforcementProtocol": {
-    "description": "How the agent enforces this standard on code output.",
+    "description": "Three rules are mechanical: __check.sh enforces them, and state-guard.ts runs it on every edit and write. The other fourteen are semantic and rest on the model answering for them; no tooling checks them. Every rule states which it is, so nobody has to guess which rules are guaranteed.",
     "beforeOutput": "Run CodingStandard.check on every changed function.",
     "violationResponse": "Fix the violation. Do not emit the code.",
     "waiverProtocol": {

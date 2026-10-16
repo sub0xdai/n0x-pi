@@ -72,36 +72,38 @@ This is the part worth keeping.
 
 ```mermaid
 flowchart LR
-    M["model proposes code"]
-    EP["EMISSION PROTOCOL<br/>APPEND_SYSTEM.md<br/>write to .tmp, gate, then overwrite"]
-    MC["MECHANICAL<br/>__check.sh<br/>TB-09 width, TB-10 tokens, TB-17 comments"]
-    SEM["SEMANTIC<br/>model self-check against<br/>coding-standard 17 rules + review-policy"]
-    RT["RUNTIME<br/>state-guard<br/>read before write,<br/>verify after mutate"]
+    M["model edits or writes a file"]
+    RT["RUNTIME (tool_call)<br/>state-guard<br/>refuse an unread existing file"]
+    MC["MECHANICAL (inside the handler)<br/>__check.sh<br/>TB-09 width, TB-10 tokens, TB-17 comments,<br/>MD-01 fences, JSON-01 validity"]
+    NUDGE["RUNTIME (agent_before_settle)<br/>one continuation while anything is unverified"]
+    SEM["SEMANTIC<br/>the model answers for the 14 semantic rules"]
     PC["PRE-COMMIT<br/>scrub.py + Presidio<br/>PII and secrets, rewrites files"]
     C["commit"]
 
-    M --> EP
-    EP -->|"fail: fix and retry"| MC
-    MC -->|"pass"| SEM
-    SEM -->|"pass"| RT
-    RT --> C
+    M --> RT
+    RT -->|"allowed"| MC
+    MC -->|"violations appended to the tool result"| M
+    MC -->|"clean"| SEM
+    SEM --> C
     C --> PC
     PC -->|"exit 2: re-staged"| C
-    MC -.->|"blocked"| M
-    SEM -.->|"blocked"| M
-    RT -.->|"blocked edit"| M
+    MC -.->|"still dirty at settle"| NUDGE
+    NUDGE -.->|"one continuation"| M
 ```
 
-Where each gate can lie to you:
+Where each gate can still lie to you:
 
-- **EMISSION PROTOCOL** is a prompt instruction. Nothing enforces it.
-  An agent that skips the `.tmp` step is invisible.
-- **MECHANICAL** is real code, but line-anchored regex: it sees comment markers and `TODO` strings, not intent.
-- **SEMANTIC** is the model grading itself, in the same context that produced the code.
-- **RUNTIME** is the only gate that cannot be talked out of a decision, because it is a
-  `tool_call` handler in the pi process.
-- **PRE-COMMIT** is the only gate that fires after the agent has stopped, and the only one
-  that never sees the reasoning.
+- **RUNTIME (tool_call)** cannot be argued with: it is a handler in the pi process, so a refused
+  edit simply does not happen.
+- **MECHANICAL** can no longer be skipped, because the handler runs it. It is still regex, so it
+  sees tokens rather than intent, which is why `@waiver` exists.
+- **SEMANTIC** is the model grading itself, in the same context that produced the code. 14 of the
+  17 rules live here, and the schema now says so per rule.
+- **PRE-COMMIT** is the only gate that fires after the agent has stopped, and the only one that
+  never sees the reasoning.
+
+The prompt no longer carries a mechanical step. It carries only what no script can check: the
+verdict format, the waiver syntax, and the circuit breaker.
 
 ## 3. The three tiers, and where each actually lives
 
@@ -144,12 +146,11 @@ table is still a proposal.
 ```mermaid
 flowchart TB
     SP["system prompt<br/>APPEND_SYSTEM.md: one TigerBeetle section, one Ponytail section"]
-    subgraph CTL["control plane"]
+    subgraph CTL["control plane - 4 extensions"]
         E1["state-guard<br/>cannot be talked out of it"]
         E2["notifications"]
         E3["tmux-manager"]
-        E4["gone: context-usage.ts<br/>vim owns the editor slot"]
-        E5["plan-mode"]
+        E4["herdr-agent-state<br/>vendor-managed, keep"]
     end
     subgraph PL["execution plane"]
         S1["12 core skills"]
@@ -163,7 +164,7 @@ flowchart TB
     CUT2["DONE: context-meter.ts gone"]
     CUT3["CUT 5 primitives with no reader"]
     CUT4["CUT 3 extension candidates"]
-    CUT5["CUT 5 packages"]
+    CUT5["DONE: 3 theme packages gone"]
     CUT6["CUT duplicate docs layer"]
     SP --> CTL
     SP --> PL

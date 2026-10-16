@@ -162,20 +162,54 @@ OUTPUT=$("$CHECK" "$T4_NONE")
 assert_eq "T-4: unknown extension skips the comment rule" "" "$(rule_lines TB-17 "$OUTPUT")"
 rm "$T4_NONE"
 
+LONG_ROW='| TB-09 | a markdown table row long enough to exceed one hundred columns when it is'
+LONG_ROW="$LONG_ROW"' written out in full, which markdown cannot wrap |'
+
 T4_MD=$(mktemp --suffix=.md)
-cat > "$T4_MD" <<'MD'
-# Prose is not code
-
-A rule description may name a prohibited token, and a table row cannot wrap.
-
-| rule | note |
-|------|------|
-| TB-10 | no TODO, FIXME, HACK, XXX in code |
-| TB-09 | a markdown table row with a deliberately long sentence that runs past one hundred columns |
-MD
+{
+  printf '# Prose is not code\n\n'
+  printf 'A rule may name %s in prose.\n\n' "TO""DO"
+  printf '%s\n' "$LONG_ROW"
+} > "$T4_MD"
 OUTPUT=$("$CHECK" "$T4_MD")
 assert_eq "T-4: markdown is not graded as code" "[]" "$OUTPUT"
 rm "$T4_MD"
+
+echo "=== T-5: File Type Scoping ==="
+
+T5_FENCES=$(mktemp --suffix=.md)
+{
+  printf '# Doc\n\n'
+  printf '```bash\necho hi\n```\n\n'
+  printf '```mermaid\nflowchart TB\n    A --> B\n```\n'
+} > "$T5_FENCES"
+OUTPUT=$("$CHECK" "$T5_FENCES")
+assert_eq "T-5: balanced fences and mermaid pass" "[]" "$OUTPUT"
+rm "$T5_FENCES"
+
+T5_OPEN=$(mktemp --suffix=.md)
+printf '# Doc\n\n```bash\necho hi\n' > "$T5_OPEN"
+OUTPUT=$("$CHECK" "$T5_OPEN")
+assert_json "T-5: unclosed fence output is valid JSON" "$OUTPUT"
+assert_eq "T-5: unclosed fence is flagged" "3" "$(rule_lines MD-01 "$OUTPUT")"
+rm "$T5_OPEN"
+
+T5_MERMAID=$(mktemp --suffix=.md)
+{
+  printf '```mermaid\nflowchart TB\n    subgraph X\n        A --> B\n```\n'
+} > "$T5_MERMAID"
+OUTPUT=$("$CHECK" "$T5_MERMAID")
+assert_eq "T-5: unbalanced mermaid subgraph is flagged" "1" "$(rule_lines MD-01 "$OUTPUT")"
+rm "$T5_MERMAID"
+
+T5_JSON=$(mktemp --suffix=.json)
+printf '{"a": 1, "b": [2, 3]}\n' > "$T5_JSON"
+OUTPUT=$("$CHECK" "$T5_JSON")
+assert_eq "T-5: valid json passes" "[]" "$OUTPUT"
+printf '{"a": 1,}\n' > "$T5_JSON"
+OUTPUT=$("$CHECK" "$T5_JSON")
+assert_eq "T-5: invalid json is flagged" "0" "$(rule_lines JSON-01 "$OUTPUT")"
+rm "$T5_JSON"
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

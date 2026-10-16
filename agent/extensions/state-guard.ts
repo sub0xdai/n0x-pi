@@ -1,6 +1,8 @@
+import { execFile } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
-import { isAbsolute, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
+import { promisify } from "node:util";
 import type {
   ExtensionAPI,
   ExtensionContext,
@@ -13,16 +15,23 @@ type Phase = "DISCOVER" | "MUTATE" | "VERIFY";
 interface Observed {
   read: ReadonlySet<string>;
   dirty: ReadonlySet<string>;
+  violations: Readonly<Record<string, string>>;
   nudged: boolean;
 }
 
 type Outcome =
   | { kind: "read"; path: string; ok: boolean }
   | { kind: "mutate"; path: string; ok: boolean }
+  | { kind: "violated"; path: string; detail: string }
+  | { kind: "clean"; path: string }
   | { kind: "verify" }
   | { kind: "nudged" };
 
-const INITIAL: Observed = { read: new Set(), dirty: new Set(), nudged: false };
+const INITIAL: Observed = { read: new Set(), dirty: new Set(), violations: {}, nudged: false };
+
+const GATE = join(homedir(), ".pi", "agent", "scripts", "__check.sh");
+
+const runGate = promisify(execFile);
 
 const VERIFY_COMMAND =
   /\b(test|check|lint|build|clippy|typecheck|tsc|pytest|ruff|mypy|eslint|biome|gradle)\b/;
@@ -31,6 +40,11 @@ function assertInvariant(state: Observed): Observed {
   for (const path of state.dirty) {
     if (!state.read.has(path)) {
       throw new Error(`state-guard: dirty path was never observed as read: ${path}`);
+    }
+  }
+  for (const path of Object.keys(state.violations)) {
+    if (!state.dirty.has(path)) {
+      throw new Error(`state-guard: violation recorded for a path that is not dirty: ${path}`);
     }
   }
   return state;
@@ -52,7 +66,22 @@ function step(state: Observed, outcome: Outcome): Observed {
       };
     }
     case "verify": {
-      return { ...state, dirty: new Set(), nudged: false };
+      return { ...state, dirty: new Set(), violations: {}, nudged: false };
+    }
+    case "violated": {
+      return {
+        ...state,
+        read: new Set(state.read).add(outcome.path),
+        dirty: new Set(state.dirty).add(outcome.path),
+        violations: { ...state.violations, [outcome.path]: outcome.detail },
+        nudged: false,
+      };
+    }
+    case "clean": {
+      if (!(outcome.path in state.violations)) return state;
+      const next = { ...state.violations };
+      delete next[outcome.path];
+      return { ...state, violations: next };
     }
     case "nudged": {
       return { ...state, nudged: true };
@@ -117,6 +146,28 @@ function outcomeOf(event: ToolResultEvent): Outcome | undefined {
   return undefined;
 }
 
+function writtenPath(event: ToolResultEvent): string | undefined {
+  if (event.toolName !== "edit" && event.toolName !== "write") return undefined;
+  const input = event.input as Record<string, unknown>;
+  return typeof input.path === "string" ? input.path : undefined;
+}
+
+async function gateViolations(file: string): Promise<string[]> {
+  try {
+    const { stdout } = await runGate(GATE, [file], { timeout: 15_000 });
+    const parsed: unknown = JSON.parse(stdout);
+    if (!Array.isArray(parsed)) return [`the gate did not return a list for ${file}`];
+    return parsed.map((item) => {
+      const violation = item as { rule?: string; line?: number; message?: string };
+      const rule = violation.rule ?? "unknown";
+      return `${rule} line ${violation.line ?? 0}: ${violation.message ?? "violation"}`;
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return [`the gate did not run: ${detail}`];
+  }
+}
+
 export default function stateGuard(pi: ExtensionAPI) {
   let state: Observed = INITIAL;
 
@@ -150,6 +201,17 @@ export default function stateGuard(pi: ExtensionAPI) {
     const outcome = outcomeOf(event);
     if (outcome !== undefined) record(ctx.cwd, outcome);
     render(ctx);
+    const raw = event.isError ? undefined : writtenPath(event);
+    if (raw === undefined) return undefined;
+    const full = normalizePath(ctx.cwd, raw);
+    const violations = await gateViolations(full);
+    if (violations.length === 0) {
+      record(ctx.cwd, { kind: "clean", path: full });
+      return undefined;
+    }
+    record(ctx.cwd, { kind: "violated", path: full, detail: violations.join(" | ") });
+    const block = `[state-guard] __check.sh rejected ${raw}:\n${violations.join("\n")}`;
+    return { content: [...event.content, { type: "text" as const, text: block }] };
   });
 
   pi.on("agent_before_settle", async (event, ctx) => {
@@ -157,14 +219,21 @@ export default function stateGuard(pi: ExtensionAPI) {
     if (state.dirty.size === 0 || state.nudged) return;
     state = reduce(state, { kind: "nudged" });
     render(ctx);
+    const failing = Object.entries(state.violations)
+      .slice(0, 3)
+      .map(([path, detail]) => `${path}: ${detail}`);
+    const gateNote =
+      failing.length === 0
+        ? ""
+        : ` The mechanical gate is failing on ${failing.join("; ")}.`;
     return {
       entries: [
         {
           type: "custom_message",
           customType: "state-guard",
           content:
-            `Unverified mutations this turn: ${[...state.dirty].join(", ")}. ` +
-            "Run the project check (test, lint, or build) before finishing.",
+            `Unverified mutations this turn: ${[...state.dirty].join(", ")}.` +
+            `${gateNote} Fix every violation, then run the project check.`,
           display: true,
         },
       ],
