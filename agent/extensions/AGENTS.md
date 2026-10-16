@@ -49,9 +49,11 @@ Extensions from pi packages live in `~/.pi/agent/npm/node_modules/` or
 | `comment.ts` | TUI/UI Manipulation (#2) | Reads last assistant response and injects `#`-prefixed comment into editor via `ctx.ui.setEditorText()` |
 | `notifications.ts` | Lifecycle Interception (#1) | Hooks `tool_execution_start/end` and `agent_end` to send desktop and OSC 777 terminal notifications |
 | `plan-mode.ts` | Lifecycle Interception (#1) | Registers `/plan` command and hooks `tool_call` to gate destructive operations when plan mode is active |
-| `jev-sieve.ts` | Lifecycle Interception (#1) | Hooks `tool_result` to judge large read/bash/grep results block by block and replace confident-irrelevant blocks with a cache-backed stub; the judgment runs in `~/dotfiles/scripts/jev.sh`. Defaults to `off`, and a result whose path, content, or task names a secret is never sent, never cached, and never modified |
+| `jev-sieve.ts` | Lifecycle Interception (#1) | Hooks `tool_result` to judge large read/bash/grep results block by block and replace confident-irrelevant blocks with a cache-backed stub; the judgment runs in `~/dotfiles/scripts/jev.sh`. Defaults to `off`, and a result whose path, content, or task names a secret is never sent, never cached, and never modified. A reading whose served model is not the pinned one is discarded as no reading |
 | `tmux-manager.ts` | Lifecycle Interception (#1) | Registers tmux tool (tmux_new_session, capture_pane, send_keys, kill_session) for tmux session management |
 | `herdr-agent-state.ts` | Persistent Transport (#3) | Reports agent state to the Herdr platform over `HERDR_SOCKET_PATH`, inert unless `HERDR_ENV=1` and a pane id are set. Vendor-managed: reinstalling the Herdr integration overwrites the file, so add hooks beside it rather than editing it |
+| `context-usage.ts` | TUI/UI Manipulation (#2) | Emits `editor:set-status-segment` on the `@tungthedev/pi-extensions` event bus so the boxed editor's top-right border shows used context as `30k/1M`; segment clears when `ctx.getContextUsage().tokens` is null |
+| `state-guard.ts` | Lifecycle Interception (#1) | Derives `DISCOVER`/`MUTATE`/`VERIFY` from tool events instead of trusting the model to declare state. Blocks `edit`/`write` on an existing file the session never read, and asks for one continuation when a turn ends with unverified mutations. State is per-session, in memory, reset on `session_start`. Limits: only the `read` tool marks a file read, so a file inspected through `ffgrep`, `grep`, or `codemode` still needs one `read` (a snippet is not enough context for a patch). Paths are canonicalized with `realpathSync.native`, so a symlinked alias such as `~/dotfiles/scripts/__check.sh` and its target count as one file. Hardlinks stay two paths: same inode, no symlink to resolve. Check: `node state-guard.check.mjs` (`.mjs` is not auto-loaded, `.ts` and `.js` are) |
 
 ### Package-Provided Extensions (active via settings.json)
 
@@ -72,7 +74,8 @@ Extensions from pi packages live in `~/.pi/agent/npm/node_modules/` or
 against installed packages on startup, so the array is not stable across runs.
 
 Also sitting in this directory but not an extension: `eko24ive-pi-ask.json`, which is
-package config.
+package config, and `state-guard.check.mjs`, which is the self-check for `state-guard.ts`
+(`.mjs` is not loaded by `discoverExtensionsInDir`, which accepts only `.ts` and `.js`).
 
 ## Work Guidance
 

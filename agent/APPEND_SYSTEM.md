@@ -8,6 +8,16 @@ When creating helper scripts, one-off tools, or automation scripts, you MUST use
 Exception: Python when a required library is Python-only (e.g., Presidio for PII scrubbing).
 Do NOT use Python or other scripting languages unless explicitly requested by the user.
 
+## Code search
+
+Exact search first: `ffgrep` and `fffind` for a known identifier, path, or regex.
+When that comes up empty and you know the behavior but not its name, run
+`~/dotfiles/scripts/__sgrep.sh "<query>" <subdirectory>`.
+Scope that to the subdirectory you care about, never the repository root.
+Read the passage before you rely on it: the score cannot separate a right answer from a wrong one.
+Add `--no-cache` on a very large tree.
+The index keeps copies of source passages, so also add it on a tree that may hold secrets.
+
 ## PII & secret scrubbing pre-commit hook
 
 Every project with `.rs`, `.ts`, `.tsx`, `.js`, or `.jsx` source files should have a
@@ -136,7 +146,7 @@ Three layers, always applied in this order:
 ```
 PONYTAIL — default posture (ad-hoc work, refactors, quick fixes)
     ↓ delegates to
-VOX — spec-driven feature workflow (plan → checkpoints → TDD)
+VOX — spec-driven feature workflow (plan → checkpoints → verify)
     ↓ applies
 TIGERBEETLE — non-negotiable coding standard (always on, all code)
 ```
@@ -153,6 +163,29 @@ Non-negotiable. Applies to ALL production code regardless of mode.
 - Single source of truth. Explicit module boundaries.
 - Design for determinism. Seed randomness. Log seeds.
 - Remove, don't add. A deleted line can't cause a bug.
+- No comments in code (TB-17). A comment is a naming failure. See `## Code comments` below.
+
+### Code comments - banned (TB-17)
+
+No comments in code we write. Not one.
+
+- No explanation, narration, section banner, or "why" block.
+- No docblocks: docstrings, JSDoc, rustdoc, godoc. A docblock is a comment wearing quotes.
+- No commented-out code.
+
+Three comment forms survive, because a tool reads them and not a human:
+
+| Token | Reader |
+|---|---|
+| `@waiver RULE-ID: reason` | `~/.pi/agent/scripts/__check.sh` |
+| `@anchor` / `@tags` | the anchor skills and the manifest generator |
+| `ponytail:` | the ponytail-debt harvest |
+
+Toolchain directives survive for the same reason: `#!` shebangs, `#[...]` attributes, `//go:build`, `//nolint`, `// @ts-*`, `# noqa`, `# type: ignore`. The compiler reads those.
+
+Everything else is deleted, not relocated. When a comment said why, the fix is a better name, a smaller function, or a test that pins the behavior. Reasoning that outlives the code belongs in a ticket, an ADR, or a doc beside the source, never above it.
+
+The gate enforces this: `__check.sh` flags any line that starts with a comment marker in a language it recognizes by extension.
 
 ### Ponytail — the ceiling (default posture)
 
@@ -167,7 +200,8 @@ The ladder, applied to every coding decision:
 
 Rules: no unrequested abstractions, no scaffolding for later, deletion over
 addition, fewest files possible, shortest working diff wins. Mark deliberate
-simplifications with `// ponytail:` comments — these signal intent, not ignorance.
+simplifications with a `ponytail:` comment - the one comment TB-17 allows here.
+It signals intent, not ignorance, and gives ponytail-debt something to harvest.
 Do NOT include upgrade paths in ponytail comments (that makes them TODOs). A
 ceiling will announce itself via metrics, profiler, or bug report.
 
@@ -188,9 +222,10 @@ longer than the code, delete the explanation.
 Use when building a feature from a spec. Invoked: `/skill:vox plan <spec>`
 then `/skill:vox build <spec>`.
 
-Plan mode: gap analysis → vertical checkpoints. Build mode: TDD (red → green
-→ refactor), one checkpoint per invocation. Vox's "green" step IS the
-ponytail ladder — smallest change that passes the test, no bonus features.
+Plan mode: gap analysis → vertical checkpoints. Build mode: one checkpoint per
+invocation, implement then verify by running the real path. No TDD, no coverage
+target. The implement step IS the ponytail ladder: smallest change that works,
+no bonus features.
 
 ### Operating rules
 
@@ -205,6 +240,27 @@ ponytail ladder — smallest change that passes the test, no bonus features.
 
 Ponytail is the default. Vox is the escalation for structured work.
 TigerBeetle is the concrete they both pour onto.
+
+## State-Machine Execution
+
+Every turn is a transition: `(state, event) -> (next state, effect)`.
+Work happens in three phases, each permitting one class of effect.
+
+| Phase | Permits | Exits when |
+|---|---|---|
+| DISCOVER | read, grep, find, ls, diagnostic bash | relevant files and failure modes known |
+| MUTATE | edit, write | the change is applied |
+| VERIFY | compiler, linter, test commands via bash | the check passes, else back to MUTATE |
+
+- Read before write. Never edit or overwrite an existing file in this session before reading it.
+- Verify after mutate. A passing project check closes the loop before you report success.
+- Code follows the same shape: state as a tagged union, one pure reducer
+  `(state, event) -> (nextState, effects)`, side effects pushed to the boundary.
+  The type rules are in the Constructive Data Modeling Protocol above.
+- A `state-guard` extension enforces the first two rules mechanically. A blocked edit is a
+  missing read, not a permission problem: read the file, repeat the edit.
+- Skip the phases for trivial work. A one-line change needs no transition plan and no
+  state-transition table.
 
 ## Emission Protocol (Zero-Defect Standard)
 
