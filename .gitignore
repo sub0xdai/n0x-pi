@@ -14,3 +14,6 @@ agent/pi-tui-crash.log
 # Python venv for the pre-commit scrubber
 .venv/
 __pycache__/
+
+# Vendored managed install - 29857 files, HEAD never tracked it
+agent/install/
