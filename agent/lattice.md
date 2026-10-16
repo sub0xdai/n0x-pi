@@ -141,8 +141,6 @@ Then restart from step 2.
 | Invocation | Type | Description | Scripts |
 |------------|------|-------------|---------|
 | `/adr` | Skill | Create and manage Architecture Decision Records (ADRs). | (none) |
-| `/anchor-init` | Skill | Scaffolds anchor tag infrastructure and generates the initial master manifest map. | (none) |
-| `/anchor-verify` | Skill | Validates compliance of modified or staged files against system anchor policies. | (none) |
 | `/appimage-integrate` | Skill | Install an AppImage so it launches from the desktop launcher (rofi, dmenu, application menu): extract, install .desktop and icon, fix the Exec line, test launch. | (none) |
 | `/audit` | Skill | Two-pass code audit: adversarial deep review followed by standard second opinion. | (none) |
 | `/cloudflare-devops` | Skill | Automated bootstrap engine for Cloudflare deployments via wrangler and cloudflared. | (none) |

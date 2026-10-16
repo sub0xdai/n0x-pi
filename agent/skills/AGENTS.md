@@ -50,8 +50,6 @@ require explicit invocation.
 | `adr` | `/skill:adr` | Create and manage Architecture Decision Records; "write an ADR", "document this decision", new dependency or pattern introduction | no |
 | `appimage-integrate` | `/skill:appimage-integrate` | Install an AppImage into the desktop launcher; "set up this AppImage", "not launching from rofi" | no |
 | `cover-letter` | `/skill:cover-letter` | Write a job application cover letter from a pasted posting, grounded in real resume + past letters; "make me a cover letter", "help me apply to <job>" | no |
-| `anchor-init` | `/skill:anchor-init` | Scaffolding anchor tags for codebase navigation; "new" or "existing" project with language target | generate_manifest.py |
-| `anchor-verify` | `/skill:anchor-verify` | Validating anchor compliance on "staged" or "all" files | pre-commit hook |
 | `audit` | `/skill:audit` | Two-pass code audit; after implementing features, fixing multi-file bugs, or "audit this" | no |
 | `cloudflare-devops` | `/skill:cloudflare-devops` | Cloudflare deployments, wrangler, Pages/Workers, CI/CD, domain management, tunnel setup | no |
 | `diff-review` | `/skill:diff-review` | Visual HTML diff review of branches, commits, PRs, or working tree changes | no |
@@ -104,7 +102,7 @@ invocations it performs.
 - Skill count should match lattice.md index
 - Each skill must have a single `SKILL.md` with valid YAML frontmatter
 - No extra files in skill directories beyond SKILL.md (except explicit assets like
-  `anchor-init/generate_manifest.py` or `shannon/scripts/`)
+  `shannon/scripts/`)
 
 ## Child DOX Index
 

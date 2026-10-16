@@ -154,16 +154,23 @@ TIGERBEETLE — non-negotiable coding standard (always on, all code)
 ### TigerBeetle — the floor (always on)
 
 Non-negotiable. Applies to ALL production code regardless of mode.
+The rule list has one home: `primitives/coding-standard.schema.json`, 17 rules, each with the
+check that enforces it. Nothing else enumerates rules or their counts. Read it when a rule's
+exact check matters.
+
+The ones that change what you write most often:
 
 - Assertion density ≥ 2 per function. Assert preconditions, postconditions, invariants.
-- No `.unwrap()` in production code paths. Typed errors, never `Result<(), &str>`.
 - Pair-assert before write AND after read.
-- No dynamic allocation on the hot path. Batching over individual operations.
+- No `.unwrap()` in production code paths. Typed errors, never `Result<(), &str>`.
 - Function length ≤ 70 lines. Line width ≤ 100 columns.
 - Single source of truth. Explicit module boundaries.
 - Design for determinism. Seed randomness. Log seeds.
 - Remove, don't add. A deleted line can't cause a bug.
 - No comments in code (TB-17). A comment is a naming failure. See `## Code comments` below.
+
+Three of the 17 rules are mechanical (`__check.sh`); the rest are unenforceable by tooling and
+rest on you. A rule you cannot check is still a block.
 
 ### Code comments - banned (TB-17)
 

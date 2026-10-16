@@ -10,14 +10,8 @@
       "runner": "~/dotfiles/scripts/__check.sh"
     },
     "semantic": {
-      "description": "Rules evaluated by the agent. Requires reasoning about code structure.",
-      "rules": [
-        "TB-01", "TB-02", "TB-03", "TB-04", "TB-05",
-        "TB-06", "TB-07", "TB-08", "TB-11", "TB-12",
-        "TB-13", "TB-14",
-        "RP-01", "RP-02", "RP-03", "RP-04", "RP-05",
-        "RP-06", "RP-07"
-      ],
+      "description": "Every rule in primitives/coding-standard.schema.json that is not in the mechanical list above. Not enumerated here, so the rule list has one home.",
+      "source": "primitives/coding-standard.schema.json",
       "runner": "agent self-check",
       "evaluationProtocol": {
         "description": "For each semantic rule, the agent must produce a one-line verdict: PASS, WAIVED (with reason), or FIXED (with what changed). If any rule yields FAIL, the code must be fixed and both gates re-run.",
