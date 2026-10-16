@@ -17,5 +17,8 @@
     "npm:pi-mcp-adapter",
     "npm:@ff-labs/pi-fff",
     "npm:vim-motions-pi"
+  ],
+  "extensions": [
+    "-builtin:mcp"
   ]
 }
