@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 659.163 466.7" width="659.163" height="466.7" style="--bg:#18181B;--fg:#FAFAFA;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="PO" data-label="PONYTAIL - default">
+  <rect x="181.679" y="40" width="295.805" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="181.679" y="40" width="295.805" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="193.679" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">PONYTAIL - default</text>
+</g>
+<g class="subgraph" data-id="VO" data-label="VOX - features">
+  <rect x="133.36599999999999" y="184.9" width="392.43100000000004" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="133.36599999999999" y="184.9" width="392.43100000000004" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="145.36599999999999" y="198.9" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">VOX - features</text>
+</g>
+<g class="subgraph" data-id="TI" data-label="TIGERBEETLE - the floor">
+  <rect x="40" y="329.8" width="579.163" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="329.8" width="579.163" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="343.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">TIGERBEETLE - the floor</text>
+</g>
+<polyline class="edge" data-from="PO" data-to="VO" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="329.5815,136.9 329.5815,184.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="VO" data-to="TI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="329.5815,281.8 329.5815,329.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="node" data-id="P1" data-label="6 skills" data-shape="rectangle">
+  <rect x="197.679" y="84" width="82.705" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="239.0315" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">6 skills</text>
+</g>
+<g class="node" data-id="P2" data-label="refusals, no artifact" data-shape="rectangle">
+  <rect x="308.384" y="84" width="153.10000000000002" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="384.934" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">refusals, no artifact</text>
+</g>
+<g class="node" data-id="V1" data-label="vox skill" data-shape="rectangle">
+  <rect x="292.675" y="228.9" width="90.11500000000001" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="337.7325" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">vox skill</text>
+</g>
+<g class="node" data-id="V2" data-label="4 prompts" data-shape="rectangle">
+  <rect x="410.79" y="228.9" width="99.007" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="460.2935" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">4 prompts</text>
+</g>
+<g class="node" data-id="V3" data-label="plan-mode.ts" data-shape="rectangle">
+  <rect x="149.36599999999999" y="228.9" width="115.30900000000001" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="207.0205" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">plan-mode.ts</text>
+</g>
+<g class="node" data-id="T1" data-label="8 rules in the prompt" data-shape="rectangle">
+  <rect x="251.17899999999997" y="373.8" width="157.546" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="329.952" y="392.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">8 rules in the prompt</text>
+</g>
+<g class="node" data-id="T2" data-label="17 rules in the schema" data-shape="rectangle">
+  <rect x="436.725" y="373.8" width="166.438" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="519.944" y="392.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">17 rules in the schema</text>
+</g>
+<g class="node" data-id="T3" data-label="3 rules in __check.sh" data-shape="rectangle">
+  <rect x="56" y="373.8" width="167.17899999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="139.5895" y="392.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 rules in __check.sh</text>
+</g>
+</svg>

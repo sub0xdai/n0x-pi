@@ -17,3 +17,6 @@ __pycache__/
 
 # Vendored managed install - 29857 files, HEAD never tracked it
 agent/install/
+
+# Rendered PNGs of the harness map; the SVGs are tracked and regenerate the rest
+diagrams/*.png

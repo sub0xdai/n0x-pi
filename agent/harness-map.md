@@ -1,219 +1,201 @@
 # Harness map
 
 Drawn 2026-10-17 from the live tree at `~/.pi/agent` (pi 1.3.0), not from memory or docs.
+Every count was read off disk at draw time, and every diagram below was rendered to check it,
+not eyeballed. Regenerate with:
 
-The files under `/home/m0xu/recovery-2026-10-17/` are unrelated to this map.
-They are recovery candidates from the merge incident: diffs of work the transcripts hold,
-applied or skipped one by one. Delete the directory once you have reviewed it.
+```bash
+node scripts/__render-diagrams.mjs harness-map.md ../diagrams
+```
+
+The files under `/home/m0xu/recovery-2026-10-17/` are unrelated to this map: they are recovery
+candidates from the merge incident. Delete them once reviewed.
 
 ## Read this first
 
-Three numbers describe the whole harness:
-
 | Layer | Count | What it is |
 |---|---|---|
-| system prompt | 2 | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
-| control plane | 7 extensions + 9 packages | lifecycle hooks that act on the agent loop |
+| system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
+| control plane | 7 extensions + 9 packages | code that acts on the agent loop |
 | execution plane | 24 skills + 6 prompts | text the model follows |
-| documentation plane | 10 primitives + 6 AGENTS.md | JSON schemas and DOX contracts describing the above |
-| mechanical plane | 2 scripts + 1 hook | `__check.sh` and the Presidio pre-commit scrub |
+| documentation plane | 9 primitives + 6 `AGENTS.md` + `lattice.md` | schemas and DOX contracts describing the rest |
+| mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
 
 ## 1. What pi loads
 
+Structural only. The membership of each box is in the table underneath, so the diagram stays
+readable in a terminal.
+
 ```mermaid
 flowchart TB
-    P["pi process 1.3.0"]
-    SET["settings.json<br/>provider, model, theme, editor, packages"]
-    SP["system prompt<br/>APPEND_SYSTEM.md plus AGENTS.md DOX root"]
-
-    subgraph LOCAL["local control plane - ~/.pi/agent"]
-        EXT["extensions/ 7 loaded<br/>comment, herdr-agent-state, jev-sieve,<br/>notifications, plan-mode, state-guard, tmux-manager"]
-        SCR["scripts/__check.sh<br/>mechanical emission gate"]
+    P["pi 1.3.0"]
+    SP["system prompt"]
+    SET["settings.json"]
+    subgraph CTL["control plane"]
+        EXT["extensions 7"]
+        PKG["packages 9"]
     end
-
-    subgraph EXEC["execution plane"]
-        SK["skills/ 24"]
-        PR["prompts/ 6"]
+    subgraph EXE["execution plane"]
+        SK["skills 24"]
+        PR["prompts 6"]
     end
-
-    subgraph DOC["documentation plane"]
-        PRI["primitives/ 10 json"]
-        DOX["AGENTS.md x 6 plus lattice.md"]
+    subgraph DOC["documentation"]
+        PRI["primitives 9"]
+        DOX["AGENTS.md 6 + lattice.md"]
     end
-
     subgraph COS["cosmetic"]
-        TH["themes/ 3"]
+        TH["themes 2"]
     end
-
-    subgraph PKG["12 installed packages"]
-        PA["pi-web-access<br/>@upstash/context7-pi<br/>@ff-labs/pi-fff<br/>@tungthedev/pi-extensions<br/>pi-mcp-adapter"]
-        PB["ponytail<br/>git:pi-ask<br/>@yeliu84/pi-model-router"]
-        PC["vim-motions-pi"]
-    end
-
-    P --> SET
     P --> SP
-    SET --> PKG
-    SET --> EXT
+    P --> SET
     SP --> SK
     SP --> PR
-    SP --> DOX
-    EXT --> SCR
+    SET --> EXT
+    SET --> PKG
+    EXT --> PRI
     SK --> PRI
-    PR --> PRI
     EXT --> TH
-    PKG --> TH
 ```
 
-## 2. The chain that gates a code change
+| Box | Members |
+|---|---|
+| extensions 7 | `comment`, `herdr-agent-state`, `jev-sieve`, `notifications`, `plan-mode`, `state-guard`, `tmux-manager` |
+| packages 9 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `pi-mcp-adapter`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
+| skills 24 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `video-render-qa`, `vox`, `yt-dlp-download` |
+| prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
+| primitives 9 | `adr`, `check`, `coding-standard`, `decision-tree`, `glossary`, `project-context`, `review-policy`, `review-result`, `spec` |
 
-Every gate below is a different mechanism with a different failure mode.
-This is the part worth keeping.
+One box is a lie: `pi-mcp-adapter` is declared in `settings.json` with nothing installed behind it.
+`npm/node_modules/pi-mcp-adapter` is gone while a dangling `npm/node_modules/.bin/pi-mcp-adapter`
+symlink to `../pi-mcp-adapter/cli.js` remains, and pi reacted to the declaration by writing
+`extensions: ["-builtin:mcp"]` into `settings.json`, which switches off pi's own MCP support. No
+MCP tools exist in a session.
+
+## 2. The gate chain
 
 ```mermaid
-flowchart LR
-    M["model edits or writes a file"]
-    RT["RUNTIME (tool_call)<br/>state-guard<br/>refuse an unread existing file"]
-    MC["MECHANICAL (inside the handler)<br/>__check.sh<br/>TB-09 width, TB-10 tokens, TB-17 comments,<br/>MD-01 fences, JSON-01 validity"]
-    NUDGE["RUNTIME (agent_before_settle)<br/>one continuation while anything is unverified"]
-    SEM["SEMANTIC<br/>the model answers for the 14 semantic rules"]
-    PC["PRE-COMMIT<br/>scrub.py + Presidio<br/>PII and secrets, rewrites files"]
+flowchart TB
+    M["model edits or writes"]
+    RT["tool_call: state-guard<br/>refuse an unread file"]
+    MC["__check.sh<br/>the mechanical gate"]
+    SEM["semantic self-check<br/>14 rules, by the model"]
     C["commit"]
-
+    PC["pre-commit: scrub.py"]
+    N["agent_before_settle<br/>one continuation"]
     M --> RT
     RT -->|"allowed"| MC
-    MC -->|"violations appended to the tool result"| M
     MC -->|"clean"| SEM
     SEM --> C
     C --> PC
-    PC -->|"exit 2: re-staged"| C
-    MC -.->|"still dirty at settle"| NUDGE
-    NUDGE -.->|"one continuation"| M
+    PC -->|"exit 2: restaged"| C
+    MC -.->|"violations appended, model re-edits"| RT
+    MC -.->|"still dirty at settle"| N
 ```
 
-Where each gate can still lie to you:
+Read the spine top to bottom. The two dotted edges are the loops: the gate sends the model back to
+re-edit, and an unfinished turn gets exactly one continuation.
 
-- **RUNTIME (tool_call)** cannot be argued with: it is a handler in the pi process, so a refused
-  edit simply does not happen.
-- **MECHANICAL** can no longer be skipped, because the handler runs it. It is still regex, so it
-  sees tokens rather than intent, which is why `@waiver` exists.
-- **SEMANTIC** is the model grading itself, in the same context that produced the code. 14 of the
-  17 rules live here, and the schema now says so per rule.
-- **PRE-COMMIT** is the only gate that fires after the agent has stopped, and the only one that
-  never sees the reasoning.
+Where this can still fail:
 
-The prompt no longer carries a mechanical step. It carries only what no script can check: the
-verdict format, the waiver syntax, and the circuit breaker.
+- The gate runs on `edit` and `write` only. A file created by a `bash` heredoc is never inspected.
+  This is the largest remaining hole.
+- The gate is regex, so it sees tokens rather than intent. `@waiver` is the release valve.
+- The semantic step is the model grading itself, in the same context that wrote the code.
+- The pre-commit hook is the only gate that runs after the agent has stopped.
 
-## 3. The three tiers, and where each actually lives
+## 3. The rule spine
+
+One file owns the rules. Nothing else enumerates them or their counts.
 
 ```mermaid
 flowchart TB
-    subgraph TB1["PONYTAIL - default posture"]
-        P1["ponytail skill family, 6 skills"]
-        P2["no artifact: it is a set of refusals"]
-    end
-    subgraph TB2["VOX - spec-driven features"]
-        V1["vox skill, plan and build"]
-        V2["prompts: brainstorm, brilliance, grill-me"]
-        V3["extension: plan-mode.ts"]
-    end
-    subgraph TB3["TIGERBEETLE - the floor"]
-        T1["APPEND_SYSTEM.md section"]
-        T2["primitives/coding-standard.schema.json<br/>17 rules"]
-        T3["primitives/check.schema.json<br/>plus __check.sh"]
-        T4["prompts/tigerbeetle.md<br/>plus a primitives/ with no other reader"]
-    end
-    TB1 --> TB2
-    TB2 --> TB3
+    CS["coding-standard.schema.json<br/>17 rules"]
+    M3["3 mechanical<br/>TB-09, TB-10, TB-17"]
+    S14["14 semantic<br/>everything else"]
+    G["__check.sh<br/>run by state-guard"]
+    SELF["the model's own verdict"]
+    CS --> M3
+    CS --> S14
+    M3 --> G
+    S14 --> SELF
 ```
 
-TigerBeetle is currently described in four places: the system prompt section,
-`coding-standard.schema.json`, `prompts/tigerbeetle.md`, and `check.schema.json`.
-They do not agree on the rule count.
-The system prompt lists 10 floor rules, `coding-standard.schema.json` now says 17 after recovery,
-`prompts/tigerbeetle.md` said 14 and now says 17, and `check.schema.json` enumerates a different
-subset again.
+`APPEND_SYSTEM.md` keeps the eight rules that change behavior most often and points at the file.
+`prompts/tigerbeetle.md` keeps the protocol and no table. `check.schema.json` keeps the protocol
+and no rule IDs. The four copies that had drifted to 10, 14, 16, and 17 rules are gone, and each
+rule now states its own `enforcement` and `enforcedBy`.
 
-## 4. Proposed shape
-
-Same functions, fewer moving parts. Everything marked CUT has an evidence line under the diagram.
-
-**Executed 2026-10-17:** `anchor` (both skills, the generator, the hook template) and
-`context-meter.ts` are deleted, and the TigerBeetle rule list now has one home. The rest of the
-table is still a proposal.
+## 4. Where the three tiers live
 
 ```mermaid
 flowchart TB
-    SP["system prompt<br/>APPEND_SYSTEM.md: one TigerBeetle section, one Ponytail section"]
-    subgraph CTL["control plane - 4 extensions"]
-        E1["state-guard<br/>cannot be talked out of it"]
-        E2["notifications"]
-        E3["tmux-manager"]
-        E4["herdr-agent-state<br/>vendor-managed, keep"]
+    subgraph PO["PONYTAIL - default"]
+        P1["6 skills"]
+        P2["refusals, no artifact"]
     end
-    subgraph PL["execution plane"]
-        S1["12 core skills"]
-        S2["3 prompts"]
+    subgraph VO["VOX - features"]
+        V1["vox skill"]
+        V2["4 prompts"]
+        V3["plan-mode.ts"]
     end
-    subgraph MECH["mechanical plane"]
-        M1["__check.sh + test"]
-        M2["scrub.py hook"]
+    subgraph TI["TIGERBEETLE - the floor"]
+        T1["8 rules in the prompt"]
+        T2["17 rules in the schema"]
+        T3["3 rules in __check.sh"]
     end
-    CUT1["DONE: anchor gone"]
-    CUT2["DONE: context-meter.ts gone"]
-    CUT3["CUT 5 primitives with no reader"]
-    CUT4["CUT 3 extension candidates"]
-    CUT5["DONE: 3 theme packages gone"]
-    CUT6["CUT duplicate docs layer"]
-    SP --> CTL
-    SP --> PL
-    CTL --> MECH
-    PL --> MECH
+    PO --> VO
+    VO --> TI
 ```
 
-### Cuts and the evidence
+## 5. Done and open
 
-| Cut | Evidence |
+```mermaid
+flowchart TB
+    subgraph D["Done this session"]
+        D1["anchor: 2 skills, generator, hook"]
+        D2["context-meter, context-usage"]
+        D3["3 theme packages"]
+        D4["the .tmp protocol"]
+        D5["4 drifting rule copies"]
+    end
+    subgraph O["Still open"]
+        O1["pi-mcp-adapter"]
+        O2["3 extensions"]
+        O3["5 primitives"]
+        O4["the docs plane"]
+        O5["bash files ungated"]
+    end
+    D -.->|"next"| O
+```
+
+| Open item | Evidence |
 |---|---|
-| **CUT, done: anchor** (`anchor-init`, `anchor-verify`, hook, manifest) | Two skills, a `generate_manifest.py`, and a pre-commit hook. The hook was installed in **zero** repos: both repos that ran it (`testudo`, `LoveByCartiana`) have `.anchor/` but their `.git/hooks/pre-commit` is the PII scrub, with no anchor line. It produced artifacts and no gate. |
-| **CUT, done: `context-meter.ts`** | Rendered `setWidget("sys", ...)` above the editor; `context-usage.ts` renders the same context numbers as a status segment. Both hooked `session_start`. Kept `context-usage.ts`, which is the one the index documents. |
-| **5 primitives** | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. `spec.schema.json` (5) and `coding-standard` (3) are the only ones with real readers. |
-| **3 extensions** | `comment.ts` exists to paste a `#`-prefixed comment into the editor; `jev-sieve.ts` calls a local model to censor tool output, with a cache and a retention policy; `plan-mode.ts` writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
-| **Not a cut: `herdr-agent-state.ts`** | Used occasionally, so it stays. It is also vendor-managed: its own header says `installed by herdr` and `reinstalling or updating the integration overwrites this file`, so removing it from here would not survive that integration anyway. The map keeps it out of the cut list on purpose, because a stale proposal is the drift this pass exists to remove. |
-| **CUT, done: 3 theme packages** | Whole packages removed: `pi-ansi-themes`, `pi-themes`, `pi-blackboard-theme`. The active theme `vanilla-amoled` is a local file in `themes/`, so none of the three shipped anything in use. |
-| **Kept, by decision: `model-router`** | Per-turn routing through `model-router.json`. Removing it would make `settings.json` the only model authority; you kept it, so `settings.json` and `model-router.json` both stay. |
-| **Resolved: the editor slot** | `vim-motions-pi` loads last, so it wins `setEditorComponent` and the boxed editor never installs. Dropping the boxed editor is not an option: `@tungthedev/pi-extensions` also provides the Task subagents, todos, goal, workspace, mermaid, and shell. So vim keeps the slot, and `context-usage.ts` plus `settings.json`'s `editor` block are gone, because only `@tungthedev` listens for the event `context-usage.ts` emitted. |
-| **duplicate docs** | `primitives/`, `lattice.md`, 6 `AGENTS.md` files, and `extensions/AGENTS.md` all restate boundaries that the system prompt also states. Three of them were already out of date (`extensions/AGENTS.md` lacked `context-meter.ts`; `lattice.md` lacked the state-guard). |
+| `pi-mcp-adapter` | Declared, package directory absent, dangling bin symlink, `builtin:mcp` disabled by pi in response. Install it or delete the declaration. |
+| `comment.ts` | Exists to paste a `#`-prefixed comment into the editor. |
+| `jev-sieve.ts` | Calls a local model to censor tool output, with a cache and a retention policy. No evidence it runs. |
+| `plan-mode.ts` | Writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
+| 5 primitives | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. |
+| docs plane | `lattice.md` plus 6 `AGENTS.md` files restate boundaries the system prompt already states. Three were stale before this session. |
+| bash files ungated | The `tool_result` handler sees `edit` and `write`. A `bash` heredoc writes a file nothing inspects. |
 
-### Keep, and make it the spine
+Two decisions recorded so the next pass does not re-litigate them:
 
-The one gate that survived every incident in this session is the mechanical one,
-because it is the only gate that is code plus a test: `__check.sh` and `__check.test.sh` (15 tests).
+| Kept | Reason |
+|---|---|
+| `herdr-agent-state.ts` | In use. Also vendor-managed: its own header says reinstalling the Herdr integration overwrites the file, so removing it here would not survive anyway. |
+| `@yeliu84/pi-model-router` | Per-turn routing through `model-router.json`. Removing it would make `settings.json` the only model authority. |
 
-If TigerBeetle is the style guide, the shape follows:
+## 6. What verifying this pass turned up
 
-1. One rule list, in one file, at one version. `coding-standard.schema.json` is the best
-   candidate; delete the count from the system prompt and from `prompts/tigerbeetle.md` and
-   reference the file instead.
-2. Every rule is either mechanical (a `__check.sh` check with a test) or named as
-   unenforceable. Today 3 of 17 are mechanical, and the other 14 rest on the model grading
-   itself, which is what the harness keeps failing at.
-3. Move the enforcement that matters out of prompts and into `tool_call` handlers, the way
-   `state-guard` does. A handler is the only place a rule has teeth.
-
-## 5. What the cuts changed in the rule spine
-
-The rule list now has one home: `primitives/coding-standard.schema.json` (17 rules).
-`APPEND_SYSTEM.md` keeps the eight rules that change behavior most often and points at the file;
-`prompts/tigerbeetle.md` no longer carries a copy of the table.
-
-Two things the gate does to your own docs, both found while verifying this change:
-
-- `__check.sh APPEND_SYSTEM.md` flags line 212 for a prohibited token. The token is the word
-  `TODOs` in the Ponytail section. The gate is line-anchored regex, so prose trips it.
-- The same file trips TB-09 in nine places. Markdown tables and long sentences cannot fit inside
-  100 columns, so the width rule only makes sense for code.
-
-The remaining duplicate is small and deliberate: `primitives/check.schema.json` still names the
-three mechanical rule IDs, because it defines the gate's protocol. Everything else derives.
+- `__check.sh` used to grade Markdown as code: `APPEND_SYSTEM.md` tripped TB-10 on the word
+  `TODOs` in prose, and TB-09 nine times on table rows that cannot wrap. Markdown now gets MD-01
+  (unclosed fence, unbalanced mermaid) and JSON gets JSON-01 (validity), and both are tested.
+- Writing those tests made the gate flag its own test file, because the fixtures embedded the
+  tokens and comment headers under test. The fixtures now build content with `printf` and split
+  `"TO" "DO"`, so the file no longer contains what it forbids.
+- A live run showed the gate cannot be skipped: the transcript holds
+  `[state-guard] __check.sh rejected /tmp/sg-gate/bad2.ts:` in the tool result, and the settle
+  nudge naming `TB-10 line 1` and `TB-17 line 1`.
+- Twice a model refused to satisfy a test that required writing a violation. The first refused to
+  write the `TODO` at all; the second wrote it, then declined to fix it because the instruction
+  and the nudge disagreed, and flagged the contradiction instead. Both are the harness working.
