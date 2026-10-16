@@ -162,7 +162,7 @@ flowchart TB
     CUT1["DONE: anchor gone"]
     CUT2["DONE: context-meter.ts gone"]
     CUT3["CUT 5 primitives with no reader"]
-    CUT4["CUT 4 extension candidates"]
+    CUT4["CUT 3 extension candidates"]
     CUT5["CUT 5 packages"]
     CUT6["CUT duplicate docs layer"]
     SP --> CTL
@@ -178,7 +178,8 @@ flowchart TB
 | **CUT, done: anchor** (`anchor-init`, `anchor-verify`, hook, manifest) | Two skills, a `generate_manifest.py`, and a pre-commit hook. The hook was installed in **zero** repos: both repos that ran it (`testudo`, `LoveByCartiana`) have `.anchor/` but their `.git/hooks/pre-commit` is the PII scrub, with no anchor line. It produced artifacts and no gate. |
 | **CUT, done: `context-meter.ts`** | Rendered `setWidget("sys", ...)` above the editor; `context-usage.ts` renders the same context numbers as a status segment. Both hooked `session_start`. Kept `context-usage.ts`, which is the one the index documents. |
 | **5 primitives** | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. `spec.schema.json` (5) and `coding-standard` (3) are the only ones with real readers. |
-| **4 extensions** | `herdr-agent-state.ts` is vendor-managed and inert unless `HERDR_ENV=1`; `comment.ts` exists to paste a `#`-prefixed comment into the editor; `jev-sieve.ts` calls a local model to censor tool output, with a cache and a retention policy; `plan-mode.ts` writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
+| **3 extensions** | `comment.ts` exists to paste a `#`-prefixed comment into the editor; `jev-sieve.ts` calls a local model to censor tool output, with a cache and a retention policy; `plan-mode.ts` writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
+| **Not a cut: `herdr-agent-state.ts`** | Used occasionally, so it stays. It is also vendor-managed: its own header says `installed by herdr` and `reinstalling or updating the integration overwrites this file`, so removing it from here would not survive that integration anyway. The map keeps it out of the cut list on purpose, because a stale proposal is the drift this pass exists to remove. |
 | **5 packages** | Three theme packages for one active theme (`vanilla-amoled`); `vim-motions-pi` is documented as competing with the boxed editor for the same `session_start` slot, so exactly one of them works; `@yeliu84/pi-model-router` duplicates the model choice already in `settings.json` plus `model-router.json`. |
 | **duplicate docs** | `primitives/`, `lattice.md`, 6 `AGENTS.md` files, and `extensions/AGENTS.md` all restate boundaries that the system prompt also states. Three of them were already out of date (`extensions/AGENTS.md` lacked `context-meter.ts`; `lattice.md` lacked the state-guard). |
 
