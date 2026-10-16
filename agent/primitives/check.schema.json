@@ -5,8 +5,8 @@
 
   "ruleClassification": {
     "mechanical": {
-      "description": "Rules checked by __check.sh shell script. Language-agnostic text checks.",
-      "rules": ["TB-09", "TB-10"],
+      "description": "Rules checked by __check.sh shell script. Language-agnostic text checks. TB-17 needs the file extension to pick the comment marker.",
+      "rules": ["TB-09", "TB-10", "TB-17"],
       "runner": "~/dotfiles/scripts/__check.sh"
     },
     "semantic": {
@@ -14,7 +14,7 @@
       "rules": [
         "TB-01", "TB-02", "TB-03", "TB-04", "TB-05",
         "TB-06", "TB-07", "TB-08", "TB-11", "TB-12",
-        "TB-13", "TB-14", "TB-15", "TB-16",
+        "TB-13", "TB-14",
         "RP-01", "RP-02", "RP-03", "RP-04", "RP-05",
         "RP-06", "RP-07"
       ],
@@ -30,7 +30,7 @@
     "sequence": [
       "1. Write modified code to a .tmp file (never check against stale on-disk state)",
       "2. Run __check.sh <file>.tmp — resolve all mechanical violations",
-      "3. Run semantic self-check against all 21 rules",
+      "3. Run semantic self-check against all 21 semantic rules",
       "4. If any violation remains: fix code, go to step 1",
       "5. Only when both gates pass: overwrite target file, emit code"
     ],
@@ -59,7 +59,7 @@
       "items": {
         "type": "object",
         "properties": {
-          "rule": {"type": "string", "enum": ["TB-09", "TB-10", "SYSTEM"]},
+          "rule": {"type": "string", "enum": ["TB-09", "TB-10", "TB-17", "SYSTEM"]},
           "line": {"type": "integer"},
           "message": {"type": "string"}
         }
@@ -99,8 +99,8 @@
       "mitigation": "Drop failed intermediate traces. Only final artifact + summary survive."
     },
     "fm4_regexCollision": {
-      "scenario": "grep flags valid literal string as forbidden token.",
-      "mitigation": "Apply @waiver annotation. Accepted cost of parser-less checks."
+      "scenario": "grep flags valid literal string as forbidden token, or flags a trailing comment.",
+      "mitigation": "Apply @waiver annotation. Accepted cost of parser-less checks. TB-17 sees comment-marker lines only, so a trailing comment after code needs a waiver or a hand edit."
     },
     "fm5_skipCheck": {
       "scenario": "Agent emits code without running check protocol.",

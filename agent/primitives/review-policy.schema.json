@@ -61,6 +61,7 @@
       "question": "Is every line pulling its weight?",
       "checks": [
         "No dead code, commented-out blocks, TODO without ticket",
+        "No comments at all (TB-17) - no explanation, banner, docblock, or commented-out code. Only @waiver, @anchor/@tags, and ponytail: survive",
         "Every import used, every variable read",
         "No unearned abstraction — one-line helper called once is noise",
         "Deleted lines are celebrated — a deleted line can't cause a bug"

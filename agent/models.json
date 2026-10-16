@@ -1,0 +1,18 @@
+{
+  "providers": {
+    "cyberkimi": {
+      "baseUrl": "http://127.0.0.1:8787/v1",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "lordx64/cyberglm",
+          "name": "CyberGLM (confidential gateway)",
+          "input": ["text"],
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 65536
+        }
+      ]
+    }
+  }
+}

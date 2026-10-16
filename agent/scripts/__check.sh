@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# __check.sh — Mechanical code emission gate
-# Input: file path. Output: JSON array of violations.
-# Rules: TB-09 (line width <= 100), TB-10 (no TODO/FIXME/HACK/XXX)
-# Respects inline @waiver RULE-ID annotations. Caps at 20 total items
-# (19 real violations + 1 overflow sentinel if suppressed remain).
+# ponytail: TB-17 detection is line-anchored, and templates tracked by backtick parity only
 
 set -euo pipefail
 FILE="$1"
@@ -34,8 +30,9 @@ add_violation() {
 }
 
 emit_sentinel() {
-  local n=$1
-  local json="{\"rule\":\"SYSTEM\",\"line\":0,\"message\":\"Truncated: $n additional violations hidden\"}"
+  local n="$1"
+  local msg="Truncated: $n additional violations hidden"
+  local json="{\"rule\":\"SYSTEM\",\"line\":0,\"message\":\"$msg\"}"
   if [[ -z "$VIOLATIONS" ]]; then
     VIOLATIONS="$json"
   else
@@ -43,16 +40,68 @@ emit_sentinel() {
   fi
 }
 
-# ── TB-10: No TODO/FIXME/HACK/XXX (skip @waiver TB-10 lines) ─────────────
-# Process first — fewer typical violations, more useful in output
+count_ticks() {
+  local rest="$1" n=0
+  while [[ "$rest" == *'`'* ]]; do
+    rest="${rest#*\`}"
+    n=$((n + 1))
+  done
+  echo "$n"
+}
+
+FORBIDDEN='TODO|FIXME|HACK|XXX' # @waiver TB-09 @waiver TB-10: the detector's own pattern
+
 while IFS=: read -r grep_line_num line_content; do
   if [[ "$line_content" =~ @waiver[[:space:]]+TB-10 ]]; then
     continue
   fi
   add_violation "TB-10" "$grep_line_num" "Prohibited token found" || true
-done < <(grep -nE 'TODO|FIXME|HACK|XXX' "$FILE" 2>/dev/null || true)
+done < <(grep -nE "$FORBIDDEN" "$FILE" 2>/dev/null || true)
 
-# ── TB-09: Line width <= 100 (skip @waiver TB-09 lines) ──────────────────
+case "$FILE" in
+  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.rs|*.go|*.java|*.c|*.cc|*.cpp|*.h|*.hpp|*.swift|*.kt)
+    COMMENT_RE='^[[:space:]]*(//|/\*|\*)' ;;
+  *.sh|*.bash|*.zsh|*.py|*.rb|*.yml|*.yaml|*.toml|*.pl|*.conf)
+    COMMENT_RE='^[[:space:]]*#' ;;
+  *.sql|*.lua|*.hs)
+    COMMENT_RE='^[[:space:]]*--([[:space:]]|\[|$)' ;;
+  *)
+    COMMENT_RE='' ;;
+esac
+
+KEEP_RE='^[[:space:]]*#!|^[[:space:]]*#\[|@waiver|@anchor|@tags|ponytail:'
+KEEP_RE="$KEEP_RE"'|@ts-|eslint|prettier|biome|istanbul|nolint|noqa'
+KEEP_RE="$KEEP_RE"'|type:[[:space:]]*ignore|pragma|go:build|\+build'
+KEEP_RE="$KEEP_RE"'|//[[:space:]]*export|#include|-\*-'
+
+if [[ -n "$COMMENT_RE" ]]; then
+  line_num=0
+  in_tpl=0
+  while IFS= read -r line_content || [[ -n "$line_content" ]]; do
+    line_num=$((line_num + 1))
+    ticks=$(count_ticks "$line_content")
+    if (( in_tpl )); then
+      if (( ticks % 2 == 1 )); then
+        in_tpl=0
+      fi
+      continue
+    fi
+    if (( ticks % 2 == 1 )); then
+      in_tpl=1
+    fi
+    if [[ ! "$line_content" =~ $COMMENT_RE ]]; then
+      continue
+    fi
+    if [[ "$line_content" =~ $KEEP_RE ]]; then
+      continue
+    fi
+    if [[ "$line_content" =~ @waiver[[:space:]]+TB-17 ]]; then
+      continue
+    fi
+    add_violation "TB-17" "$line_num" "Comment in code" || true
+  done < "$FILE"
+fi
+
 line_num=0
 while IFS= read -r line_content || [[ -n "$line_content" ]]; do
   line_num=$((line_num + 1))
@@ -63,7 +112,7 @@ while IFS= read -r line_content || [[ -n "$line_content" ]]; do
     add_violation "TB-09" "$line_num" "Line exceeds 100 characters" || true
   fi
 done < "$FILE"
-# ── Overflow sentinel ─────────────────────────────────────────────────────
+
 if (( SUPPRESSED > 0 )); then
   emit_sentinel "$SUPPRESSED"
 fi

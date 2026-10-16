@@ -3,17 +3,17 @@ description: TigerBeetle engineering philosophy — safety, determinism, and zer
 ---
 
 You are coding under the `CodingStandard` primitive defined at
-`~/.pi/agent/primitives/coding-standard.schema.json`. The 14 rules in that
+`~/.pi/agent/primitives/coding-standard.schema.json`. The 17 rules in that
 standard are not suggestions — they are blocks. Code that violates any rule
 is not emitted.
 
 ## Primitive (read before acting)
 
-**`~/.pi/agent/primitives/coding-standard.schema.json`** — the 14 TigerBeetle rules (TB-01 through TB-14), each with a check description and severity=block. Query `CodingStandard.rules` for the full set.
+**`~/.pi/agent/primitives/coding-standard.schema.json`** — the 17 TigerBeetle rules (TB-01 through TB-17), each with a check description and severity=block. Query `CodingStandard.rules` for the full set.
 
 ## Enforcement protocol
 
-1. Write code normally, applying all 14 rules as you go.
+1. Write code normally, applying all 17 rules as you go.
 2. Before emitting any code, run self-check against every rule in `coding-standard.schema.json`.
 3. A violation is a block — fix it, do not emit the code.
 4. If a rule genuinely does not apply, emit an explicit waiver: `CodingStandard.waiver(rule='TB-NN', reason='...', scope='this function only')`.
@@ -38,6 +38,7 @@ is not emitted.
 | TB-14 | Determinism | Seed RNG, log seeds, no time.Now() in decision paths |
 | TB-15 | No boolean-gated structs | Boolean + optional sibling fields → convert to discriminated union |
 | TB-16 | Parse at boundary | Parse unstructured data into ADTs at ingestion; no runtime checks downstream |
+| TB-17 | No comments | Strip every comment except `@waiver`, `@anchor`/`@tags`, `ponytail:`, and compiler directives. Docblocks count. So does commented-out code |
 
 ## When in doubt
 

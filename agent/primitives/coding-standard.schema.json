@@ -1,7 +1,7 @@
 {
   "$id": "https://pi.agent/primitives/coding-standard",
   "title": "TigerBeetle Coding Standard",
-  "description": "16 non-negotiable rules applied to all production code. Each rule is machine-checkable — the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
+  "description": "17 non-negotiable rules applied to all production code. Each rule is machine-checkable - the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
 
   "rules": {
     "assertionDensity": {
@@ -101,6 +101,13 @@
       "check": "Trace each unstructured data source (API response, file read, CLI arg, LLM output, tool invocation) to its consumption. If downstream code performs typeof/instanceof/field-existence checks on data that should have been parsed at the boundary, flag it. The parse step must produce a sum type with an error variant for each failure mode.",
       "severity": "block",
       "languages": ["rust", "typescript", "python", "go"]
+    },
+    "noComments": {
+      "id": "TB-17",
+      "description": "No comments in code. Not an explanation, not a section banner, not a docblock (docstring, JSDoc, rustdoc, godoc), not commented-out code. A comment is a naming failure: it states what a name, a type, or a test should have stated. Three machine-read tokens survive, and only where their tool needs them: @waiver RULE-ID (read by __check.sh), @anchor and @tags (read by the anchor skills), ponytail: (read by the ponytail-debt harvest). Shebangs and toolchain directives survive because the compiler reads them.",
+      "check": "Flag every line that starts with a comment marker for the file's language: // and /* */ for ts/js/rs/go/java/c, # for sh/py/rb/yaml/toml, -- for sql/lua/hs. Exempt @waiver, @anchor, @tags, ponytail:, shebangs, and toolchain directives (@ts-*, eslint, biome, nolint, go:build, noqa, type: ignore, pragma). Delete the rest rather than relocating it. Reasoning that must outlive the code goes in a ticket, an ADR, or a doc beside the source.",
+      "severity": "block",
+      "languages": ["rust", "typescript", "javascript", "python", "go", "shell", "sql"]
     }
   },
 
