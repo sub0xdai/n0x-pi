@@ -16,7 +16,7 @@ candidates from the merge incident. Delete them once reviewed.
 | Layer | Count | What it is |
 |---|---|---|
 | system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
-| control plane | 4 extensions + 8 packages | code that acts on the agent loop |
+| control plane | 5 extensions + 8 packages | code that acts on the agent loop |
 | execution plane | 24 skills + 6 prompts | text the model follows |
 | documentation plane | 4 primitives + 5 `AGENTS.md` | schemas and DOX contracts describing the rest |
 | mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
@@ -59,7 +59,7 @@ flowchart TB
 
 | Box | Members |
 |---|---|
-| extensions 4 | `herdr-agent-state`, `notifications`, `state-guard`, `tmux-manager` |
+| extensions 5 | `herdr-agent-state`, `jev-sieve`, `notifications`, `state-guard`, `tmux-manager` |
 | packages 8 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
 | skills 24 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `video-render-qa`, `vox`, `yt-dlp-download` |
 | prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
@@ -161,7 +161,7 @@ flowchart TB
         D4["the .tmp protocol"]
         D5["4 drifting rule copies"]
         D6["the phantom MCP package"]
-        D7["3 extensions"]
+        D7["2 extensions, jev-sieve restored"]
         D8["5 primitives"]
         D9["docs plane, one contract"]
     end
@@ -181,6 +181,7 @@ Two decisions recorded so the next pass does not re-litigate them:
 |---|---|
 | `herdr-agent-state.ts` | In use. Also vendor-managed: its own header says reinstalling the Herdr integration overwrites the file, so removing it here would not survive anyway. |
 | `@yeliu84/pi-model-router` | Per-turn routing through `model-router.json`. Removing it would make `settings.json` the only model authority. |
+| `jev-sieve.ts` | Restored after being cut. It defaults to `off` (`JEV_SIEVE=on` enables it), it is the only integration that puts the jev classifier between tool output and the context window, and deleting a feature you use is not a simplification. Its pure checks pass. |
 
 ## 6. What verifying this pass turned up
 

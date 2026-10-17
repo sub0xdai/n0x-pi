@@ -273,8 +273,9 @@ Work happens in three phases, each permitting one class of effect.
 
 The mechanical gate runs by itself now. `state-guard` runs `__check.sh` after every `edit` and
 `write`, appends the violations to the tool result, and keeps the file unverified until the gate
-passes. Do not write `.tmp` copies by hand and do not run `__check.sh` yourself: read what the
-append says and fix it. The gate covers source code (TB-09, TB-10, TB-17), Markdown (unclosed or
+passes. Do not write `.tmp` copies by hand.
+You do not need to run `__check.sh` yourself, because the handler does it after every edit
+and write; running it again on demand is harmless. The gate covers source code (TB-09, TB-10, TB-17), Markdown (unclosed or
 unbalanced fences) and JSON (validity).
 
 What remains yours is the part no script can do:
