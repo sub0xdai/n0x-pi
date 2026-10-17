@@ -11,13 +11,12 @@ Topic: $@
 
 ## Primitives (read before acting)
 
-1. **`~/.pi/agent/primitives/project-context.schema.json`** — defines the structured context query protocol. Use it instead of raw `git log`, `ls`, or ad-hoc file searches.
-2. **`~/.pi/agent/primitives/spec.schema.json`** — defines the output shape. Every design section maps to a Spec section. The final output is a Spec, not freeform markdown.
+1. **`~/.pi/agent/primitives/spec.schema.json`** — defines the output shape. Every design section maps to a Spec section. The final output is a Spec, not freeform markdown.
 
 ## Process
 
-**1. Ground yourself via ProjectContext**
-- Query `ProjectContext` using the protocol defined in `project-context.schema.json`.
+**1. Ground yourself in the code**
+- Query the codebase for conventions, constraints, and boundaries before proposing anything.
 - Do not run raw shell commands — use the structured query steps.
 - State briefly what you found ("what exists") before asking questions.
 

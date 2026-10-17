@@ -11,9 +11,7 @@ Target: $@ (defaults to staged changes + working tree diff if omitted)
 
 ## Primitives (read before acting)
 
-1. **`~/.pi/agent/primitives/project-context.schema.json`** — query for conventions, constraints, language, and module boundaries before forming opinions.
-2. **`~/.pi/agent/primitives/review-policy.schema.json`** — the 7 review dimensions (RP-01 through RP-07) and severity classification. Every finding must be tagged with its dimension ID.
-3. **`~/.pi/agent/primitives/review-result.schema.json`** — structured output format. Produce a ReviewResult, not unstructured markdown.
+1. **`~/.pi/agent/primitives/review-policy.schema.json`** — the 7 review dimensions (RP-01 through RP-07) and severity classification. Every finding must be tagged with its dimension ID.
 
 ## Phase 0 — Ground yourself
 
@@ -22,7 +20,7 @@ Before reviewing, understand the context:
 1. **Read the diff.** If no target is given, use `git diff` + `git diff --cached`.
 2. **Read the surrounding code.** A change is only brilliant in context.
    Skim the files adjacent to the diff — imports, callers, callees, tests.
-3. **Query ProjectContext** for conventions (`project-context.schema.json`).
+3. **Query the codebase** for conventions.
    Brilliance means consistency with the codebase.
 
 ## Review dimensions (from review-policy.schema.json)
@@ -39,12 +37,12 @@ For every changed line, evaluate against each dimension:
 
 ## Process
 
-1. **Ground first.** Query ProjectContext before forming opinions.
+1. **Ground first.** Query the codebase before forming opinions.
 2. **Tag every finding** with its dimension ID (RP-NN) and severity from `review-policy.schema.json`.
 3. **Show the fix.** Every non-praise finding must include a concrete diff.
 4. **Praise is mandatory.** At least one finding with severity=praise.
 
-## Output format (from review-result.schema.json)
+## Output format (fixed shape)
 
 Produce a structured ReviewResult:
 

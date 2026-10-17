@@ -16,9 +16,9 @@ candidates from the merge incident. Delete them once reviewed.
 | Layer | Count | What it is |
 |---|---|---|
 | system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
-| control plane | 7 extensions + 8 packages | code that acts on the agent loop |
+| control plane | 4 extensions + 8 packages | code that acts on the agent loop |
 | execution plane | 24 skills + 6 prompts | text the model follows |
-| documentation plane | 9 primitives + 6 `AGENTS.md` + `lattice.md` | schemas and DOX contracts describing the rest |
+| documentation plane | 4 primitives + 5 `AGENTS.md` | schemas and DOX contracts describing the rest |
 | mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
 
 ## 1. What pi loads
@@ -40,8 +40,8 @@ flowchart TB
         PR["prompts 6"]
     end
     subgraph DOC["documentation"]
-        PRI["primitives 9"]
-        DOX["AGENTS.md 6 + lattice.md"]
+        PRI["primitives 4"]
+        DOX["AGENTS.md 5"]
     end
     subgraph COS["cosmetic"]
         TH["themes 2"]
@@ -59,11 +59,11 @@ flowchart TB
 
 | Box | Members |
 |---|---|
-| extensions 7 | `comment`, `herdr-agent-state`, `jev-sieve`, `notifications`, `plan-mode`, `state-guard`, `tmux-manager` |
+| extensions 4 | `herdr-agent-state`, `notifications`, `state-guard`, `tmux-manager` |
 | packages 8 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
 | skills 24 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `video-render-qa`, `vox`, `yt-dlp-download` |
 | prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
-| primitives 9 | `adr`, `check`, `coding-standard`, `decision-tree`, `glossary`, `project-context`, `review-policy`, `review-result`, `spec` |
+| primitives 4 | `check`, `coding-standard`, `review-policy`, `spec` |
 
 MCP was broken when this map was drawn and is fixed now. `npm:pi-mcp-adapter` was declared with
 nothing installed behind it, so pi wrote `extensions: ["-builtin:mcp"]` into `settings.json` and
@@ -161,23 +161,18 @@ flowchart TB
         D4["the .tmp protocol"]
         D5["4 drifting rule copies"]
         D6["the phantom MCP package"]
+        D7["3 extensions"]
+        D8["5 primitives"]
+        D9["docs plane, one contract"]
     end
     subgraph O["Still open"]
-        O2["3 extensions"]
-        O3["5 primitives"]
-        O4["the docs plane"]
-        O5["shell gate limits"]
+        O1["shell gate limits"]
     end
     D -.->|"next"| O
 ```
 
 | Open item | Evidence |
 |---|---|
-| `comment.ts` | Exists to paste a `#`-prefixed comment into the editor. |
-| `jev-sieve.ts` | Calls a local model to censor tool output, with a cache and a retention policy. No evidence it runs. |
-| `plan-mode.ts` | Writes a `PLAN.md` that the vox workflow and `.specify/` already cover. |
-| 5 primitives | Exact-filename reference counts: `adr` 3, `decision-tree` 4, `glossary` 3, `project-context` 6, `review-result` 3. Each is referenced only by `primitives/AGENTS.md`, itself, and one prompt or skill. |
-| docs plane | `lattice.md` plus 6 `AGENTS.md` files restate boundaries the system prompt already states. Three were stale before this session. |
 | shell boundary limits | Indirect writes are detected only inside a git repo, and the gate cannot see a file whose extension it does not know. |
 
 Two decisions recorded so the next pass does not re-litigate them:

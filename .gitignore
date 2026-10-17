@@ -20,3 +20,6 @@ agent/install/
 
 # Rendered PNGs of the harness map; the SVGs are tracked and regenerate the rest
 diagrams/*.png
+
+# pi-managed launcher symlink into the ignored install tree
+agent/bin/

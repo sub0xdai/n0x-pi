@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 853.0938333333334 485.6" width="853.0938333333334" height="485.6" style="--bg:#18181B;--fg:#FAFAFA;background:var(--bg)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 787.8858333333333 485.6" width="787.8858333333333" height="485.6" style="--bg:#18181B;--fg:#FAFAFA;background:var(--bg)">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
   text { font-family: 'Inter', system-ui, sans-serif; }
@@ -27,72 +27,72 @@
   </marker>
 </defs>
 <g class="subgraph" data-id="CTL" data-label="control plane">
-  <rect x="525.4398333333334" y="191.8" width="287.654" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="525.4398333333334" y="191.8" width="287.654" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <text x="537.4398333333334" y="205.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">control plane</text>
+  <rect x="460.2318333333334" y="191.8" width="287.654" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="460.2318333333334" y="191.8" width="287.654" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="472.2318333333334" y="205.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">control plane</text>
 </g>
 <g class="subgraph" data-id="EXE" data-label="execution plane">
-  <rect x="248.31783333333337" y="191.8" width="249.12199999999999" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="248.31783333333337" y="191.8" width="249.12199999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <text x="260.3178333333334" y="205.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">execution plane</text>
+  <rect x="183.10983333333337" y="191.8" width="249.12199999999999" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="183.10983333333337" y="191.8" width="249.12199999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="195.10983333333337" y="205.8" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">execution plane</text>
 </g>
 <g class="subgraph" data-id="DOC" data-label="documentation">
-  <rect x="40" y="348.70000000000005" width="357.308" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="40" y="348.70000000000005" width="357.308" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="348.70000000000005" width="292.1" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="348.70000000000005" width="292.1" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
   <text x="52" y="362.70000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">documentation</text>
 </g>
 <g class="subgraph" data-id="COS" data-label="cosmetic">
-  <rect x="556.7610000000001" y="348.70000000000005" width="125.079" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="556.7610000000001" y="348.70000000000005" width="125.079" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <text x="568.7610000000001" y="362.70000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">cosmetic</text>
+  <rect x="491.55300000000005" y="348.70000000000005" width="125.079" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="491.55300000000005" y="348.70000000000005" width="125.079" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="503.55300000000005" y="362.70000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">cosmetic</text>
 </g>
-<polyline class="edge" data-from="P" data-to="SP" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="515.0830833333333,76.9 515.0830833333333,88.9 370.65583333333336,88.9 370.65583333333336,100.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="P" data-to="SET" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="515.0830833333333,76.9 515.0830833333333,88.9 670.7488333333333,88.9 670.7488333333333,100.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="SP" data-to="SK" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="370.65583333333336,137.8 370.65583333333336,186.8 309.3753333333334,186.8 309.3753333333334,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="SP" data-to="PR" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="370.65583333333336,137.8 370.65583333333336,186.8 431.9363333333333,186.8 431.9363333333333,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="SET" data-to="EXT" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="670.7488333333333,137.8 670.7488333333333,186.8 599.8353333333333,186.8 599.8353333333333,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="SET" data-to="PKG" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="670.7488333333333,137.8 670.7488333333333,186.8 741.6623333333333,186.8 741.6623333333333,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="EXT" data-to="PRI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="599.8353333333333,272.70000000000005 599.8353333333333,332.70000000000005 327.3585,332.70000000000005 327.3585,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="SK" data-to="PRI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="309.3753333333334,272.70000000000005 309.3753333333334,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
-<polyline class="edge" data-from="EXT" data-to="TH" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="599.8353333333333,272.70000000000005 599.8353333333333,332.70000000000005 619.3005,332.70000000000005 619.3005,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="P" data-to="SP" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="449.87508333333335,76.9 449.87508333333335,88.9 305.44783333333334,88.9 305.44783333333334,100.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="P" data-to="SET" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="449.87508333333335,76.9 449.87508333333335,88.9 605.5408333333334,88.9 605.5408333333334,100.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SP" data-to="SK" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="305.44783333333334,137.8 305.44783333333334,186.8 244.16733333333337,186.8 244.16733333333337,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SP" data-to="PR" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="305.44783333333334,137.8 305.44783333333334,186.8 366.72833333333335,186.8 366.72833333333335,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SET" data-to="EXT" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="605.5408333333334,137.8 605.5408333333334,186.8 534.6273333333334,186.8 534.6273333333334,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SET" data-to="PKG" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="605.5408333333334,137.8 605.5408333333334,186.8 676.4543333333335,186.8 676.4543333333335,235.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EXT" data-to="PRI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="534.6273333333334,272.70000000000005 534.6273333333334,332.70000000000005 262.1505,332.70000000000005 262.1505,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SK" data-to="PRI" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="244.16733333333337,272.70000000000005 244.16733333333337,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="EXT" data-to="TH" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="534.6273333333334,272.70000000000005 534.6273333333334,332.70000000000005 554.0925000000001,332.70000000000005 554.0925000000001,392.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
 <g class="node" data-id="P" data-label="pi 1.3.0" data-shape="rectangle">
-  <rect x="475.9535833333333" y="40" width="78.259" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="515.0830833333333" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">pi 1.3.0</text>
+  <rect x="410.74558333333334" y="40" width="78.259" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="449.87508333333335" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">pi 1.3.0</text>
 </g>
 <g class="node" data-id="SP" data-label="system prompt" data-shape="rectangle">
-  <rect x="307.81433333333337" y="100.9" width="125.68299999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="370.65583333333336" y="119.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">system prompt</text>
+  <rect x="242.60633333333337" y="100.9" width="125.68299999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="305.44783333333334" y="119.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">system prompt</text>
 </g>
 <g class="node" data-id="SET" data-label="settings.json" data-shape="rectangle">
-  <rect x="612.7238333333333" y="100.9" width="116.05" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="670.7488333333333" y="119.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">settings.json</text>
+  <rect x="547.5158333333334" y="100.9" width="116.05" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="605.5408333333334" y="119.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">settings.json</text>
 </g>
 <g class="node" data-id="EXT" data-label="extensions 7" data-shape="rectangle">
-  <rect x="541.4398333333334" y="235.8" width="116.791" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="599.8353333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">extensions 7</text>
+  <rect x="476.2318333333334" y="235.8" width="116.791" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="534.6273333333334" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">extensions 7</text>
 </g>
 <g class="node" data-id="PKG" data-label="packages 8" data-shape="rectangle">
-  <rect x="686.2308333333333" y="235.8" width="110.863" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="741.6623333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">packages 8</text>
+  <rect x="621.0228333333334" y="235.8" width="110.863" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="676.4543333333335" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">packages 8</text>
 </g>
 <g class="node" data-id="SK" data-label="skills 24" data-shape="rectangle">
-  <rect x="264.3178333333334" y="235.8" width="90.11499999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="309.3753333333334" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">skills 24</text>
+  <rect x="199.10983333333337" y="235.8" width="90.11499999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="244.16733333333337" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">skills 24</text>
 </g>
 <g class="node" data-id="PR" data-label="prompts 6" data-shape="rectangle">
-  <rect x="382.43283333333335" y="235.8" width="99.007" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="431.9363333333333" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">prompts 6</text>
+  <rect x="317.2248333333333" y="235.8" width="99.007" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="366.72833333333335" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">prompts 6</text>
 </g>
-<g class="node" data-id="PRI" data-label="primitives 9" data-shape="rectangle">
-  <rect x="273.409" y="392.70000000000005" width="107.899" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="327.3585" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">primitives 9</text>
+<g class="node" data-id="PRI" data-label="primitives 4" data-shape="rectangle">
+  <rect x="208.20100000000002" y="392.70000000000005" width="107.899" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="262.1505" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">primitives 4</text>
 </g>
-<g class="node" data-id="DOX" data-label="AGENTS.md 6 + lattice.md" data-shape="rectangle">
-  <rect x="56" y="392.70000000000005" width="189.409" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="150.7045" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">AGENTS.md 6 + lattice.md</text>
+<g class="node" data-id="DOX" data-label="AGENTS.md 5" data-shape="rectangle">
+  <rect x="56" y="392.70000000000005" width="124.20100000000001" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="118.10050000000001" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">AGENTS.md 5</text>
 </g>
 <g class="node" data-id="TH" data-label="themes 2" data-shape="rectangle">
-  <rect x="572.7610000000001" y="392.70000000000005" width="93.079" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="619.3005" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">themes 2</text>
+  <rect x="507.55300000000005" y="392.70000000000005" width="93.079" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="554.0925000000001" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">themes 2</text>
 </g>
 </svg>

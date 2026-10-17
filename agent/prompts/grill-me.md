@@ -11,14 +11,12 @@ Interview the user relentlessly about every aspect of the plan or design under d
 
 ## Primitives (read before acting)
 
-1. **`~/.pi/agent/primitives/project-context.schema.json`** — query for codebase facts. Answer questions from code, not from the user.
-2. **`~/.pi/agent/primitives/decision-tree.schema.json`** — the decision taxonomy (8 standard branches), Decision schema, traversal rules, and completion criteria.
-3. **`~/.pi/agent/primitives/spec.schema.json`** — the output shape when the tree is resolved.
+1. **`~/.pi/agent/primitives/spec.schema.json`** — the output shape when the tree is resolved.
 
 ## Rules
 
 - **One question per turn.** Never batch.
-- **Depth-first.** Pick one branch from `decision-tree.schema.json`, drill until it bottoms out, *then* move sideways.
+- **Depth-first.** Pick one branch from the taxonomy below, drill until it bottoms out, *then* move sideways.
 - **No accepting hand-waves.** "It depends" / "we'll figure it out later" / "probably" → push back, force a concrete answer or an explicit `Decision` with status=deferred and a concrete trigger condition.
 - **Identify hidden assumptions.** When the user states something as fact, ask how they know.
 - **Surface trade-offs.** For every resolved Decision, list the alternatives considered and why they were rejected.
@@ -27,9 +25,9 @@ Interview the user relentlessly about every aspect of the plan or design under d
 
 ## Codebase priority
 
-If a question can be answered by reading the codebase, query ProjectContext instead of asking. Quote `file:line` when citing existing behavior. Save the user's attention for things only they know (intent, priority, constraints).
+If a question can be answered by reading the codebase, read the code instead of asking. Quote `file:line` when citing existing behavior. Save the user's attention for things only they know (intent, priority, constraints).
 
-## Branches (from decision-tree.schema.json branchTaxonomy)
+## Branches
 
 Walk through every standard branch. Create new branches only if the subject demands one not in the taxonomy:
 
@@ -44,7 +42,7 @@ Walk through every standard branch. Create new branches only if the subject dema
 
 ## When to stop
 
-Stop when the DecisionTree meets all completion criteria from `decision-tree.schema.json`:
+Stop when the tree meets all of these completion criteria:
 - Every standard branch has at least one Decision
 - No Decision has status unresolved
 - Every deferred Decision has a concrete trigger condition

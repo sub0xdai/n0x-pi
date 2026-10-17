@@ -27,7 +27,6 @@ Each `.md` file is a prompt template. Frontmatter fields:
 
 - Self-contained — no imports, no script dependencies
 - Place in `~/.pi/agent/prompts/` or `.pi/prompts/` in a project
-- Update lattice.md index when adding or removing
 
 ## Prompt Index
 
@@ -43,11 +42,11 @@ Each `.md` file is a prompt template. Frontmatter fields:
 
 - Use `{{argument}}` for single-argument templates, positional `{{1}}`, `{{2}}` for multiple
 - Keep prompts concise — they're inserted into the conversation, not system prompts
-- Templates indexed here should match lattice.md's prompt index
+- Every template listed here exists on disk; pi lists them by name
 
 ## Verification
 
-- Template count should match lattice.md index
+- Prompts stay self-contained
 - Each `.md` file must have valid YAML frontmatter
 
 ## Child DOX Index

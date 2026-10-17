@@ -3,7 +3,7 @@
 My pi config. The agent knows where everything lives, follows a coding standard,
 and checks its own output before showing it to me. Will be looking to decrease bloat where possible.
 
-- [Lattice](agent/lattice.md) — directory layout, naming rules, the extension litmus test
+- [Contract](agent/AGENTS.md) — directory layout, naming rules, the extension boundary test
 - [TigerBeetle](agent/prompts/tigerbeetle.md) — 17 coding rules, always enforced
 - [jev-sieve](jev-sieve.md) - design record for the Jev context sieve (its comments, moved out of the source)
 - [Vox](agent/skills/vox/SKILL.md) — spec to plan to TDD checkpoints
@@ -27,7 +27,7 @@ Each one modifies the harness event loop. No CLI wrappers dressed up as extensio
 
 25 skills in `agent/skills/`, 6 in `~/.agents/skills/`, plus the package skills
 (`ponytail`, `context7-docs`, `ask-user`, `mcp-scripting`). The full index, with each
-skill's companion scripts, is in [lattice](agent/lattice.md).
+skill's companion scripts, is in the [contract](agent/AGENTS.md).
 
 **Code and review:**
 `vox` — plan and build from specs.
@@ -81,4 +81,4 @@ Session end:       handoff
 
 Stock pi is a blank config. This one ships with opinions and checks. Almost
 everything outside the extensions is a bash script in `~/dotfiles/scripts/`.
-The lattice file maps it all.
+The contract file maps it all.

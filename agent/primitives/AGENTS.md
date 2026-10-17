@@ -15,7 +15,7 @@ matrices, and computable validation rules.
 
 - **Owner:** m0xu
 - **Parent:** `~/.pi/agent/AGENTS.md` (root DOX contract)
-- **Governed by:** `lattice.md` (spatial protocol)
+- **Governed by:** `~/.pi/agent/AGENTS.md` (directory map)
 
 ## Categories
 
@@ -31,24 +31,18 @@ matrices, and computable validation rules.
 - No prose instruction — only structured data
 - Referenced by absolute path from prompts (e.g. `~/.pi/agent/primitives/coding-standard.json`)
 - A primitive must have exactly one purpose — split before merging
-- Update `lattice.md` index when adding or removing primitives
 
 ## Primitive Index
 
 | Primitive | Category | Serves |
 |-----------|----------|--------|
-| `project-context.schema.json` | Knowledge | brainstorm, brilliance, grill-me, grill-with-docs |
-| `glossary.schema.json` | Knowledge | grill-with-docs |
-| `adr.schema.json` | Knowledge | grill-with-docs, adr skill |
 | `spec.schema.json` | Action | brainstorm, grill-me, grill-with-docs |
-| `decision-tree.schema.json` | Action | grill-me, grill-with-docs |
-| `review-result.schema.json` | Action | brilliance |
 | `coding-standard.schema.json` | Constraint | tigerbeetle |
 | `review-policy.schema.json` | Constraint | brilliance |
 | `check.schema.json` | Constraint | all code emission |
 
 ## Verification
 
-- Primitive count should match `lattice.md` index
+- Every schema listed here exists, and every prompt that reads one says so
 - Every primitive referenced by a prompt must exist
 - Every primitive must be valid JSON

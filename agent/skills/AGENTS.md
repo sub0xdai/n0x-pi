@@ -5,7 +5,7 @@ description: Contract and index for all skill directories. Defines creation rule
 # Skills — Directory Contract
 
 Agents editing or invoking skills under `~/.pi/agent/skills/` must follow this contract
-and the spatial protocol in `~/.pi/agent/lattice.md`.
+and the boundary rules in `~/.pi/agent/AGENTS.md`.
 
 ## Purpose
 
@@ -17,14 +17,14 @@ instructions. Tools come from extensions or native pi tools.
 
 - **Owner:** m0xu
 - **Parent:** `~/.pi/agent/AGENTS.md` (root DOX contract)
-- **Protocol:** `~/.pi/agent/lattice.md` (spatial map, naming, boundaries)
+- **Protocol:** `~/.pi/agent/AGENTS.md` (directory map, naming, boundaries)
 
 ## Local Contracts
 
 ### Directory Shape
 
 Each skill is a directory containing exactly one `SKILL.md` file. No other assets
-(lattices, scripts, templates) belong in the skill directory. Script companions live
+(templates, assets) belong in the skill directory. Script companions live
 at `~/dotfiles/scripts/<skill-name>*.sh`.
 
 ### Creation Rules
@@ -35,7 +35,6 @@ at `~/dotfiles/scripts/<skill-name>*.sh`.
 - If skill requires scripts, create them in `~/dotfiles/scripts/` with the
   `<skill-name>` prefix convention
 - If skill requires prompt templates, create them in `~/.pi/agent/prompts/`
-- Update lattice.md index when adding or removing a skill
 
 ### Invocation
 
@@ -99,7 +98,7 @@ invocations it performs.
 
 ## Verification
 
-- Skill count should match lattice.md index
+- Every skill directory holds exactly one SKILL.md
 - Each skill must have a single `SKILL.md` with valid YAML frontmatter
 - No extra files in skill directories beyond SKILL.md (except explicit assets like
   `shannon/scripts/`)

@@ -1,4 +1,4 @@
-# Pi Agent Configuration — DOX Root
+# Pi Agent Configuration - DOX Root
 
 
 # NO words 
@@ -12,83 +12,80 @@ tree must read this doc plus the nearest child AGENTS.md along the path.
 
 ## Purpose
 
-`~/.pi/agent/` houses all pi coding agent configuration: skills, extensions, prompts,
-themes, packages, settings, and the spatial protocol (`lattice.md`). Every edit here
-changes pi's behavior across all projects.
+`~/.pi/agent/` houses all pi coding agent configuration. Every edit here changes pi's
+behavior in every project. This file is the single contract for layout and boundaries.
+There is no separate map file: a second document that describes the first is a second
+thing to drift.
 
 ## Ownership
 
 - **Owner:** m0xu
-- **Machine-local:** This directory is not synced, version-controlled, or portable
-- **Pi loads this:** Pi reads `APPEND_SYSTEM.md` as system prompt appendix.
-  AGENTS.md files in this tree are loaded by pi via `AGENTS.md` discovery
-  when cwd is under `~/.pi/agent/`.
+- **Versioned:** in the repository at `~/.pi`, alongside these files, so the contract and
+  the tree it describes change in one commit
+- **Pi loads:** `APPEND_SYSTEM.md` rides in the system prompt. `AGENTS.md` files load by
+  directory discovery when the working directory is under this tree.
 
-## Local Contracts
+## Local contracts
 
-### Spatial Protocol (`lattice.md`)
+### Directory map
 
-`lattice.md` is the binding spatial map and protocol for this configuration. It defines:
-- Directory boundaries (skills = behavior, extensions = harness modification)
-- Naming conventions (double-underscore prefix for agent-invoked scripts)
-- The extension litmus test: extensions must pass lifecycle interception, TUI/UI
-  manipulation, or persistent transport protocol criteria
-- Pathing discipline (absolute paths only outside workspace)
-- Discovery loop for locating capabilities
+| Path | Purpose | Rule |
+|---|---|---|
+| `skills/` | Behavioral workflows, one directory per skill | exactly one `SKILL.md`, no other files unless the skill ships an asset |
+| `prompts/` | Reusable instruction templates, invoked as `/<name>` | self-contained; no dependency on an extension |
+| `extensions/` | Hooks into the pi event loop, `.ts` only | must pass the boundary test below |
+| `primitives/` | Typed ground truth, `.schema.json` only | typed data, never prose instruction |
+| `themes/` | pi theme JSON | one theme per file |
+| `scripts/` | The mechanical gate and its test | loaded by `state-guard`, not by pi |
+| `~/dotfiles/scripts/` | Executable logic that skills invoke | absolute paths only |
 
-**lattice.md is authoritative for all spatial and boundary decisions.** When
-lattice.md and an AGENTS.md disagree about directory boundaries or naming conventions,
-lattice.md controls. AGENTS.md files add local detail within lattice.md's framework.
+### The extension boundary
 
-### System Prompt (`APPEND_SYSTEM.md`)
+An extension exists to modify the harness event loop. If a workflow can be a bash script
+driven through the native `bash` tool, an extension for it is a mistake.
 
-Contains git commit rules: no Co-authored-by, Signed-off-by, or trailer lines.
+An extension may exist only if it does one of these three things:
 
-### Runtime Configuration (`settings.json`)
+1. **Lifecycle interception** - blocks or modifies the agent event loop.
+   `state-guard` refuses blind edits and runs the gate; `notifications` reacts to turns.
+2. **TTY/UI manipulation** - changes terminal rendering.
+3. **Persistent transport** - needs a stateful socket to an external API.
 
-- Default model: DeepSeek v4 flash (via OpenAI provider), thinking level: high
-- Theme: vanilla-amoled, thinking blocks hidden
-- Boxed editor with fixed editor mode
-- Eight installed pi packages
+An extension that registers a wrapper tool and passes none of the three is
+execution-plane leakage. Prefer `bash <command>`, and flag the extension rather than
+writing another one.
 
-### Pi Packages Installed
+### Naming and pathing
 
-| Package | Provides |
-|---------|----------|
-| `pi-web-access` | web_search, source_check, fetch_content, get_search_content tools, plus the curator layer |
-| `ponytail` (git) | Ponytail skill family (ponytail, ponytail-audit, ponytail-review, ponytail-debt, ponytail-gain, ponytail-help) |
-| `@upstash/context7-pi` | Context7 documentation lookup (resolve-library-id, query-docs) plus the context7-docs skill |
-| `@yeliu84/pi-model-router` | Model routing between providers |
-| `@tungthedev/pi-extensions` | Boxed editor with extensible status row, and Task subagents |
-| `pi-mcp-adapter` | mcp and mcpScript tools plus the mcp-scripting skill |
-| `@ff-labs/pi-fff` | ffgrep and fffind tools |
-| `eko24ive/pi-ask` (git) | ask_user tool plus the ask-user skill |
-| `vim-motions-pi` | Vim keybindings in the editor. Replaces the editor component, so it competes with the boxed editor; built against the deprecated `@mariozechner/*` scope |
+- Scripts are `<name>.sh` in `~/dotfiles/scripts/`, grouped by prefix (`scythe_*`).
+- A skill named `<name>` uses scripts matching `~/dotfiles/scripts/<name>*.sh`.
+- Paths outside the workspace are always absolute. A skill has no local assets; its
+  template is a prompt in `prompts/`, referenced absolutely.
+- If a capability is missing, say so and use `bash`. Do not invent a tool.
 
-`pi list` is the source of truth for what is registered. Pi reconciles `settings.json`
-against installed packages on startup, so a package present in `npm/package.json` can
-appear in `settings.json` without an explicit `pi install`. Read `pi list` rather than
-trusting the array to be stable.
+### Runtime configuration
 
-## Work Guidance
+`settings.json` is the only source for provider, model, theme, and packages. `pi list` is
+the source of truth for what is actually installed, because pi reconciles the settings
+array against disk at startup.
 
-- Extensions go through the lattice.md litmus test before creation
-- Skills must follow the Agent Skills standard (one SKILL.md per directory)
-- Prompt templates are self-contained markdown with optional YAML frontmatter
-- Themes are JSON files following pi's theme schema
-- Do not edit `npm/node_modules/` or `git/` contents directly — use `pi install/remove`
+`agent/mcp.json` holds MCP servers for pi's builtin MCP support. Do not declare an MCP
+adapter package: pi answers a declared MCP extension by writing `extensions:
+["-builtin:mcp"]`, which silently disables every server.
 
-## Verification
+### Verification
 
-- `lattice.md` index should remain current → edit lattice.md when skills/prompts change
-- Extensions must declare which lattice.md criterion they satisfy in their AGENTS.md entry
+- `bash scripts/__check.test.sh` - the gate's own tests (22)
+- `node extensions/state-guard.check.mjs` - the runtime guard's assertions
+- `__check.sh` runs automatically after every `edit` and `write`, and on files a bash call
+  changed inside a git repository. A failing gate is a block, not a warning.
 
-## Child DOX Index
+## Child DOX index
 
 | Child | Scope | Description |
-|-------|-------|-------------|
-| `skills/AGENTS.md` | `~/.pi/agent/skills/` | Skill contracts, triggers, and invocation rules |
-| `extensions/AGENTS.md` | `~/.pi/agent/extensions/` | Extension contracts enforcing lattice.md criteria |
-| `prompts/AGENTS.md` | `~/.pi/agent/prompts/` | Prompt template index and usage conventions |
-| `themes/AGENTS.md` | `~/.pi/agent/themes/` | Theme file conventions |
-| `primitives/AGENTS.md` | `~/.pi/agent/primitives/` | Primitive contracts — structured ground truth referenced by prompts |
+|---|---|---|
+| `skills/AGENTS.md` | `~/.pi/agent/skills/` | skill creation rules and the script each skill invokes |
+| `extensions/AGENTS.md` | `~/.pi/agent/extensions/` | extension index, the boundary criterion each one meets, loader limits |
+| `prompts/AGENTS.md` | `~/.pi/agent/prompts/` | prompt conventions and the primitives each one reads |
+| `primitives/AGENTS.md` | `~/.pi/agent/primitives/` | schema conventions and which prompt reads each |
+| `themes/AGENTS.md` | `~/.pi/agent/themes/` | theme file conventions |
