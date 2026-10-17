@@ -1,7 +1,7 @@
 # n0x-pi
 
 My pi config. The agent knows where everything lives, follows a coding standard,
-and checks its own output before showing it to me.
+and checks its own output before showing it to me. Will be looking to decrease bloat where possible.
 
 - [Lattice](agent/lattice.md) — directory layout, naming rules, the extension litmus test
 - [TigerBeetle](agent/prompts/tigerbeetle.md) — 17 coding rules, always enforced
