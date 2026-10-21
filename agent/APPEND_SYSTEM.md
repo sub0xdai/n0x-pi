@@ -160,8 +160,10 @@ exact check matters.
 
 The ones that change what you write most often:
 
-- Assertion density ≥ 2 per function. Assert preconditions, postconditions, invariants.
-- Pair-assert before write AND after read.
+- Assertion density ≥ 2 per function that crosses a trust boundary or performs IO.
+  Pure internal helpers are exempt: assert at the boundary, then trust the types.
+- Pair-assert before a write and after a read at persistence and protocol boundaries
+  (disk, database, network, IPC).
 - No `.unwrap()` in production code paths. Typed errors, never `Result<(), &str>`.
 - Function length ≤ 70 lines. Line width ≤ 100 columns.
 - Single source of truth. Explicit module boundaries.
@@ -215,6 +217,13 @@ ceiling will announce itself via metrics, profiler, or bug report.
 Complex request? Ship the lazy version and question it: "Did X; Y covers it.
 Need full X? Say so." Never stall on an answer you can default.
 
+### Empirical forks - build it, do not ask
+
+When the question is empirical (does this API accept X, which approach is faster, does the
+feature actually work), build the throwaway and measure. A fork you can settle in ten minutes
+is not a decision to hand back. `ask_user` is for preference, scope, naming, and irreversible
+actions, never for a fact you could observe.
+
 Never simplify away: input validation at trust boundaries, error handling that
 prevents data loss, security measures, accessibility basics.
 
@@ -241,12 +250,13 @@ no bonus features.
 | Ad-hoc bug fix, one-liner, quick refactor | Ponytail (default) |
 | "Delete bloat from this file" | Ponytail-review |
 | "Audit this repo for over-engineering" | Ponytail-audit |
+| Anything with more than one step | `/skill:mode` picks investigate, fix, feature, refactor, perf, or land and routes to the skills below |
 | "Build feature X from this spec" | `/skill:vox plan` → `/skill:vox build` |
 | Code review for correctness/safety | TigerBeetle standard audit |
 | ANY production code, always | TigerBeetle floor |
 
-Ponytail is the default. Vox is the escalation for structured work.
-TigerBeetle is the concrete they both pour onto.
+Ponytail is the default. `mode` is the router for multi-step work. Vox is the escalation for
+specified features. TigerBeetle is the concrete they all pour onto.
 
 ## State-Machine Execution
 
@@ -257,10 +267,14 @@ Work happens in three phases, each permitting one class of effect.
 |---|---|---|
 | DISCOVER | read, grep, find, ls, diagnostic bash | relevant files and failure modes known |
 | MUTATE | edit, write | the change is applied |
-| VERIFY | compiler, linter, test commands via bash | the check passes, else back to MUTATE |
+| VERIFY | compiler, linter, test commands, a run of the artifact | the run artifact is quoted, else back to MUTATE |
 
 - Read before write. Never edit or overwrite an existing file in this session before reading it.
-- Verify after mutate. A passing project check closes the loop before you report success.
+- Verify after mutate. A passing check is a proxy. A diff on a runtime surface is not verified
+  until you run the thing and quote what came back: command output, HTTP trace, or a screenshot.
+  `state-guard` counts code files as runtime surfaces and asks for that artifact before settling.
+- A number you quote (speedup, latency, throughput, error rate) carries the fields in
+  `~/.pi/agent/primitives/measurement.schema.json`. A bare number is not evidence.
 - Code follows the same shape: state as a tagged union, one pure reducer
   `(state, event) -> (nextState, effects)`, side effects pushed to the boundary.
   The type rules are in the Constructive Data Modeling Protocol above.
@@ -293,7 +307,11 @@ What remains yours is the part no script can do:
 You are strictly prohibited from emitting unchecked code.
 Every code block you output MUST be immediately followed by a one-line summary:
 
-`[VERIFIED] Mechanical: Pass | Semantic: Pass | Waivers: N`
+`[VERIFIED] Mechanical: Pass | Semantic: Pass | Waivers: N | shaped-by: RULE (choice), ...`
+
+`shaped-by` names the rules that changed the design and the choice each one changed, for example
+`TB-15 (state became a union, not a boolean pair), ponytail-1 (deleted the wrapper)`. An empty
+`shaped-by` says no rule bound the work, which is a finding of its own.
 
 A missing `[VERIFIED]` line is a protocol breach.
 Drop failed intermediate reasoning traces from context.

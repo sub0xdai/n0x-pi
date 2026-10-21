@@ -50,12 +50,14 @@ require explicit invocation.
 | `appimage-integrate` | `/skill:appimage-integrate` | Install an AppImage into the desktop launcher; "set up this AppImage", "not launching from rofi" | no |
 | `cover-letter` | `/skill:cover-letter` | Write a job application cover letter from a pasted posting, grounded in real resume + past letters; "make me a cover letter", "help me apply to <job>" | no |
 | `audit` | `/skill:audit` | Two-pass code audit; after implementing features, fixing multi-file bugs, or "audit this" | no |
+| `bridge-recon` | `/skill:bridge-recon` | Recon and fund-path probing for cross-chain swap and bridge front-ends; "recon this bridge", "is this swap exploitable" | no |
 | `cloudflare-devops` | `/skill:cloudflare-devops` | Cloudflare deployments, wrangler, Pages/Workers, CI/CD, domain management, tunnel setup | no |
 | `diff-review` | `/skill:diff-review` | Visual HTML diff review of branches, commits, PRs, or working tree changes | no |
 | `ffmpeg-composite` | `/skill:ffmpeg-composite` | Hand-built ffmpeg composite builds and filtergraph debugging; custom cut/assemble/overlay video, concat errors | no |
 | `graphify` | `/skill:graphify` | Codebase analysis, architecture questions, file relationships; especially if graphify-out/ exists | no |
 | `handoff` | `/skill:handoff` | "write a handoff", "summarise this session", wrapping up a session | no |
 | `humanizer` | `/skill:humanizer` | Removing AI-generated writing patterns from text; editing/reviewing for natural voice | no |
+| `mode` | `/skill:mode` | Routed rigor for a non-trivial task; classifies into investigate, fix, feature, refactor, perf, or land, prints the steps, and holds the turn to that shape's exit condition | no |
 | `scythe` | `/skill:scythe` | Generate brutalist kinetic marketing/promo videos for any project; triggers on "generate a video", "make a promo video", "brutalist video", "scythe" | yes: scythe_build.sh, scythe_bootstrap.sh, scythe_ingest.sh, scythe_render.sh |
 | `nuclear-review` | `/skill:nuclear-review` | Thermo-nuclear code quality review; deep maintainability audit | no |
 | `onchain` | `/skill:onchain` | On-chain wallet/token forensics for hidden alpha and connections; triggers on "analyze this wallet", "trace this token", "who is behind X", "money trail", "dev wallet analysis", "is this token safe" on Ethereum, ETH-adjacent chains, or Solana | no |
@@ -64,10 +66,13 @@ require explicit invocation.
 | `shannon` | `/skill:shannon` | Neovim interaction; show "in Neovim", annotated code review, walkthrough, error markers | shannon-find-nvim.sh |
 | `ste-writing` | `/skill:ste-writing` | Rewrite prose in ASD-STE100 Simplified Technical English to remove AI slop; two modes: strict (procedures) and STE-flavored (general prose). Triggers on "ste", "STE", "de-slop", "anti-slop", "make this not sound like AI", "clean up this doc". | ste_lint.py |
 | `teach` | `/skill:teach` (explicit only) | "teach me", "I want to learn", "explain X". Uses sub-skills for glossary, learning records, missions, resources | no |
+| `typesafe-ai` | `/skill:typesafe-ai` | Build AI features from small typed judgment units; programmable common sense, a structured decision instead of prompt-and-parse | no |
 | `video-render-qa` | `/skill:video-render-qa` | Verify a rendered video against its design; "check the render", post-render QA, frame/pixel/OCR/audio checks | no |
+| `verify-ui` | `/skill:verify-ui` | Prove a UI change on the real surface through kitesurf chrome-devtools; screenshot, console, and network calls as the artifact | no |
 | `yt-dlp-download` | `/skill:yt-dlp-download` | YouTube downloads with 403 player-client recovery; "download this YouTube video", "grab the audio from this link" | no |
 | `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before vox plan | no |
 | `vox` | `/skill:vox plan` → `/skill:vox build` | Spec-driven development with TDD checkpoints; two-step pipeline from spec to code | no |
+| `why` | `/skill:why` | Reconstruct the intent behind code from git history, PR discussion, repo docs, and vault notes in parallel; "why is this like this", "is this deliberate" | no |
 
 ### Skill Conflicts
 

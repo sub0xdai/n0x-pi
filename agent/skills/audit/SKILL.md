@@ -5,13 +5,13 @@ description: "Two-pass code audit: adversarial deep review followed by standard 
 
 # Code Audit — Two-Pass Adversarial Review
 
-Two-pass audit on recent changes or specified files. Pass 1 is adversarial (assume broken until proven otherwise); Pass 2 is a standard review second opinion on the fixed state. Both passes run in-process — there are no subagents in pi.
+Two-pass audit on recent changes or specified files. Pass 1 is adversarial and runs in-process: assume broken until proven otherwise. Pass 2 is a standard review dispatched to the `reviewer` subagent, so the second opinion comes from a context that neither wrote the code nor defended Pass 1.
 
 ## How this works
 
 **Pass 1 — Adversarial deep audit.** You (the agent) adopt an adversarial mindset: assume every line is wrong until you prove it correct. Read the diff, run verification commands, and produce a structured report covering all checklist categories. **Do not fix anything during Pass 1.** Only read, grep, and run verification — report every finding.
 
-**Pass 2 — Standard review second opinion.** After Pass 1 findings are fixed, switch to a standard PR-review mindset. Re-read the final state and answer: *"Would a fresh reviewer approve this?"* Produce `verdict: approve` or `verdict: change requested` with specific issues.
+**Pass 2 — Standard review second opinion.** After Pass 1 findings are fixed, dispatch `Task` with `subagent_type: reviewer` over the diff plus the final state. Hand it the diff, the stated requirements, and the verification commands; do not hand it Pass 1's reasoning, which would anchor it. Ask: *"Would a fresh reviewer approve this?"* Produce `verdict: approve` or `verdict: change requested` with specific issues. If `Task` is unavailable, run the pass in-process and say in the report that the second opinion shared the author's context.
 
 **Adversarial escalation (Pass 2 variant).** For security-critical changes only, re-run the adversarial checklist instead of the standard review. The three narrow triggers:
 
@@ -275,15 +275,22 @@ After all Pass 1 findings are resolved (and optionally re-audited), run the stan
 
 ### Mindset
 
-You are a fresh reviewer seeing this code for the first time. You are not adversarial — you are thorough and fair. Your job: *"Would I approve this PR?"*
+The second opinion must come from a context that did not write the code and did not argue for
+Pass 1's findings. A fresh reviewer is thorough and fair, not adversarial. The question is
+*"Would I approve this PR?"*
 
 ### What to do
 
-1. Re-read the final diff (original change + all fixes applied).
-2. Verify every Pass 1 finding has been addressed.
-3. Check for **regressions** — did any fix introduce a new problem?
-4. Check for **missed issues** — did Pass 1 overlook anything that a standard review would catch?
-5. Check overall code quality: clarity, consistency with project conventions, test coverage.
+1. Dispatch `Task` with `subagent_type: reviewer`. Hand it the diff, the stated requirements, and
+the verification commands. Do not hand it Pass 1's reasoning, which anchors it.
+2. Ask it to re-read the final diff (original change plus applied fixes), verify every Pass 1
+   finding against the current code, then look for regressions and missed issues.
+3. Require a quote for each PASS: the command it ran and its output, or the file:line it read. A
+   PASS with no evidence is rejected and the step is rerun.
+4. Collect the verdict and fold it into the report below, attributed as the reviewer's.
+
+If `Task` is unavailable, run the pass in-process and say in the report that the second opinion
+shared the author's context, which weakens it.
 
 ### Pass 2 report format
 

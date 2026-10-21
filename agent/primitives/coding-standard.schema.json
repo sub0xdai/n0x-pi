@@ -5,8 +5,8 @@
   "rules": {
     "assertionDensity": {
       "id": "TB-01",
-      "description": "Assertion density ≥ 2 per function. Assert preconditions before mutation. Assert postconditions after. Assert invariants at every boundary.",
-      "check": "Count assert statements in function body. Must be >= 2 for every function longer than 5 lines. Functions <= 5 lines are exempt.",
+      "description": "Assertion density ≥ 2 per function that crosses a trust boundary or performs IO (parse, network, filesystem, database, external call, shared state). Assert preconditions before mutation and postconditions after. Pure internal helpers and in-memory transforms are exempt: assert at the boundary, then trust the types.",
+      "check": "For each function that parses external input, performs IO, or mutates shared state: count asserts, must be >= 2. Pure functions and internal helpers are not counted, and redundancy added to satisfy this rule inside a trusted boundary is itself a boundary violation.",
       "severity": "block",
       "enforcement": "semantic",
       "enforcedBy": "the model, in the semantic self-check"
@@ -29,8 +29,8 @@
     },
     "pairAssert": {
       "id": "TB-04",
-      "description": "Pair-assert before write AND after read. After writing data, immediately read it back and assert it matches what was written.",
-      "check": "Every write operation must be followed by a read + assert within 5 lines. Hardware lies. File systems lie. Databases lie.",
+      "description": "Pair-assert before write AND after read at persistence and protocol boundaries. After writing to disk, a database, a network peer, or an IPC channel, read it back and assert it matches what was written.",
+      "check": "For each write that leaves the process: verify a read + assert follows within 5 lines. In-memory writes inside a pure function are exempt. Hardware lies, file systems lie, databases lie; a local variable does not.",
       "severity": "block",
       "enforcement": "semantic",
       "enforcedBy": "the model, in the semantic self-check"

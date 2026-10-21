@@ -310,7 +310,9 @@ Works with both delta and legacy layouts. Resolution order same as plan mode ste
 - **Verify against delta scenarios.** Each CP's tests should map to specific Scenarios
   in the delta spec. Track which scenarios each CP covers.
 - **Verify before claiming done.** Run the checkpoint's verification command and quote the actual output.
-- **No parallelism.** No subagent dispatch, no worktrees. Linear execution in this session.
+- **No parallelism.** No worktrees, no fan-out, no competing agents. One exception: after
+  step 6, a single `Task` with `subagent_type: reviewer` may check the checkpoint against its
+  delta scenarios. It runs sequentially, before the CP is marked complete.
 - **Stop and surface** if you hit an unknown not covered by the plan — don't improvise scope.
 
 ### Steps

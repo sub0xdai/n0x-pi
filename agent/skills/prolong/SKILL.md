@@ -40,6 +40,17 @@ Do not summarize multiple steps into one entry. If it moved the task forward, it
 - If a step fails, log the error verbatim before retrying.
 - Logs are append-only. Never edit or delete past entries.
 
+## Decision view (at close, or when a run is handed off)
+
+`DEC` entries are the reviewable trail. Render them as a table instead of asking a human to read
+the whole log:
+
+    ~/dotfiles/scripts/prolong_decisions.sh [path/to/log.txt]
+
+It prints a TSV of `time` and `decision`, defaults to `.prolong/log.txt`, and says so when there
+are no decisions. Hand the TSV path to the user with the summary. A long run whose log has no
+`DEC` lines has no trail: say that plainly rather than reconstructing decisions from memory.
+
 ## Trigger pattern
 
 When this skill is active, every assistant turn that performs a tool call or receives a tool result appends to the log before producing its final answer. Final answers cite the log entries that support them when relevant.

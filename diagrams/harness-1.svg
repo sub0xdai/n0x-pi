@@ -67,25 +67,25 @@
   <rect x="547.5158333333334" y="100.9" width="116.05" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="605.5408333333334" y="119.35000000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">settings.json</text>
 </g>
-<g class="node" data-id="EXT" data-label="extensions 7" data-shape="rectangle">
+<g class="node" data-id="EXT" data-label="extensions 5" data-shape="rectangle">
   <rect x="476.2318333333334" y="235.8" width="116.791" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="534.6273333333334" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">extensions 7</text>
+  <text x="534.6273333333334" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">extensions 5</text>
 </g>
 <g class="node" data-id="PKG" data-label="packages 8" data-shape="rectangle">
   <rect x="621.0228333333334" y="235.8" width="110.863" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="676.4543333333335" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">packages 8</text>
 </g>
-<g class="node" data-id="SK" data-label="skills 24" data-shape="rectangle">
+<g class="node" data-id="SK" data-label="skills 27" data-shape="rectangle">
   <rect x="199.10983333333337" y="235.8" width="90.11499999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="244.16733333333337" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">skills 24</text>
+  <text x="244.16733333333337" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">skills 27</text>
 </g>
 <g class="node" data-id="PR" data-label="prompts 6" data-shape="rectangle">
   <rect x="317.2248333333333" y="235.8" width="99.007" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="366.72833333333335" y="254.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">prompts 6</text>
 </g>
-<g class="node" data-id="PRI" data-label="primitives 4" data-shape="rectangle">
+<g class="node" data-id="PRI" data-label="primitives 5" data-shape="rectangle">
   <rect x="208.20100000000002" y="392.70000000000005" width="107.899" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="262.1505" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">primitives 4</text>
+  <text x="262.1505" y="411.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">primitives 5</text>
 </g>
 <g class="node" data-id="DOX" data-label="AGENTS.md 5" data-shape="rectangle">
   <rect x="56" y="392.70000000000005" width="124.20100000000001" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />

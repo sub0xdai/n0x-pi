@@ -49,11 +49,113 @@ await mutate("edit", "a.ts");
 const nudge = await settle();
 assert.equal(nudge?.continue, true, "a dirty mutation must request a continuation");
 assert.equal(nudge.entries.length, 1, "the nudge carries exactly one message");
-assert.equal(await settle(), undefined, "the nudge must fire once per mutation, not loop");
+assert.ok(
+  nudge.entries[0].content.includes("No run artifact for"),
+  "runtime dirt demands a run artifact, not a project check"
+);
 
+const warned = await settle();
+assert.equal(warned?.continue, undefined, "the second settle does not loop");
+assert.ok(
+  warned?.entries?.[0]?.content.includes("Settled without a run artifact"),
+  "the second settle names the missing artifact"
+);
+assert.equal(await settle(), undefined, "the warning fires once per mutation");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("npx tsc --noEmit");
+assert.equal((await settle())?.continue, true, "a typecheck is not a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash('git commit -m "fix node crash"');
+assert.equal((await settle())?.continue, true, "a commit message is not a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("rg node src/");
+assert.equal((await settle())?.continue, true, "grepping for a keyword is not a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
 await bash("cargo test");
-assert.equal(await settle(), undefined, "a verified run must settle quietly");
+assert.equal((await settle())?.continue, true, "a test run never satisfies a runtime diff");
 
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("npm run test");
+assert.equal((await settle())?.continue, true, "an npm test script is not a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("node --test");
+assert.equal((await settle())?.continue, true, "node --test is not a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "main.rs");
+await bash("./target/debug/app --smoke");
+assert.equal(await settle(), undefined, "running the built binary is a run artifact");
+
+await call("session_start", {});
+await mutate("edit", "App.TSX");
+assert.equal((await settle())?.continue, true, "an upper-case suffix is still a runtime surface");
+
+await call("session_start", {});
+await mutate("edit", "theme.css");
+assert.equal((await settle())?.continue, true, "a stylesheet is a runtime surface");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await call("tool_result", { toolName: "mcp__github__click_issue", input: {}, isError: false });
+assert.equal((await settle())?.continue, true, "a non-browser MCP tool is not proof");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("cargo run --quiet");
+assert.equal(await settle(), undefined, "a run artifact settles the turn");
+
+await mutate("edit", "a.ts");
+await call("tool_result", {
+  toolName: "mcp__kitesurf__take_screenshot",
+  input: {},
+  isError: false,
+});
+assert.equal(await settle(), undefined, "a live-surface tool result counts as proof");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await call("tool_result", { toolName: "mcp__kitesurf__list_pages", input: {}, isError: false });
+assert.equal(
+  (await settle())?.continue,
+  true,
+  "listing pages is not a run artifact"
+);
+
+await call("session_start", {});
+await mutate("write", "notes.md");
+const docNudge = await settle();
+assert.ok(
+  docNudge.entries[0].content.includes("project check"),
+  "a docs-only diff demands the project check, not a run"
+);
+await bash("npm test");
+assert.equal(await settle(), undefined, "the project check clears a docs-only diff");
+await mutate("edit", "b.ts");
+const afterDocs = await settle();
+assert.ok(
+  !afterDocs.entries[0].content.includes("notes.md"),
+  "the docs file leaves the dirty set once the check runs"
+);
+
+await assert.doesNotReject(async () => {
+  await call("tool_result", { toolName: "edit", input: { path: "a.ts" }, isError: false }, {
+    cwd: "",
+    mode: "print",
+  });
+}, "an empty cwd must not throw out of the handler");
+
+await call("session_start", {});
 await bash("cargo test", true);
 await mutate("edit", "a.ts");
 assert.equal((await settle())?.continue, true, "a failed check leaves the run dirty");
@@ -85,11 +187,8 @@ const cleanRun = await call("tool_result", {
 });
 assert.equal(cleanRun, undefined, "a clean file is not appended to");
 
-const shellCall = (command) =>
-  call("tool_call", { toolName: "bash", input: { command }, toolCallId: "shell-1" });
-
 const workDir = mkdtempSync(join(homedir(), ".state-guard-work-"));
-const shellCtx = { cwd: workDir, mode: "print" };
+
 const shellCallIn = (cwd, command) =>
   handlers.get("tool_call")({ toolName: "bash", input: { command }, toolCallId: "shell-2" }, {
     cwd,
@@ -145,7 +244,77 @@ const shellNote = after?.content?.map((b) => b.text).join("\n") ?? "";
 assert.ok(shellNote.includes("bash changed"), "boundary B notices a file a shell call changed");
 assert.ok(shellNote.includes("TB-10"), "boundary B gates that file with __check.sh");
 
+const generated = join(repo, "asset.svg");
+writeFileSync(generated, "<svg>\n");
+await handlers.get("tool_call")(
+  { toolName: "bash", input: { command: "echo generate" }, toolCallId: "shell-c" },
+  repoCtx
+);
+writeFileSync(generated, `<svg>${"x".repeat(140)}</svg>\n`);
+const generatedResult = await handlers.get("tool_result")(
+  {
+    toolName: "bash",
+    input: { command: "echo generate" },
+    toolCallId: "shell-c",
+    content: [{ type: "text", text: "generate" }],
+    isError: false,
+  },
+  repoCtx
+);
+assert.equal(generatedResult, undefined, "a generated artifact is not gated as source code");
 
+await call("session_start", {}, repoCtx);
+const generatedPaths = [];
+for (let i = 0; i < 12; i += 1) {
+  const asset = join(repo, `bulk${String(i).padStart(2, "0")}.svg`);
+  writeFileSync(asset, "<svg>\n");
+  generatedPaths.push(asset);
+}
+await handlers.get("tool_call")(
+  { toolName: "bash", input: { command: "echo bulk" }, toolCallId: "shell-e" },
+  repoCtx
+);
+for (const asset of generatedPaths) writeFileSync(asset, `<svg>${"x".repeat(120)}</svg>\n`);
+writeFileSync(join(repo, "zzz.ts"), "// TO" + "DO: planted\nconst z = 1;\n");
+const capped = await handlers.get("tool_result")(
+  {
+    toolName: "bash",
+    input: { command: "echo bulk" },
+    toolCallId: "shell-e",
+    content: [{ type: "text", text: "bulk" }],
+    isError: false,
+  },
+  repoCtx
+);
+const cappedNote = capped?.content?.map((b) => b.text).join("\n") ?? "";
+assert.ok(
+  cappedNote.includes("zzz.ts"),
+  "generated files must not consume the gated-file cap"
+);
+
+await call("session_start", {}, repoCtx);
+await handlers.get("tool_call")(
+  { toolName: "bash", input: { command: "node gen.js" }, toolCallId: "shell-d" },
+  repoCtx
+);
+writeFileSync(join(repo, "gen.ts"), "// TO" + "DO: generated\nconst gen = 1;\n");
+const combined = await handlers.get("tool_result")(
+  {
+    toolName: "bash",
+    input: { command: "node gen.js" },
+    toolCallId: "shell-d",
+    content: [{ type: "text", text: "generated" }],
+    isError: false,
+  },
+  repoCtx
+);
+const combinedNote = combined?.content?.map((b) => b.text).join("\n") ?? "";
+assert.ok(combinedNote.includes("TB-10"), "a run plus a shell violation still reports the gate");
+const afterRun = await handlers.get("agent_before_settle")({ outcome: "completed" }, repoCtx);
+assert.ok(
+  afterRun?.entries?.[0]?.content.includes("TB-10"),
+  "a run must not erase a gate violation"
+);
 
 rmSync(repo, { recursive: true, force: true });
 rmSync(workDir, { recursive: true, force: true });

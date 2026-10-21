@@ -83,7 +83,7 @@
     "reEvaluation": "Agent must re-evaluate waivers when surrounding code changes. If the justification no longer holds, flag it."
   },
   "emissionContract": {
-    "summaryFormat": "[VERIFIED] Mechanical: {Pass|Fail} | Semantic: {Pass|Fail} | Waivers: {count}",
+    "summaryFormat": "[VERIFIED] Mechanical: {Pass|Fail} | Semantic: {Pass|Fail} | Waivers: {count} | shaped-by: {RULE} ({choice}), ...",
     "description": "Every code block emitted by the agent MUST be immediately followed by this one-line summary. Code without a [VERIFIED] line is a protocol breach.",
     "missingReceiptResponse": "The user sees no receipt line — a human-detectable protocol breach."
   },

@@ -178,6 +178,8 @@ The bar for approval is:
 - no unnecessary wrapper/cast/optionality churn obscuring the real design
 - no clear architecture-boundary leak or avoidable canonical-helper duplication
 - no missed opportunity for an obvious decomposition that would materially improve maintainability
+- no performance, memory, or throughput claim without a record that meets
+  `~/.pi/agent/primitives/measurement.schema.json`. A bare number, or "looks faster now", is a blocker
 
 Treat these as presumptive blockers unless the author can justify them clearly:
 

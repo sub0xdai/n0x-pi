@@ -40,6 +40,7 @@ matrices, and computable validation rules.
 | `coding-standard.schema.json` | Constraint | tigerbeetle |
 | `review-policy.schema.json` | Constraint | brilliance |
 | `check.schema.json` | Constraint | all code emission |
+| `measurement.schema.json` | Constraint | APPEND_SYSTEM.md (any number quoted), nuclear-review approvals |
 
 ## Verification
 

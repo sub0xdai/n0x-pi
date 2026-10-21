@@ -16,7 +16,9 @@ interface Observed {
   read: ReadonlySet<string>;
   dirty: ReadonlySet<string>;
   violations: Readonly<Record<string, string>>;
+  proof: boolean;
   nudged: boolean;
+  warned: boolean;
 }
 
 type Outcome =
@@ -24,10 +26,19 @@ type Outcome =
   | { kind: "mutate"; path: string; ok: boolean }
   | { kind: "violated"; path: string; detail: string }
   | { kind: "clean"; path: string }
-  | { kind: "verify" }
-  | { kind: "nudged" };
+  | { kind: "proved" }
+  | { kind: "checked" }
+  | { kind: "nudged" }
+  | { kind: "warned" };
 
-const INITIAL: Observed = { read: new Set(), dirty: new Set(), violations: {}, nudged: false };
+const INITIAL: Observed = {
+  read: new Set(),
+  dirty: new Set(),
+  violations: {},
+  proof: false,
+  nudged: false,
+  warned: false,
+};
 
 const GATE = join(homedir(), ".pi", "agent", "scripts", "__check.sh");
 
@@ -35,8 +46,44 @@ const RUN_OPTIONS = { encoding: "utf8" as const, timeout: 15_000 };
 
 const runGate = promisify(execFile);
 
+const SEGMENT_START = "(?:^|[;&|(]\\s*|\\bsudo\\s+|\\benv\\s+)";
+
+const RUN_COMMAND = new RegExp(
+  SEGMENT_START +
+    "(?:curl|wget|playwright|puppeteer|bats|node|uvx" +
+    "|(?:npm|pnpm|yarn)\\s+(?:run|start|exec)|bun\\s+(?:run|x)" +
+    "|deno\\s+run|go\\s+run|cargo\\s+run|python3?|uv\\s+run|\\.{0,2}/[\\w./-]+)"
+);
+
+const TEST_ONLY = new RegExp(
+  "\\b(pytest|jest|vitest|mocha|tsc|eslint|ruff|mypy|clippy|typecheck)\\b" +
+    "|(?:^|\\s)--test\\b" +
+    "|(?:npm|pnpm|yarn|bun)\\s+(?:run\\s+)?test\\b"
+);
+
 const VERIFY_COMMAND =
   /\b(test|check|lint|build|clippy|typecheck|tsc|pytest|ruff|mypy|eslint|biome|gradle)\b/;
+
+const RUNTIME_SUFFIX = new RegExp(
+  "\\.(ts|tsx|js|jsx|mjs|cjs|rs|go|py|rb|sh|bash|java|c|cc|cpp|swift|kt" +
+    "|css|html|vue|svelte|astro|scss)$",
+  "i"
+);
+
+const PAGE_SERVER = "mcp__kitesurf__";
+
+const PAGE_TOOL = new RegExp(
+  "(screenshot|snapshot|navigate|click|fill|press|evaluate|wait|drag" +
+    "|hover|type_text|upload|new_page|emulate|resize|console|network)"
+);
+
+function isRuntime(path: string): boolean {
+  return RUNTIME_SUFFIX.test(path);
+}
+
+function failingOnly(state: Observed): ReadonlySet<string> {
+  return new Set(Object.keys(state.violations));
+}
 
 function assertInvariant(state: Observed): Observed {
   for (const path of state.dirty) {
@@ -47,6 +94,13 @@ function assertInvariant(state: Observed): Observed {
   for (const path of Object.keys(state.violations)) {
     if (!state.dirty.has(path)) {
       throw new Error(`state-guard: violation recorded for a path that is not dirty: ${path}`);
+    }
+  }
+  if (state.proof) {
+    for (const path of state.dirty) {
+      if (!(path in state.violations)) {
+        throw new Error(`state-guard: proof left an unverified path dirty: ${path}`);
+      }
     }
   }
   return state;
@@ -64,11 +118,17 @@ function step(state: Observed, outcome: Outcome): Observed {
         ...state,
         read: new Set(state.read).add(outcome.path),
         dirty: new Set(state.dirty).add(outcome.path),
+        proof: false,
         nudged: false,
+        warned: false,
       };
     }
-    case "verify": {
-      return { ...state, dirty: new Set(), violations: {}, nudged: false };
+    case "proved": {
+      return { ...state, dirty: failingOnly(state), proof: true };
+    }
+    case "checked": {
+      if ([...state.dirty].some(isRuntime)) return state;
+      return { ...state, dirty: failingOnly(state) };
     }
     case "violated": {
       return {
@@ -76,6 +136,7 @@ function step(state: Observed, outcome: Outcome): Observed {
         read: new Set(state.read).add(outcome.path),
         dirty: new Set(state.dirty).add(outcome.path),
         violations: { ...state.violations, [outcome.path]: outcome.detail },
+        proof: false,
         nudged: false,
       };
     }
@@ -87,6 +148,9 @@ function step(state: Observed, outcome: Outcome): Observed {
     }
     case "nudged": {
       return { ...state, nudged: true };
+    }
+    case "warned": {
+      return { ...state, warned: true };
     }
   }
 }
@@ -133,6 +197,8 @@ function blindMutation(state: Observed, cwd: string, event: ToolCallEvent): stri
 }
 
 function outcomeOf(event: ToolResultEvent): Outcome | undefined {
+  const pageTool = event.toolName.startsWith(PAGE_SERVER) && PAGE_TOOL.test(event.toolName);
+  if (!event.isError && pageTool) return { kind: "proved" };
   const input = event.input as Record<string, unknown>;
   const raw = typeof input.path === "string" ? input.path : undefined;
   if (event.toolName === "read" && raw) {
@@ -143,7 +209,9 @@ function outcomeOf(event: ToolResultEvent): Outcome | undefined {
   }
   if (event.toolName === "bash" || event.toolName === "powershell") {
     const command = typeof input.command === "string" ? input.command : "";
-    if (!event.isError && VERIFY_COMMAND.test(command)) return { kind: "verify" };
+    if (event.isError) return undefined;
+    if (RUN_COMMAND.test(command) && !TEST_ONLY.test(command)) return { kind: "proved" };
+    if (VERIFY_COMMAND.test(command)) return { kind: "checked" };
   }
   return undefined;
 }
@@ -263,8 +331,10 @@ export default function stateGuard(pi: ExtensionAPI) {
     const after = await gitFingerprint(cwd);
     if (after === undefined) return [];
     const notes: string[] = [];
-    for (const path of advancedPaths(before, after).slice(0, MAX_SHELL_GATED)) {
-      if (isTemporary(path)) continue;
+    const candidates = advancedPaths(before, after).filter(
+      (path) => !isTemporary(path) && GATED_SUFFIX.test(path)
+    );
+    for (const path of candidates.slice(0, MAX_SHELL_GATED)) {
       const violations = await gateViolations(path);
       if (violations.length === 0) {
         record(cwd, { kind: "clean", path });
@@ -288,7 +358,9 @@ export default function stateGuard(pi: ExtensionAPI) {
   function record(cwd: string, outcome: Outcome): void {
     const target = "path" in outcome ? outcome.path : undefined;
     const normalized =
-      target === undefined ? outcome : { ...outcome, path: normalizePath(cwd, target) };
+      target === undefined || cwd.length === 0
+        ? outcome
+        : { ...outcome, path: normalizePath(cwd, target) };
     state = reduce(state, normalized);
   }
 
@@ -321,6 +393,7 @@ export default function stateGuard(pi: ExtensionAPI) {
       const text = shellTouched.join("\n");
       return { content: [...event.content, { type: "text" as const, text }] };
     }
+    if (ctx.cwd.length === 0) return undefined;
     const full = normalizePath(ctx.cwd, raw);
     const violations = await gateViolations(full);
     if (violations.length === 0) {
@@ -334,9 +407,10 @@ export default function stateGuard(pi: ExtensionAPI) {
 
   pi.on("agent_before_settle", async (event, ctx) => {
     if (event.outcome !== "completed") return;
-    if (state.dirty.size === 0 || state.nudged) return;
-    state = reduce(state, { kind: "nudged" });
-    render(ctx);
+    if (state.dirty.size === 0) return;
+    const runtime = [...state.dirty].filter(isRuntime);
+    const unproven = runtime.filter((path) => !(path in state.violations));
+    const needsProof = unproven.length > 0 && !state.proof;
     const failing = Object.entries(state.violations)
       .slice(0, 3)
       .map(([path, detail]) => `${path}: ${detail}`);
@@ -344,6 +418,31 @@ export default function stateGuard(pi: ExtensionAPI) {
       failing.length === 0
         ? ""
         : ` The mechanical gate is failing on ${failing.join("; ")}.`;
+    if (state.nudged) {
+      if (!needsProof || state.warned) return undefined;
+      state = reduce(state, { kind: "warned" });
+      render(ctx);
+      return {
+        entries: [
+          {
+            type: "custom_message",
+            customType: "state-guard",
+            content:
+              `Settled without a run artifact for ${unproven.join(", ")}.` +
+              `${gateNote} Tests are a proxy. Run the thing before the next claim.`,
+            display: true,
+          },
+        ],
+      };
+    }
+    state = reduce(state, { kind: "nudged" });
+    render(ctx);
+    const demand = needsProof
+      ? `No run artifact for ${unproven.join(", ")}. Run it and quote what came back` +
+        " (command output, HTTP trace, or a screenshot). Tests alone are a proxy."
+      : failing.length > 0
+        ? "Fix every gate violation, then re-run it."
+        : "Run the project check and quote the result.";
     return {
       entries: [
         {
@@ -351,7 +450,7 @@ export default function stateGuard(pi: ExtensionAPI) {
           customType: "state-guard",
           content:
             `Unverified mutations this turn: ${[...state.dirty].join(", ")}.` +
-            `${gateNote} Fix every violation, then run the project check.`,
+            `${gateNote} ${demand}`,
           display: true,
         },
       ],

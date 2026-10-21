@@ -1,0 +1,58 @@
+{
+  "$id": "https://pi.agent/primitives/measurement",
+  "title": "Measurement Record",
+  "description": "The fields a number carries before anyone trusts, reports, or acts on it. A speedup, latency, throughput, memory figure, or eval result is a claim about the world, and this is the shape that makes the claim checkable. Cited by APPEND_SYSTEM.md and skills/nuclear-review.",
+  "fields": {
+    "claim": {
+      "required": true,
+      "shape": "one sentence, with the direction and the subject",
+      "example": "Listing 10k rows dropped from 2400 ms to 410 ms."
+    },
+    "baseline": {
+      "required": true,
+      "shape": "the number before the change, measured the same way, on the same machine",
+      "invalidWhen": "the baseline is a remembered number, a published benchmark, or a different input"
+    },
+    "command": {
+      "required": true,
+      "shape": "the exact command that produced the number, rerunnable by a reviewer",
+      "invalidWhen": "the command is not quoted, or needs unstated local state"
+    },
+    "environment": {
+      "required": true,
+      "shape": "machine, runtime version, dataset size, cache state, and whether the build is release",
+      "invalidWhen": "a debug build is compared to a release build, or an empty cache to a warm one"
+    },
+    "repeats": {
+      "required": true,
+      "shape": { "runs": "integer >= 3", "statistic": "median unless outliers dominate" },
+      "invalidWhen": "n = 1, or the best run is reported and the rest are discarded"
+    },
+    "variance": {
+      "required": true,
+      "shape": "spread across runs, as a range or standard deviation, in the same unit as the claim",
+      "invalidWhen": "the effect is smaller than the spread, which makes the claim noise"
+    },
+    "measured": {
+      "required": true,
+      "shape": "what the instrument actually counted, in units",
+      "invalidWhen": "the metric is a proxy that includes work outside the change, or excludes the work the user feels"
+    },
+    "alternatives": {
+      "required": true,
+      "shape": "array of { explanation: string, ruledOutBy: string }",
+      "invalidWhen": "no other explanation was considered, so warmup, ordering, background load, and a different workload remain live"
+    },
+    "verdict": {
+      "required": true,
+      "shape": "keep | revert | rerun | inconclusive",
+      "invalidWhen": "the verdict is 'keep' while variance exceeds the effect"
+    }
+  },
+  "rules": [
+    "A number that fails any required field is reported as unmeasured, not as a result.",
+    "Under 10 percent with n = 3 on a shared machine is noise until a rerun separates the runs.",
+    "An errored or timed-out run is excluded and counted, never silently dropped.",
+    "A perf claim that changes behavior also needs the run artifact required by APPEND_SYSTEM.md."
+  ]
+}

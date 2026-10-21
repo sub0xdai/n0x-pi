@@ -17,8 +17,8 @@ candidates from the merge incident. Delete them once reviewed.
 |---|---|---|
 | system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
 | control plane | 5 extensions + 8 packages | code that acts on the agent loop |
-| execution plane | 24 skills + 6 prompts | text the model follows |
-| documentation plane | 4 primitives + 5 `AGENTS.md` | schemas and DOX contracts describing the rest |
+| execution plane | 27 skills + 6 prompts | text the model follows |
+| documentation plane | 5 primitives + 5 `AGENTS.md` | schemas and DOX contracts describing the rest |
 | mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
 
 ## 1. What pi loads
@@ -32,15 +32,15 @@ flowchart TB
     SP["system prompt"]
     SET["settings.json"]
     subgraph CTL["control plane"]
-        EXT["extensions 7"]
+        EXT["extensions 5"]
         PKG["packages 8"]
     end
     subgraph EXE["execution plane"]
-        SK["skills 24"]
+        SK["skills 27"]
         PR["prompts 6"]
     end
     subgraph DOC["documentation"]
-        PRI["primitives 4"]
+        PRI["primitives 5"]
         DOX["AGENTS.md 5"]
     end
     subgraph COS["cosmetic"]
@@ -61,9 +61,9 @@ flowchart TB
 |---|---|
 | extensions 5 | `herdr-agent-state`, `jev-sieve`, `notifications`, `state-guard`, `tmux-manager` |
 | packages 8 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
-| skills 24 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `video-render-qa`, `vox`, `yt-dlp-download` |
+| skills 27 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `mode`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `verify-ui`, `video-render-qa`, `vox`, `why`, `yt-dlp-download` |
 | prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
-| primitives 4 | `check`, `coding-standard`, `review-policy`, `spec` |
+| primitives 5 | `check`, `coding-standard`, `measurement`, `review-policy`, `spec` |
 
 MCP was broken when this map was drawn and is fixed now. `npm:pi-mcp-adapter` was declared with
 nothing installed behind it, so pi wrote `extensions: ["-builtin:mcp"]` into `settings.json` and
@@ -79,17 +79,20 @@ flowchart TB
     RT["tool_call: state-guard<br/>refuse an unread file"]
     MC["__check.sh<br/>the mechanical gate"]
     SEM["semantic self-check<br/>14 rules, by the model"]
+    RUN["run artifact<br/>exec command or page tool"]
     C["commit"]
     PC["pre-commit: scrub.py"]
     N["agent_before_settle<br/>one continuation"]
     M --> RT
     RT -->|"allowed"| MC
     MC -->|"clean"| SEM
-    SEM --> C
+    SEM --> RUN
+    RUN -->|"runtime diff, artifact quoted"| C
     C --> PC
     PC -->|"exit 2: restaged"| C
     MC -.->|"violations appended, model re-edits"| RT
     MC -.->|"still dirty at settle"| N
+    RUN -.->|"no artifact"| N
 ```
 
 Read the spine top to bottom. The two dotted edges are the loops: the gate sends the model back to
@@ -104,6 +107,11 @@ Where this can still fail:
 - That second boundary only works inside a git repository, and only for file types the gate knows.
 - The gate is regex, so it sees tokens rather than intent. `@waiver` is the release valve.
 - The semantic step is the model grading itself, in the same context that wrote the code.
+- The run-artifact step is a pattern match, and a weak one. It sees a command that starts an
+execution (`node`, `cargo run`, `./binary`, `curl`, a kitesurf page tool) and excludes test
+runners by name. That means a run named like a test is discounted, a `make` target is not
+recognized at all, and a command that merely looks like a run still counts. It proves a surface
+was touched, never that the claim was checked.
 - The pre-commit hook is the only gate that runs after the agent has stopped.
 
 ## 3. The rule spine
@@ -138,8 +146,7 @@ flowchart TB
     end
     subgraph VO["VOX - features"]
         V1["vox skill"]
-        V2["4 prompts"]
-        V3["plan-mode.ts"]
+        V2["3 prompts"]
     end
     subgraph TI["TIGERBEETLE - the floor"]
         T1["8 rules in the prompt"]
