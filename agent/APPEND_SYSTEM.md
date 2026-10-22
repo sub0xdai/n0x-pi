@@ -8,6 +8,15 @@ When creating helper scripts, one-off tools, or automation scripts, you MUST use
 Exception: Python when a required library is Python-only (e.g., Presidio for PII scrubbing).
 Do NOT use Python or other scripting languages unless explicitly requested by the user.
 
+## Network and server binding (always on)
+
+Applies every time you start a web server, dashboard, preview, or any listening process.
+
+1. Port range: only 3000 through 3010. Never use a port outside it.
+2. Verify the port is free before starting: `ss -ltn | grep -q ":<port> "` and pick the next free port in range if it is taken.
+3. Bind to `0.0.0.0`, never `127.0.0.1` or `localhost` (for example `--host 0.0.0.0`, `-H 0.0.0.0`, `--bind 0.0.0.0`).
+4. Report the link as `http://100.65.87.4:<port>`, where the address comes from `tailscale ip -4`, never as localhost.
+
 ## Code search
 
 Exact search first: `ffgrep` and `fffind` for a known identifier, path, or regex.

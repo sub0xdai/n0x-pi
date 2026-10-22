@@ -62,7 +62,7 @@ const TEST_ONLY = new RegExp(
 );
 
 const VERIFY_COMMAND =
-  /\b(test|check|lint|build|clippy|typecheck|tsc|pytest|ruff|mypy|eslint|biome|gradle)\b/;
+  /\b(__check|test|check|lint|build|clippy|typecheck|tsc|pytest|ruff|mypy|eslint|biome|gradle)\b/;
 
 const RUNTIME_SUFFIX = new RegExp(
   "\\.(ts|tsx|js|jsx|mjs|cjs|rs|go|py|rb|sh|bash|java|c|cc|cpp|swift|kt" +
