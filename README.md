@@ -1,84 +1,47 @@
 # n0x-pi
 
-My pi config. The agent knows where everything lives, follows a coding standard,
-and checks its own output before showing it to me. Will be looking to decrease bloat where possible.
+My pi config.
+The agent knows where everything lives, follows a coding standard, and checks its own output before showing it to me.
+Looking to decrease bloat where possible.
 
-- [Contract](agent/AGENTS.md) — directory layout, naming rules, the extension boundary test
-- [TigerBeetle](agent/prompts/tigerbeetle.md) — 17 coding rules, always enforced
-- [jev-sieve](jev-sieve.md) - design record for the Jev context sieve (its comments, moved out of the source)
-- [Vox](agent/skills/vox/SKILL.md) — spec to plan to TDD checkpoints
-- [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) — lazy-first, simplest solution that works
-- [Primitives](agent/primitives/) — 9 typed schemas (ADR, Spec, DecisionTree, Glossary, CodingStandard, ReviewPolicy, ReviewResult, ProjectContext, Check). Structured ground truth for prompts and the emission gate.
+- [Contract](agent/AGENTS.md) - directory layout, naming, the extension boundary test
+- [Harness map](agent/harness-map.md) - every count in the tree, read off disk, with diagrams
+- [TigerBeetle](agent/prompts/tigerbeetle.md) - 17 coding rules, always enforced
+- [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) - lazy-first, the smallest solution that works
+- [Vox](agent/skills/vox/SKILL.md) - spec to plan to TDD checkpoints
+- [jev-sieve](jev-sieve.md) - design record for the Jev context sieve, including its security review
 
-## Extensions
+## Shape
 
-Each one modifies the harness event loop. No CLI wrappers dressed up as extensions.
+Three layers, applied in order.
+Ponytail is the default posture.
+Vox drives a specified feature from spec to verified checkpoints.
+TigerBeetle is the floor under both: no comments, typed errors, assertion density at every trust boundary.
 
-| Extension | Does |
-|---|---|
-| `plan-mode` | Gates destructive tools when a build plan is active |
-| `comment` | Opens the last response in `$EDITOR` so I can edit before sending |
-| `tmux-manager` | Background jobs in tmux, callable by the agent |
-| `notifications` | Pings my desktop when a task finishes |
-| `herdr-agent-state` | Reports agent state to the Herdr platform over its socket |
-| `jev-sieve` | Judges large tool results with Jev and stubs out the blocks the task does not need. Off by default, and no result leaves the machine until it clears the egress denylist |
+Only these extensions hook the harness event loop: `state-guard`, `jev-sieve`, `notifications`, `tmux-manager`, `herdr-agent-state`.
+Anything that could be a bash script is a bash script.
+The boundary test and the per-extension index are in the [extension contract](agent/extensions/AGENTS.md).
 
-## Skills
-
-25 skills in `agent/skills/`, 6 in `~/.agents/skills/`, plus the package skills
-(`ponytail`, `context7-docs`, `ask-user`, `mcp-scripting`). The full index, with each
-skill's companion scripts, is in the [contract](agent/AGENTS.md).
-
-**Code and review:**
-`vox` — plan and build from specs.
-`ponytail` — lazy-first, simplest solution that works.
-`audit` — two-pass adversarial code review.
-`nuclear-review` — thermonuclear maintainability audit.
-`diff-review` — visual HTML diff with architecture diagrams.
-`shannon` — annotate code in Neovim via RPC.
-`security-audit` - find exploitable security bugs with real impact.
-
-**Structure and knowledge:**
-`anchor-init`, `anchor-verify` - @anchor tags and pre-commit enforcement.
-`adr` — architecture decision records.
-`graphify` — codebase to knowledge graph.
-`vault-context` — search Obsidian vault before coding decisions.
-`ste-writing` — rewrite prose in ASD-STE100 Simplified Technical English.
-
-**Infra and media:**
-`cloudflare-devops` — Workers/Pages, tunnels, CI/CD.
-`scythe` - brutalist kinetic promo videos.
-
-**Meta:**
-`handoff` — session summary for the next agent.
-`humanizer` — strip AI-isms from text.
-`teach` — interactive learning sessions.
-
-## Prompts
-
-`/brainstorm` — guided design, one question at a time.
-`/grill-me` — depth-first interrogation.
-`/grill-with-docs` — grill-me plus glossary refinement plus ADRs.
-`/brilliance` — iterate until nothing is left to flag.
-`/tigerbeetle` — load the coding standard explicitly.
-`/scythe-cutlist` - video cut-list spec for scythe.
+The workflows live in [skills](agent/skills/AGENTS.md) and [prompts](agent/prompts/AGENTS.md).
+The typed ground truth they read is in [primitives](agent/primitives/AGENTS.md).
+Each index is the only copy of its list.
 
 ## Guardrails (always on)
 
-- **anchor-verify** blocks commits with un-annotated files. It auto-syncs the manifest.
+- **state-guard** derives DISCOVER / MUTATE / VERIFY from tool events instead of trusting the model to declare state.
+  It blocks an edit to a file the session never read.
+  It does not settle a runtime-surface change on a test or lint run: the turn needs a run artifact.
+- **The gate** runs `__check.sh` after every edit and write, and appends its violations to the tool result.
+  Line width, banned tokens, comments, markdown fences, invalid JSON.
+  A failing gate is a block, not a warning.
 - **TigerBeetle** enforces assertion density, typed errors, and zero tech debt.
-- **No comments (TB-17)** - no explanation, banner, docblock, or commented-out code. Only `@waiver`, `@anchor`/`@tags`, and `ponytail:` survive, because a tool reads them.
-- **Emission gate** runs `__check.sh` to scan for line width, forbidden tokens, and comments. The AI then self-checks all 21 semantic rules. Every code block needs a `[VERIFIED]` receipt. A missing receipt means the agent skipped the gate.
+- **No comments (TB-17)** - no explanation, banner, docblock, or commented-out code.
+  Only `@waiver`, `@anchor`/`@tags`, and `ponytail:` survive, because a tool reads them.
+- **The receipt** - every code block ends with a `[VERIFIED]` line, and a missing receipt means the agent skipped the gate.
 
-## Workflow
+## Verify
 
+```bash
+bash agent/scripts/__check.test.sh          # the gate's own tests
+node agent/extensions/state-guard.check.mjs # the guard's assertions
 ```
-New project:       anchor-init → vox plan → vox build → anchor-verify
-Existing code:     anchor-init → graphify → context7-docs → diff-review
-Feature work:      vox plan → vox build → /grill-me → /brilliance → diff-review
-Session end:       handoff
-```
-
-Stock pi is a blank config. This one ships with opinions and checks. Almost
-everything outside the extensions is a bash script in `~/dotfiles/scripts/`.
-The contract file maps it all.
