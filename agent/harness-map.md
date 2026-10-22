@@ -144,9 +144,9 @@ flowchart TB
         P1["6 skills"]
         P2["refusals, no artifact"]
     end
-    subgraph VO["VOX - features"]
-        V1["vox skill"]
-        V2["3 prompts"]
+    subgraph VO["VOX - goal to verified change"]
+        V1["goal, build, ship"]
+        V2["3 design prompts feed it"]
     end
     subgraph TI["TIGERBEETLE - the floor"]
         T1["8 rules in the prompt"]

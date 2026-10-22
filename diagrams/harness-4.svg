@@ -31,10 +31,10 @@
   <rect x="181.679" y="40" width="295.805" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
   <text x="193.679" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">PONYTAIL - default</text>
 </g>
-<g class="subgraph" data-id="VO" data-label="VOX - features">
-  <rect x="205.0205" y="184.9" width="249.122" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <rect x="205.0205" y="184.9" width="249.122" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-  <text x="217.0205" y="198.9" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">VOX - features</text>
+<g class="subgraph" data-id="VO" data-label="VOX - goal to verified change">
+  <rect x="145.7405" y="184.9" width="367.682" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="145.7405" y="184.9" width="367.682" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="157.7405" y="198.9" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">VOX - goal to verified change</text>
 </g>
 <g class="subgraph" data-id="TI" data-label="TIGERBEETLE - the floor">
   <rect x="40" y="329.8" width="579.163" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
@@ -51,13 +51,13 @@
   <rect x="308.384" y="84" width="153.10000000000002" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <text x="384.934" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">refusals, no artifact</text>
 </g>
-<g class="node" data-id="V1" data-label="vox skill" data-shape="rectangle">
-  <rect x="221.0205" y="228.9" width="90.11500000000001" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="266.078" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">vox skill</text>
+<g class="node" data-id="V1" data-label="goal, build, ship" data-shape="rectangle">
+  <rect x="161.7405" y="228.9" width="130.87" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="227.1755" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">goal, build, ship</text>
 </g>
-<g class="node" data-id="V2" data-label="3 prompts" data-shape="rectangle">
-  <rect x="339.1355" y="228.9" width="99.007" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="388.639" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 prompts</text>
+<g class="node" data-id="V2" data-label="3 design prompts feed it" data-shape="rectangle">
+  <rect x="320.6105" y="228.9" width="176.81199999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="409.0165" y="247.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3 design prompts feed it</text>
 </g>
 <g class="node" data-id="T1" data-label="8 rules in the prompt" data-shape="rectangle">
   <rect x="251.17899999999997" y="373.8" width="157.546" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />

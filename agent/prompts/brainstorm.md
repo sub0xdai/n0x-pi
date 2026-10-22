@@ -47,4 +47,4 @@ Topic: $@
 
 ## When the design is locked
 
-Write the validated design as a Spec matching `spec.schema.json`. Save to the Spec's canonical storage target (`.specify/specs/<NAME>/spec.md`). Do not start implementation — that's `/skill:vox plan <spec>` next.
+Write the validated design as a Spec matching `spec.schema.json`, to `docs/specs/<name>.md`. Do not start implementation. The next step is `/skill:vox goal`, which turns the design into acceptance lines and the checks that prove them.

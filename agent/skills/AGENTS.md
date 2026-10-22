@@ -70,8 +70,8 @@ require explicit invocation.
 | `video-render-qa` | `/skill:video-render-qa` | Verify a rendered video against its design; "check the render", post-render QA, frame/pixel/OCR/audio checks | no |
 | `verify-ui` | `/skill:verify-ui` | Prove a UI change on the real surface through kitesurf chrome-devtools; screenshot, console, and network calls as the artifact | no |
 | `yt-dlp-download` | `/skill:yt-dlp-download` | YouTube downloads with 403 player-client recovery; "download this YouTube video", "grab the audio from this link" | no |
-| `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before vox plan | no |
-| `vox` | `/skill:vox plan` → `/skill:vox build` | Spec-driven development with TDD checkpoints; two-step pipeline from spec to code | no |
+| `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before /skill:vox goal | no |
+| `vox` | `/skill:vox goal` → `/skill:vox build` → `/skill:vox ship` | Goal-to-verified-change spine; writes `docs/goals/<slug>.md` with outcome, acceptance lines that each name their check, non-goals, and ordered units, then one verified unit per invocation. No planning document, no TDD requirement | no |
 | `why` | `/skill:why` | Reconstruct the intent behind code from git history, PR discussion, repo docs, and vault notes in parallel; "why is this like this", "is this deliberate" | no |
 
 ### Skill Conflicts

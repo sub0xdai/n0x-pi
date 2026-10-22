@@ -36,7 +36,7 @@ Walk through every standard branch. Create new branches only if the subject dema
 3. **constraints** — perf, security, deadlines, budgets, compatibility
 4. **architecture** — components, boundaries, data flow, cardinality
 5. **failureModes** — partial failures, retries, rollback, observability
-6. **testing** — what proves correctness, what's the failing test you'd write first
+6. **testing** — what proves correctness, and which command or surface shows it
 7. **migration** — how does this ship without breaking prod
 8. **reversibility** — what does "back out" look like if it goes wrong
 
@@ -48,4 +48,4 @@ Stop when the tree meets all of these completion criteria:
 - Every deferred Decision has a concrete trigger condition
 - You can write the full Spec from memory without asking another question
 
-End with the resolved DecisionTree and a one-paragraph summary. Offer to write the Spec to `.specify/specs/<NAME>/spec.md`.
+End with the resolved DecisionTree and a one-paragraph summary. Offer to write the Spec to `docs/specs/<name>.md`.

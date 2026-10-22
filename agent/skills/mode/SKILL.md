@@ -34,7 +34,7 @@ Route: `vault-context` when the notes may already hold the answer.
 
 1. Reproduce on the surface the user hit. Paste the failing command and its output. A fix without a repro is a guess.
 2. Find the first place the system goes wrong, not the last place it shows. `git log -S` if the code changed recently.
-3. Write the smallest failing test that pins the repro, if a cheap local path exists. Watch it fail.
+3. Pin the repro with the cheapest failing check: a test when the repo already has one, otherwise the command that fails. Watch it fail and quote it.
 4. Fix the root cause in the shared code, not at the call site that complained. Grep every caller first.
 5. Prove it: rerun the repro and quote the new output. Then run the project's checks.
 6. `audit` if the fix touched 3+ source files, auth, persistence, or a public contract.
@@ -47,12 +47,12 @@ Route: `why` when the root cause makes no sense, `verify-ui` when the symptom is
 
 1. Name the data shape before the code: the types, their variants, and which states are illegal. Read `~/.pi/agent/primitives/coding-standard.schema.json` TB-15 and TB-16.
 2. Settle the boundary: what the caller passes in, what comes back, which module owns the state.
-3. Write the spec and the checkpoints: `/skill:vox plan <spec>`.
-4. Build one checkpoint at a time: `/skill:vox build <spec>`, which runs red, green, refactor, and quotes the verification output.
+3. Write the goal and its check: `/skill:vox goal <goal>`. One sentence of outcome, acceptance lines that each name the command proving them, and the units in order.
+4. Build one unit at a time: `/skill:vox build`. Smallest change, then quote the run artifact.
 5. Prove it on the real surface: `verify-ui` for anything with a screen, a curl or a script run for anything without.
-6. `/skill:vox archive <spec>` when every checkpoint is done.
+6. `/skill:vox ship` when every acceptance line is checked.
 
-Exit: every checkpoint verified, the run artifact quoted, and the delta merged into the living spec.
+Exit: every acceptance line checked with a quoted artifact, the run artifact in the reply, and the commit range landed.
 
 Route: `/brainstorm` when the shape is unsettled, `ask_user` only for scope and preference.
 

@@ -1,6 +1,6 @@
 ---
 name: vault-context
-description: Search Obsidian vault for relevant knowledge before coding decisions. Use when the agent needs domain context, encounters an unfamiliar area, or before vox plan on a spec. Triggers on "what do I know about X", "check my notes on Y", "vault context for Z", or when about to make architectural decisions in an area with vault coverage.
+description: Search Obsidian vault for relevant knowledge before coding decisions. Use when the agent needs domain context, encounters an unfamiliar area, or before /skill:vox goal on a change. Triggers on "what do I know about X", "check my notes on Y", "vault context for Z", or when about to make architectural decisions in an area with vault coverage.
 ---
 
 # Vault Context — Obsidian Knowledge Bridge
@@ -10,7 +10,7 @@ The vault is plain markdown — no databases, no APIs, no infrastructure. grep +
 
 ## When to Use
 
-- Before vox plan on a spec — check if vault has relevant architectural notes,
+- Before vox goal - check if vault has relevant architectural notes,
   past decisions, or domain knowledge
 - When the agent hits an unfamiliar domain (e.g., "I'm writing a kernel module
   but I've never done that")
@@ -86,7 +86,7 @@ relevance.
 
 ## Examples
 
-**Before vox plan on a database migration spec:**
+**Before vox goal on a database migration:**
 ```
 vault context for postgres migration testudo
 → finds 0-zettel/database.md, 0-zettel/database-storage-1.md,

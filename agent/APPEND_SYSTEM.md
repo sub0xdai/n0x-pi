@@ -155,7 +155,7 @@ Three layers, always applied in this order:
 ```
 PONYTAIL — default posture (ad-hoc work, refactors, quick fixes)
     ↓ delegates to
-VOX — spec-driven feature workflow (plan → checkpoints → verify)
+VOX — goal-driven workflow (goal → verified units → ship)
     ↓ applies
 TIGERBEETLE — non-negotiable coding standard (always on, all code)
 ```
@@ -242,15 +242,16 @@ one small test. No frameworks, no fixtures unless asked.
 Output: code first, then at most three short lines. If the explanation is
 longer than the code, delete the explanation.
 
-### Vox — the bridge (spec-driven features)
+### Vox — the bridge (goal-driven features)
 
-Use when building a feature from a spec. Invoked: `/skill:vox plan <spec>`
-then `/skill:vox build <spec>`.
+Use when a change needs more than one verified step. Invoked: `/skill:vox goal <goal>`,
+then `/skill:vox build` once per unit, then `/skill:vox ship`.
 
-Plan mode: gap analysis → vertical checkpoints. Build mode: one checkpoint per
-invocation, implement then verify by running the real path. No TDD, no coverage
-target. The implement step IS the ponytail ladder: smallest change that works,
-no bonus features.
+Goal mode writes a four-section file: outcome, acceptance lines that each name their
+check, non-goals, and the ordered units. Build mode makes the smallest change for one
+unit and quotes the run artifact. Ship mode audits the checkboxes, runs the gates, and
+commits one unit per commit. There is no planning document and no test-first rule. The
+implement step IS the ponytail ladder: smallest change that works, no bonus features.
 
 ### Operating rules
 
@@ -260,12 +261,12 @@ no bonus features.
 | "Delete bloat from this file" | Ponytail-review |
 | "Audit this repo for over-engineering" | Ponytail-audit |
 | Anything with more than one step | `/skill:mode` picks investigate, fix, feature, refactor, perf, or land and routes to the skills below |
-| "Build feature X from this spec" | `/skill:vox plan` → `/skill:vox build` |
+| "Build feature X and prove it works" | `/skill:vox goal` → `/skill:vox build` → `/skill:vox ship` |
 | Code review for correctness/safety | TigerBeetle standard audit |
 | ANY production code, always | TigerBeetle floor |
 
-Ponytail is the default. `mode` is the router for multi-step work. Vox is the escalation for
-specified features. TigerBeetle is the concrete they all pour onto.
+Ponytail is the default. `mode` is the router for multi-step work. Vox is the spine for a
+change that needs more than one verified step. TigerBeetle is the concrete they all pour onto.
 
 ## State-Machine Execution
 

@@ -62,7 +62,7 @@ When an ADR is warranted, write it to `docs/adr/YYYY-MM-DD-<slug>.md` matching t
 4. **constraints** — perf, security, deadlines, budgets, compatibility
 5. **architecture** — components, boundaries, data flow, cardinality
 6. **failureModes** — partial failures, retries, rollback, observability
-7. **testing** — what proves correctness, first failing test
+7. **testing** — what proves correctness, and which command or surface shows it
 8. **migration** — how does this ship without breaking prod
 9. **reversibility** — what does "back out" look like
 
@@ -78,4 +78,4 @@ End with:
 1. The resolved DecisionTree summary
 2. Glossary additions/refinements made to CONTEXT.md
 3. ADRs created (if any)
-4. Offer to write the Spec to `.specify/specs/<NAME>/spec.md`
+4. Offer to write the Spec to `docs/specs/<name>.md`

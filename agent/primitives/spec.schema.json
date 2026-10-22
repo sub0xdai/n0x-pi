@@ -1,7 +1,7 @@
 {
   "$id": "https://pi.agent/primitives/spec",
   "title": "Specification Primitive",
-  "description": "A design specification produced by brainstorm mode or grill sessions. Defines what to build, not how. Stored in .specify/specs/<NAME>/spec.md or docs/plans/YYYY-MM-DD-<topic>-design.md.",
+  "description": "A design specification produced by brainstorm mode or grill sessions. Defines what to build, not how. Stored in docs/specs/<name>.md.",
 
   "sections": {
     "required": ["purpose", "scope", "architecture", "failureModes"],
@@ -36,7 +36,7 @@
       "shape": "array of { scenario: string, impact: string, mitigation: string }"
     },
     "testing": {
-      "description": "What proves correctness. The first failing test you'd write.",
+      "description": "What proves correctness. The command or surface that shows it, not a required test.",
       "shape": "array of { test: string, proves: string }"
     },
     "migration": {
@@ -50,8 +50,7 @@
   },
 
   "storageTargets": [
-    ".specify/specs/<NAME>/spec.md",
-    "docs/plans/YYYY-MM-DD-<topic>-design.md"
+    "docs/specs/<name>.md"
   ],
 
   "validationRules": {

@@ -36,8 +36,8 @@ No timestamp in the filename — each invocation replaces the previous handoff. 
 
 | Artifact type | Where to look |
 |---|---|
-| PRDs / Specs | `.specify/specs/`, `docs/specs/`, `*.prd.md` |
-| Implementation plans | `.specify/specs/*/IMPLEMENTATION_PLAN.md` |
+| PRDs / Specs | `docs/specs/`, `*.prd.md` |
+| Vox goals | `docs/goals/*.md` |
 | ADRs | `docs/adr/`, `adr/`, `decisions/` |
 | Architecture docs | `docs/architecture/`, `ARCHITECTURE.md` |
 | Issues | `gh issue list`, `.github/issues/` |
@@ -69,7 +69,7 @@ If the user passed arguments to `/skill:handoff`, those **are** the next session
 If no arguments were given, infer the most likely next step from the conversation:
 - What was the user about to do?
 - What tasks were discussed but not yet started?
-- What checkpoint is next (if using vox)?
+- Which vox unit is next, and the goal file path (if using vox)?
 
 If you cannot infer anything, use: `Continue from the state described above.`
 
@@ -80,7 +80,7 @@ Look at the available skills (the `<available_skills>` block in your system prom
 For each suggestion:
 - The skill name
 - Why it's relevant (1-2 sentences tied to the task)
-- How to invoke it (e.g. `/skill:vox build <spec>`, `/skill:graphify .`)
+- How to invoke it (e.g. `/skill:vox build`, `/skill:graphify .`)
 
 Also suggest **non-skill actions**: test commands, git operations, files to read first.
 
@@ -177,7 +177,7 @@ Handoff written to ./handoff.md (2.1 KB)
 
 ## Rules
 
-- **Do not duplicate artifact content.** If `.specify/specs/auth/spec.md` exists, write "See `.specify/specs/auth/spec.md`" — don't paste the spec.
+- **Do not duplicate artifact content.** If `docs/specs/auth.md` exists, write "See `docs/specs/auth.md`" — don't paste the spec.
 - **Do not invent information.** If you don't know something, say "unknown" or "not yet determined."
 - **Keep it concise.** The handoff is a map, not a novel. The next agent will read the artifacts directly.
 - **One handoff per invocation.** Do not chain multiple handoffs.
