@@ -95,7 +95,7 @@ done < <(grep -nE "$FORBIDDEN" "$FILE" 2>/dev/null || true)
 case "$FILE" in
   *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.rs|*.go|*.java|*.c|*.cc|*.cpp|*.h|*.hpp|*.swift|*.kt)
     COMMENT_RE='^[[:space:]]*(//|/\*|\*)' ;;
-  *.sh|*.bash|*.zsh|*.py|*.rb|*.yml|*.yaml|*.toml|*.pl|*.conf)
+  *.sh|*.bash|*.zsh|*.py|*.rb|*.yml|*.yaml|*.toml|*.pl)
     COMMENT_RE='^[[:space:]]*#' ;;
   *.sql|*.lua|*.hs)
     COMMENT_RE='^[[:space:]]*--([[:space:]]|\[|$)' ;;
