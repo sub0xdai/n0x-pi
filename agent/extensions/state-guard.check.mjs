@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import stateGuard from "./state-guard.ts";
@@ -186,6 +186,101 @@ const cleanRun = await call("tool_result", {
   isError: false,
 });
 assert.equal(cleanRun, undefined, "a clean file is not appended to");
+
+const vendoredDir = join(cwd, "node_modules", "pkg");
+mkdirSync(vendoredDir, { recursive: true });
+writeFileSync(join(vendoredDir, "index.ts"), "// TO" + "DO: third-party\n");
+await call("session_start", {});
+const vendoredRun = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "node_modules/pkg/index.ts" },
+  content: [{ type: "text", text: "edited vendored file" }],
+  isError: false,
+});
+assert.equal(vendoredRun, undefined, "a vendored file is never gated");
+assert.equal(await settle(), undefined, "a vendored edit does not dirty the run");
+
+const markedDir = join(cwd, "third-party");
+const rejected = (result) =>
+  typeof result === "string" || JSON.stringify(result).includes("__check.sh rejected");
+mkdirSync(markedDir, { recursive: true });
+writeFileSync(join(markedDir, "VENDOR"), "Upstream: https://example.test\n");
+writeFileSync(join(markedDir, "index.ts"), "// TO" + "DO: third-party\n");
+await call("session_start", {});
+const markedRun = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "third-party/index.ts" },
+  content: [{ type: "text", text: "edited marked file" }],
+  isError: false,
+});
+assert.equal(markedRun, undefined, "a VENDOR marker exempts the tree");
+assert.equal(await settle(), undefined, "a marker edit does not dirty the run");
+
+writeFileSync(join(markedDir, "VENDOR"), "copied from somewhere\n");
+await call("session_start", {});
+const unprovenanced = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "third-party/index.ts" },
+  content: [{ type: "text", text: "edited marked file" }],
+  isError: false,
+});
+assert.ok(rejected(unprovenanced), "a marker with no Upstream line does not exempt");
+
+rmSync(join(markedDir, "VENDOR"));
+mkdirSync(join(markedDir, "VENDOR"));
+await call("session_start", {});
+const dirMarker = await call("tool_result", {
+  toolName: "edit",
+  input: { path: "third-party/index.ts" },
+  content: [{ type: "text", text: "edited marked file" }],
+  isError: false,
+});
+assert.ok(rejected(dirMarker), "a directory named VENDOR does not exempt");
+rmdirSync(join(markedDir, "VENDOR"));
+writeFileSync(join(markedDir, "VENDOR"), "Upstream: https://example.test\n");
+await call("session_start", {});
+
+const lateDir = join(cwd, "late");
+mkdirSync(lateDir, { recursive: true });
+writeFileSync(join(lateDir, "mod.ts"), "// TO" + "DO: late\n");
+await call("tool_result", {
+  toolName: "edit",
+  input: { path: "late/mod.ts" },
+  content: [{ type: "text", text: "edited late file" }],
+  isError: false,
+});
+writeFileSync(join(lateDir, "VENDOR"), "Upstream: https://example.test\n");
+writeFileSync(join(cwd, "authored.ts"), "const ok = 1;\n");
+await call("tool_result", {
+  toolName: "edit",
+  input: { path: "authored.ts" },
+  content: [{ type: "text", text: "edited authored file" }],
+  isError: false,
+});
+const staleNote = JSON.stringify(await settle());
+assert.ok(
+  !staleNote.includes("late/mod.ts"),
+  "a path exempted after its violation is not named in the nudge",
+);
+assert.ok(
+  !staleNote.includes("mechanical gate is failing"),
+  "a stale violation does not claim the gate is failing now",
+);
+
+writeFileSync(join(cwd, "bashfixed.ts"), "// TO" + "DO: bashfixed\n");
+await call("tool_result", {
+  toolName: "edit",
+  input: { path: "bashfixed.ts" },
+  content: [{ type: "text", text: "edited bashfixed file" }],
+  isError: false,
+});
+writeFileSync(join(cwd, "bashfixed.ts"), "const ok = 1;\n");
+const healedNote = JSON.stringify(await settle());
+assert.ok(
+  !healedNote.includes("mechanical gate is failing"),
+  "a violation fixed outside the guard is re-gated at settle",
+);
+await call("session_start", {});
 
 const workDir = mkdtempSync(join(homedir(), ".state-guard-work-"));
 

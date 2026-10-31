@@ -13,6 +13,23 @@ if [[ ! -f "$FILE" ]]; then
   exit 0
 fi
 
+if [[ "$FILE" == *node_modules/* ]]; then
+  echo "[]"
+  exit 0
+fi
+
+VENDOR_DIR=$(dirname "$FILE")
+while true; do
+  if [[ -f "$VENDOR_DIR/VENDOR" ]] && grep -q 'Upstream:' "$VENDOR_DIR/VENDOR"; then
+    echo "[]"
+    exit 0
+  fi
+  if [[ "$VENDOR_DIR" == "/" || "$VENDOR_DIR" == "." ]]; then
+    break
+  fi
+  VENDOR_DIR=$(dirname "$VENDOR_DIR")
+done
+
 add_violation() {
   local rule="$1" line="$2" msg="$3"
   if (( COUNT >= CAP )); then

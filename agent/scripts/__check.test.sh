@@ -212,6 +212,39 @@ assert_eq "T-5: invalid json is flagged" "0" "$(rule_lines JSON-01 "$OUTPUT")"
 rm "$T5_JSON"
 
 echo ""
+echo "=== T-6: Vendored Paths ==="
+T6_DIR=$(mktemp -d)/node_modules/pkg
+mkdir -p "$T6_DIR"
+T6_JS="$T6_DIR/index.js"
+printf '// TO%s: third-party\nconst x = 1;\n' "DO" > "$T6_JS"
+OUTPUT=$("$CHECK" "$T6_JS")
+assert_eq "T-6: a vendored file is never gated" "[]" "$OUTPUT"
+rm -rf "${T6_DIR%/node_modules/pkg}"
+
+T6B_ROOT=$(mktemp -d)
+T6B_DIR="$T6B_ROOT/third-party"
+mkdir -p "$T6B_DIR/deep/nested"
+printf 'Upstream: https://example.test\n' > "$T6B_DIR/VENDOR"
+T6B_JS="$T6B_DIR/deep/nested/index.js"
+printf '// TO%s: third-party\nconst x = 1;\n' "DO" > "$T6B_JS"
+OUTPUT=$("$CHECK" "$T6B_JS")
+assert_eq "T-6: a marker exempts nested files" "[]" "$OUTPUT"
+OUTPUT=$(cd "$T6B_DIR" && "$CHECK" deep/nested/index.js)
+assert_eq "T-6: a relative path is exempt too" "[]" "$OUTPUT"
+rm "$T6B_DIR/VENDOR"
+: > "$T6B_DIR/VENDOR"
+OUTPUT=$("$CHECK" "$T6B_JS")
+assert_eq "T-6: a marker with no provenance does not count" "1" "$(rule_lines TB-17 "$OUTPUT")"
+rm "$T6B_DIR/VENDOR"
+mkdir "$T6B_DIR/VENDOR"
+OUTPUT=$("$CHECK" "$T6B_JS")
+assert_eq "T-6: a directory named VENDOR does not count" "1" "$(rule_lines TB-17 "$OUTPUT")"
+rmdir "$T6B_DIR/VENDOR"
+OUTPUT=$("$CHECK" "$T6B_JS")
+assert_eq "T-6: without the marker the file is gated" "1" "$(rule_lines TB-17 "$OUTPUT")"
+rm -rf "$T6B_ROOT"
+
+echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 if [[ "$FAIL" -gt 0 ]]; then
   exit 1

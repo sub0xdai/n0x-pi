@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
-import { existsSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import type {
   ExtensionAPI,
@@ -255,6 +255,33 @@ function isTemporary(target: string): boolean {
   return prefixes.some((prefix) => target.startsWith(prefix));
 }
 
+const VENDORED_SEGMENT = /(^|\/)node_modules\//;
+const VENDOR_MARKER = "VENDOR";
+const VENDOR_PROVENANCE = "Upstream:";
+
+function isVendorMarker(path: string): boolean {
+  try {
+    return statSync(path).isFile() && readFileSync(path, "utf8").includes(VENDOR_PROVENANCE);
+  } catch {
+    return false;
+  }
+}
+
+function hasVendorMarker(target: string): boolean {
+  let dir = dirname(target);
+  for (;;) {
+    if (isVendorMarker(join(dir, VENDOR_MARKER))) return true;
+    if (dir === ".") return false;
+    const parent = dirname(dir);
+    if (parent === dir) return false;
+    dir = parent;
+  }
+}
+
+function isVendored(target: string): boolean {
+  return VENDORED_SEGMENT.test(target) || hasVendorMarker(target);
+}
+
 function shellWriteTargets(command: string): string[] {
   const targets: string[] = [];
   const redirect = /(?:^|[\s;&|()])(>>?)\s*("([^"]+)"|'([^']+)'|([^\s|;&>()]+))/g;
@@ -276,7 +303,7 @@ function shellWriteBlock(command: string, cwd: string): string | undefined {
     if (!GATED_SUFFIX.test(target)) continue;
     if (target.includes("$(")) continue;
     const absolute = isAbsolute(target) ? target : resolve(cwd, target);
-    if (isTemporary(absolute)) continue;
+    if (isTemporary(absolute) || isVendored(absolute)) continue;
     const head = `State invariant violation: bash writing ${target} is not gated.`;
     return `${head} Use the edit or write tool so state-guard can verify the change.`;
   }
@@ -332,7 +359,7 @@ export default function stateGuard(pi: ExtensionAPI) {
     if (after === undefined) return [];
     const notes: string[] = [];
     const candidates = advancedPaths(before, after).filter(
-      (path) => !isTemporary(path) && GATED_SUFFIX.test(path)
+      (path) => !isTemporary(path) && !isVendored(path) && GATED_SUFFIX.test(path)
     );
     for (const path of candidates.slice(0, MAX_SHELL_GATED)) {
       const violations = await gateViolations(path);
@@ -347,6 +374,20 @@ export default function stateGuard(pi: ExtensionAPI) {
     return notes;
   }
 
+  async function liveFailures(cwd: string, violations: Readonly<Record<string, string>>) {
+    const kept: string[] = [];
+    for (const path of Object.keys(violations).slice(0, 3)) {
+      if (isVendored(path)) continue;
+      const current = await gateViolations(path);
+      if (current.length === 0) {
+        record(cwd, { kind: "clean", path });
+        continue;
+      }
+      kept.push(`${path}: ${current.join(" | ")}`);
+    }
+    return kept;
+  }
+
   function render(ctx: ExtensionContext): void {
     if (ctx.mode !== "tui") return;
     ctx.ui.setStatus(
@@ -357,6 +398,7 @@ export default function stateGuard(pi: ExtensionAPI) {
 
   function record(cwd: string, outcome: Outcome): void {
     const target = "path" in outcome ? outcome.path : undefined;
+    if (target !== undefined && isVendored(target)) return;
     const normalized =
       target === undefined || cwd.length === 0
         ? outcome
@@ -395,6 +437,7 @@ export default function stateGuard(pi: ExtensionAPI) {
     }
     if (ctx.cwd.length === 0) return undefined;
     const full = normalizePath(ctx.cwd, raw);
+    if (isVendored(full)) return undefined;
     const violations = await gateViolations(full);
     if (violations.length === 0) {
       record(ctx.cwd, { kind: "clean", path: full });
@@ -407,13 +450,12 @@ export default function stateGuard(pi: ExtensionAPI) {
 
   pi.on("agent_before_settle", async (event, ctx) => {
     if (event.outcome !== "completed") return;
-    if (state.dirty.size === 0) return;
-    const runtime = [...state.dirty].filter(isRuntime);
+    const failing = await liveFailures(ctx.cwd, state.violations);
+    const dirty = [...state.dirty].filter((path) => !isVendored(path));
+    if (dirty.length === 0) return;
+    const runtime = dirty.filter(isRuntime);
     const unproven = runtime.filter((path) => !(path in state.violations));
     const needsProof = unproven.length > 0 && !state.proof;
-    const failing = Object.entries(state.violations)
-      .slice(0, 3)
-      .map(([path, detail]) => `${path}: ${detail}`);
     const gateNote =
       failing.length === 0
         ? ""
@@ -449,7 +491,7 @@ export default function stateGuard(pi: ExtensionAPI) {
           type: "custom_message",
           customType: "state-guard",
           content:
-            `Unverified mutations this turn: ${[...state.dirty].join(", ")}.` +
+            `Unverified mutations this turn: ${dirty.join(", ")}.` +
             `${gateNote} ${demand}`,
           display: true,
         },
