@@ -1,0 +1,8 @@
+Third-party skill, copied unchanged. Do not edit in place.
+Upstream: https://github.com/cursor/plugins/tree/main/pstack/skills/statechart
+Commit: main, fetched 2026-08
+License: MIT (see LICENSE)
+Refresh: rm -rf ~/.pi/agent/skills/statechart && cp -a <clone>/pstack/skills/statechart/. ~/.pi/agent/skills/statechart/
+Toolchain: TLA2TOOLS=/path/tla2tools.jar JAVA=/usr/bin/java avoids the mise download. Verified with Java 21 and tla2tools 1.7.4.
+Tests: 359 of 360 pass. test/differential.test.ts needs the devDependency fast-check (npm install), which is not vendored.
+This marker exempts the tree from __check.sh and state-guard, because the house rules cover code we write, not upstream's.

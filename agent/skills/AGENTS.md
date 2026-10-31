@@ -27,6 +27,36 @@ Each skill is a directory containing exactly one `SKILL.md` file. No other asset
 (templates, assets) belong in the skill directory. Script companions live
 at `~/dotfiles/scripts/<skill-name>*.sh`.
 
+### Vendored skills
+
+A skill copied from an upstream plugin keeps its own tree: `SKILL.md`,
+`references/`, `scripts/`, `LICENSE`, and a `VENDOR` file naming the source, the commit,
+the refresh command, and every local patch.
+The `VENDOR` file exempts that subtree from `scripts/__check.sh` and
+`extensions/state-guard.ts`, because the house rules cover code we write, not upstream's style.
+The marker is honoured only when it is a regular file containing an `Upstream:` line, so a stray
+empty `VENDOR` cannot quietly switch the gate off for a whole tree.
+
+Never put the marker on a skill we author.
+
+A vendored skill may carry a local patch, and the patch is not an edit in place: it is a step
+to re-apply. Record every patch as a `Patched:` line in the `VENDOR` file, because a refresh
+re-copies the tree and drops the change.
+Patch frontmatter and prose only. A patched `scripts/` file stops being upstream's code, so a
+behavioural fix belongs in a wrapper skill or an upstream issue instead.
+
+The patches in use:
+
+- `disable-model-invocation: true` is removed from `blast-radius`, `benchmark-checklist`,
+  `correct`, and `typescript-best-practices`, so pi selects them from the description.
+  It stays on `statechart`, `sharpen`, `create-formal-verification-skill`, and
+  `maintain-formal-verification-skill`, which are deliberate, expensive, or both.
+
+Vendored skills carry one toolchain note each:
+
+- `statechart` runs TLC. Set `TLA2TOOLS=<path>/tla2tools.jar` and `JAVA=/usr/bin/java` to use
+the installed Java 21. Without them the skill installs Java 25 and TLC through `mise` on first run.
+
 ### Creation Rules
 
 - Must follow Agent Skills standard (YAML frontmatter: name, description, optional
@@ -73,6 +103,14 @@ require explicit invocation.
 | `vault-context` | `/skill:vault-context` | Search Obsidian vault for relevant knowledge before coding decisions; "what do I know about X", "check my notes", before /skill:vox goal | no |
 | `vox` | `/skill:vox goal` → `/skill:vox build` → `/skill:vox ship` | Goal-to-verified-change spine; writes `docs/goals/<slug>.md` with outcome, acceptance lines that each name their check, non-goals, and ordered units, then one verified unit per invocation. No planning document, no TDD requirement | no |
 | `why` | `/skill:why` | Reconstruct the intent behind code from git history, PR discussion, repo docs, and vault notes in parallel; "why is this like this", "is this deliberate" | no |
+| `benchmark-checklist` | `/skill:benchmark-checklist` | Vet a perf number before reporting or acting on it; a speedup, regression, or tool choice | vendored |
+| `blast-radius` | `/skill:blast-radius` | What a change breaks beyond the diff, with the safety fact proven by running code | vendored |
+| `correct` | `/skill:correct` | Turn repeated agent mistakes into architecture, types, or a lint whose error names the fix | vendored |
+| `create-formal-verification-skill` | `/skill:create-formal-verification-skill` | Model-check the code where a bug costs most; generates the project-local verify skill, pairs with `statechart` | vendored |
+| `maintain-formal-verification-skill` | `/skill:maintain-formal-verification-skill` | Bring a formal check back in line after merges; tells drift from a real bug | vendored |
+| `sharpen` | `/skill:sharpen` | Make a task deeper, not bigger, then rewrite the prompt | vendored |
+| `statechart` | `/skill:statechart` (explicit only) | TLA+ model of a state machine, checked by TLC, drawn as a Mermaid statechart with the shortest path to each broken rule | vendored: scripts/ |
+| `typescript-best-practices` | `/skill:typescript-best-practices` | Reading or editing any `.ts` or `.tsx` file | vendored |
 
 ### Skill Conflicts
 

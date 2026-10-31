@@ -1,0 +1,6 @@
+Third-party skill, copied unchanged. Do not edit in place.
+Upstream: https://github.com/cursor/plugins/tree/main/pstack/skills/maintain-formal-verification-skill
+Commit: main, fetched 2026-08
+License: MIT (see LICENSE)
+Refresh: rm -rf ~/.pi/agent/skills/maintain-formal-verification-skill && cp -a <clone>/pstack/skills/maintain-formal-verification-skill/. ~/.pi/agent/skills/maintain-formal-verification-skill/
+This marker exempts the tree from __check.sh and state-guard, because the house rules cover code we write, not upstream prose.
