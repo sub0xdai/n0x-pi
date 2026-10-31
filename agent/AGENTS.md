@@ -75,10 +75,14 @@ adapter package: pi answers a declared MCP extension by writing `extensions:
 
 ### Verification
 
-- `bash scripts/__check.test.sh` - the gate's own tests (22)
+- `bash scripts/__check.test.sh` - the gate's own tests (28)
 - `node extensions/state-guard.check.mjs` - the runtime guard's assertions
 - `__check.sh` runs automatically after every `edit` and `write`, and on files a bash call
   changed inside a git repository. A failing gate is a block, not a warning.
+- `.githooks/pre-commit` (the PII and secret scan) runs only when this checkout sets
+  `git config core.hooksPath .githooks`. It blocks the commit and prints `file:line`; it never rewrites
+  a staged file. A false positive takes `@waiver PII: <reason>` on that line.
+  Rewriting in place is `scrub.py --fix`, run by hand.
 
 ## Child DOX index
 

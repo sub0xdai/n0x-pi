@@ -1,6 +1,6 @@
 import sys
-import os
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
+
+from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_anonymizer import AnonymizerEngine
 
 DB_KEY = [
@@ -14,13 +14,6 @@ DEV_ID = [
     Pattern("dev_id", r'(?:dev_id|developer_id)\s*[:=]\s*\S+', 0.85),
 ]
 
-# Presidio's default recognizers cannot run over source code. Measured on this
-# tree, URL fired at 0.5 on `process.st`, `event.to` and `Math.ro` (ccTLDs for Sao
-# Tome, Tonga and Romania appearing as dotted identifier suffixes), PERSON at 0.85
-# on `Date.now`, and US_DRIVER_LICENSE at 0.3 on `i3` and `x07`. Left unfiltered it
-# rewrites every identifier it touches, so the hook would corrupt the file it is
-# meant to protect. The allowlist keeps the credential patterns above plus the PII
-# types that are anchored enough not to fire on code.
 ENTITIES = [
     "DB_KEY",
     "DEV_ID",
@@ -32,14 +25,10 @@ ENTITIES = [
     "US_PASSPORT",
 ]
 
+WAIVER = "@waiver PII"
 
-def scrub(path):
-    try:
-        with open(path) as f:
-            text = f.read()
-    except Exception:
-        return False
 
+def build():
     analyzer = AnalyzerEngine()
     analyzer.registry.add_recognizer(
         PatternRecognizer(supported_entity="DB_KEY", patterns=DB_KEY)
@@ -47,24 +36,64 @@ def scrub(path):
     analyzer.registry.add_recognizer(
         PatternRecognizer(supported_entity="DEV_ID", patterns=DEV_ID)
     )
-
-    results = analyzer.analyze(text=text, language="en", entities=ENTITIES)
-    if not results:
-        return False
-
-    redacted = AnonymizerEngine().anonymize(text=text, analyzer_results=results)
-    with open(path, "w") as f:
-        f.write(redacted.text)
-    return True
+    return analyzer
 
 
-def main():
-    changed = False
-    for p in sys.argv[1:]:
-        if os.path.isfile(p) and scrub(p):
-            changed = True
-    sys.exit(2 if changed else 0)
+def mask(value):
+    return value[:2] + "*" * min(len(value) - 2, 8)
+
+
+def scan(path, analyzer):
+    try:
+        with open(path) as handle:
+            text = handle.read()
+    except OSError as error:
+        print(f"scrub: cannot read {path}: {error}", file=sys.stderr)
+        return None, []
+    rows = text.splitlines()
+    kept = []
+    for result in analyzer.analyze(text=text, language="en", entities=ENTITIES):
+        line = text.count("\n", 0, result.start) + 1
+        if line <= len(rows) and WAIVER in rows[line - 1]:
+            continue
+        kept.append(result)
+    return text, kept
+
+
+def report(path, text, kept):
+    for result in kept:
+        line = text.count("\n", 0, result.start) + 1
+        print(f"{path}:{line}: {result.entity_type} {mask(text[result.start:result.end])}")
+
+
+def redact(path, text, kept):
+    anonymizer = AnonymizerEngine()
+    with open(path, "w") as handle:
+        handle.write(anonymizer.anonymize(text=text, analyzer_results=kept).text)
+
+
+def main(argv):
+    fix = "--fix" in argv
+    paths = [arg for arg in argv if not arg.startswith("--")]
+    analyzer = build()
+    hits = 0
+    for path in paths:
+        text, kept = scan(path, analyzer)
+        if text is None or not kept:
+            continue
+        hits += 1
+        report(path, text, kept)
+        if fix:
+            redact(path, text, kept)
+    if hits == 0:
+        return 0
+    if fix:
+        print(f"scrub: redacted {hits} file(s) in place. Review the diff before you commit.")
+        return 2
+    print("scrub: refusing the commit.")
+    print(f"scrub: fix each line, or append `{WAIVER}: <reason>` when it is a false positive.")
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
