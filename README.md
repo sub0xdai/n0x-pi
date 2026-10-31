@@ -38,10 +38,17 @@ Each index is the only copy of its list.
 - **No comments (TB-17)** - no explanation, banner, docblock, or commented-out code.
   Only `@waiver`, `@anchor`/`@tags`, and `ponytail:` survive, because a tool reads them.
 - **The receipt** - every code block ends with a `[VERIFIED]` line, and a missing receipt means the agent skipped the gate.
+- **The PII hook** - `.githooks/pre-commit` runs a Presidio scan over staged source files and aborts the commit on a finding.
+  It prints `file:line` and a masked match; it never rewrites a staged file.
+  A false positive takes `@waiver PII: <reason>` on that line.
+  It runs only where `git config core.hooksPath` returns `.githooks`.
+- **Vendored code** - a `VENDOR` file with an `Upstream:` line exempts that tree from the gate, the guard, and the PII hook.
+  Local patches are recorded in the `VENDOR` file and re-applied after a refresh.
 
 ## Verify
 
 ```bash
 bash agent/scripts/__check.test.sh          # the gate's own tests
 node agent/extensions/state-guard.check.mjs # the guard's assertions
+bash .githooks/pre-commit                   # the PII scan, without committing
 ```

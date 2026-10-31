@@ -30,25 +30,31 @@ The index keeps copies of source passages, so also add it on a tree that may hol
 ## PII & secret scrubbing pre-commit hook
 
 Every project with `.rs`, `.ts`, `.tsx`, `.js`, or `.jsx` source files should have a
-Presidio-powered pre-commit hook that scrubs PII and secrets before they land in the
-repo. Presidio: <https://github.com/microsoft/presidio>
+Presidio-powered pre-commit hook that blocks PII and secrets before they land in the repo.
+Presidio: <https://github.com/microsoft/presidio>
+
+The hook detects and blocks. It never rewrites a staged file.
+A rewrite that re-stages itself commits corrupted code behind a success exit code, and that has already happened twice: an in-place scrubber replaced a Rust test fixture with `let <DEV_ID>;`, and turned `2147483647` into `<PHONE_NUMBER>` inside a numeric expression that then fails to compile.
+No recognizer can tell a max-int literal from a phone number, so the guard against corruption belongs in the hook, not in the entity list.
 
 When starting work in a project directory for the first time, check:
-- Does `.git/hooks/pre-commit` exist and reference `scrub.py` / Presidio?
+- Does `.githooks/pre-commit` exist and reference `scrub.py` / Presidio? A legacy `.git/hooks/pre-commit` counts, but move it.
 - Does `scrub.py` exist at the repo root?
+- Does `git config core.hooksPath` return `.githooks`?
 
-If both are missing and the project has relevant source files, ask the user ONCE:
+If the hook is missing and the project has relevant source files, ask the user ONCE:
 "This project has no PII/secret scrubbing hook. Set it up with `uv`?"
 
 If they say yes, scaffold:
 1. `uv init` (if no pyproject.toml) and `uv add presidio-analyzer presidio-anonymizer`
-2. Write `scrub.py` and `.git/hooks/pre-commit` using the canonical templates below
+2. Write `scrub.py` and `.githooks/pre-commit` using the canonical templates below
+3. `chmod +x .githooks/pre-commit` and `git config core.hooksPath .githooks`, so the hook is tracked and a clone can review it
 
 ### Canonical scrub.py
 ```python
 import sys
-import os
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
+
+from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_anonymizer import AnonymizerEngine
 
 DB_KEY = [
@@ -62,14 +68,21 @@ DEV_ID = [
     Pattern("dev_id", r'(?:dev_id|developer_id)\s*[:=]\s*\S+', 0.85),
 ]
 
+ENTITIES = [
+    "DB_KEY",
+    "DEV_ID",
+    "EMAIL_ADDRESS",
+    "PHONE_NUMBER",
+    "CREDIT_CARD",
+    "IBAN_CODE",
+    "US_SSN",
+    "US_PASSPORT",
+]
 
-def scrub(path):
-    try:
-        with open(path) as f:
-            text = f.read()
-    except Exception:
-        return False
+WAIVER = "@waiver PII"
 
+
+def build():
     analyzer = AnalyzerEngine()
     analyzer.registry.add_recognizer(
         PatternRecognizer(supported_entity="DB_KEY", patterns=DB_KEY)
@@ -77,49 +90,109 @@ def scrub(path):
     analyzer.registry.add_recognizer(
         PatternRecognizer(supported_entity="DEV_ID", patterns=DEV_ID)
     )
-
-    results = analyzer.analyze(text=text, language="en")
-    if not results:
-        return False
-
-    redacted = AnonymizerEngine().anonymize(text=text, analyzer_results=results)
-    with open(path, "w") as f:
-        f.write(redacted.text)
-    return True
+    return analyzer
 
 
-def main():
-    changed = False
-    for p in sys.argv[1:]:
-        if os.path.isfile(p) and scrub(p):
-            changed = True
-    sys.exit(2 if changed else 0)
+def mask(value):
+    return value[:2] + "*" * min(len(value) - 2, 8)
+
+
+def scan(path, analyzer):
+    try:
+        with open(path) as handle:
+            text = handle.read()
+    except OSError as error:
+        print(f"scrub: cannot read {path}: {error}", file=sys.stderr)
+        return None, []
+    rows = text.splitlines()
+    kept = []
+    for result in analyzer.analyze(text=text, language="en", entities=ENTITIES):
+        line = text.count("\n", 0, result.start) + 1
+        if line <= len(rows) and WAIVER in rows[line - 1]:
+            continue
+        kept.append(result)
+    return text, kept
+
+
+def report(path, text, kept):
+    for result in kept:
+        line = text.count("\n", 0, result.start) + 1
+        print(f"{path}:{line}: {result.entity_type} {mask(text[result.start:result.end])}")
+
+
+def redact(path, text, kept):
+    anonymizer = AnonymizerEngine()
+    with open(path, "w") as handle:
+        handle.write(anonymizer.anonymize(text=text, analyzer_results=kept).text)
+
+
+def main(argv):
+    fix = "--fix" in argv
+    paths = [arg for arg in argv if not arg.startswith("--")]
+    analyzer = build()
+    hits = 0
+    for path in paths:
+        text, kept = scan(path, analyzer)
+        if text is None or not kept:
+            continue
+        hits += 1
+        report(path, text, kept)
+        if fix:
+            redact(path, text, kept)
+    if hits == 0:
+        return 0
+    if fix:
+        print(f"scrub: redacted {hits} file(s) in place. Review the diff before you commit.")
+        return 2
+    print("scrub: refusing the commit.")
+    print(f"scrub: fix each line, or append `{WAIVER}: <reason>` when it is a false positive.")
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))
 ```
 
-### Canonical .git/hooks/pre-commit
+### Canonical .githooks/pre-commit
 ```bash
 #!/bin/bash
-set -euo pipefail
+set -uo pipefail
 
-FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(rs|ts|tsx|js|jsx)$' || true)
-[ -z "$FILES" ] && exit 0
+is_vendored() {
+  local dir
+  dir=$(dirname "$1")
+  while :; do
+    if [[ -f "$dir/VENDOR" ]] && grep -q 'Upstream:' "$dir/VENDOR"; then
+      return 0
+    fi
+    if [[ "$dir" == "." || "$dir" == "/" ]]; then
+      return 1
+    fi
+    dir=$(dirname "$dir")
+  done
+}
 
-./.venv/bin/python scrub.py $FILES
-case $? in
-    2)  for f in $FILES; do git add "$f"; done
-        echo "⚠ PII/secrets scrubbed and re-staged — review before pushing."
-        exit 0 ;;
-    0)  exit 0 ;;
-    *)  echo "❌ scrub.py failed"
-        exit 1 ;;
-esac
+FILES=()
+while IFS= read -r f; do
+  is_vendored "$f" || FILES+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(rs|ts|tsx|js|jsx)$' || true)
+[ ${#FILES[@]} -eq 0 ] && exit 0
+
+if [ ! -x ./.venv/bin/python ]; then
+  echo "pre-commit: ./.venv/bin/python is missing, so the PII scan did not run."
+  echo "pre-commit: uv sync (or uv add presidio-analyzer presidio-anonymizer) to enable it."
+  exit 0
+fi
+
+./.venv/bin/python scrub.py "${FILES[@]}" || exit 1
 ```
 
-After scaffolding, remind the user to `chmod +x .git/hooks/pre-commit`.
+Exit codes: `0` clean, `1` findings and the commit aborts, `2` files rewritten by `--fix`.
+A false positive takes `@waiver PII: <reason>` on that line, the same convention as the TB waivers.
+A vendored tree is skipped when its directory holds a `VENDOR` file with an `Upstream:` line, because third-party code is not ours to redact.
+Rewriting in place survives as `scrub.py --fix`, which a human runs and reviews.
+
+Run `bash .githooks/pre-commit` by hand to see what it will say before you commit.
 
 ## Constructive Data Modeling Protocol (always on)
 

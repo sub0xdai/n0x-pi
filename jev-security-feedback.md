@@ -63,7 +63,7 @@ The brief is about decision quality. Mounted in a harness, the same Jev call is 
 `bash` is in the default tool list, so `cat` of anything is in scope.
 Shadow mode is not a privacy-safe mode: it sends the same bytes and additionally writes every hide candidate to disk.
 The recent task text goes too, so a pasted credential in a user message is egress as well.
-This repo already ships a Presidio scrubber at `scrub.py` and `.git/hooks/pre-commit` for exactly this content class, and none of it is applied to the outbound request or to the cache.
+This repo already ships a Presidio scrubber at `scrub.py` and `.githooks/pre-commit` for exactly this content class, and none of it is applied to the outbound request or to the cache.
 
 **S1. The block cache is a permanent plaintext copy outside the repo.**
 `~/.cache/jev` and `~/.cache/jev/blocks` are 0755 and every file inside is 0644.

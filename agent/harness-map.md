@@ -17,9 +17,9 @@ candidates from the merge incident. Delete them once reviewed.
 |---|---|---|
 | system prompt | 2 files | `APPEND_SYSTEM.md` + `AGENTS.md` (DOX root) |
 | control plane | 5 extensions + 8 packages | code that acts on the agent loop |
-| execution plane | 27 skills + 6 prompts | text the model follows |
+| execution plane | 35 skills + 6 prompts | text the model follows |
 | documentation plane | 5 primitives + 5 `AGENTS.md` | schemas and DOX contracts describing the rest |
-| mechanical plane | 1 gate + 1 test + 1 hook | `__check.sh`, `__check.test.sh`, `scrub.py` |
+| mechanical plane | 1 gate + 1 test + 1 hook + 1 scrubber | `__check.sh`, `__check.test.sh`, `.githooks/pre-commit`, `scrub.py` |
 
 ## 1. What pi loads
 
@@ -36,7 +36,7 @@ flowchart TB
         PKG["packages 8"]
     end
     subgraph EXE["execution plane"]
-        SK["skills 27"]
+        SK["skills 35"]
         PR["prompts 6"]
     end
     subgraph DOC["documentation"]
@@ -61,7 +61,7 @@ flowchart TB
 |---|---|
 | extensions 5 | `herdr-agent-state`, `jev-sieve`, `notifications`, `state-guard`, `tmux-manager` |
 | packages 8 | `pi-web-access`, `@upstash/context7-pi`, `@ff-labs/pi-fff`, `@tungthedev/pi-extensions`, `@yeliu84/pi-model-router`, `ponytail`, `git:pi-ask`, `vim-motions-pi` |
-| skills 27 | `adr`, `appimage-integrate`, `audit`, `bridge-recon`, `cloudflare-devops`, `cover-letter`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `mode`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `ste-writing`, `teach`, `typesafe-ai`, `vault-context`, `verify-ui`, `video-render-qa`, `vox`, `why`, `yt-dlp-download` |
+| skills 35 | `adr`, `appimage-integrate`, `audit`, `benchmark-checklist`, `blast-radius`, `bridge-recon`, `cloudflare-devops`, `correct`, `cover-letter`, `create-formal-verification-skill`, `diff-review`, `ffmpeg-composite`, `graphify`, `handoff`, `humanizer`, `maintain-formal-verification-skill`, `mode`, `nuclear-review`, `onchain`, `project-orientation`, `prolong`, `scythe`, `shannon`, `sharpen`, `statechart`, `ste-writing`, `teach`, `typesafe-ai`, `typescript-best-practices`, `vault-context`, `verify-ui`, `video-render-qa`, `vox`, `why`, `yt-dlp-download` |
 | prompts 6 | `brainstorm`, `brilliance`, `grill-me`, `grill-with-docs`, `scythe-cutlist`, `tigerbeetle` |
 | primitives 5 | `check`, `coding-standard`, `measurement`, `review-policy`, `spec` |
 
