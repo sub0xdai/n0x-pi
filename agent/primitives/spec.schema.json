@@ -24,11 +24,14 @@
       "shape": "array of { category: string, requirement: string }"
     },
     "architecture": {
-      "description": "Components, boundaries, data flow, cardinality between entities.",
+      "description": "Components, boundaries, data flow, and the domain model. The domain model has two halves. The semantic half is what exists: object types, their properties, and the link types between them. The kinetic half is what may change: action types, the only way an object is modified. A spec that models only the semantic half produces read-only schemas that every component then mutates at will, which is where domain invariants die.",
       "shape": {
         "components": "array of { name: string, responsibility: string, boundaries: string[] }",
         "dataFlow": "description of how data moves between components",
-        "cardinality": "array of { entityA: string, relationship: string, entityB: string }"
+        "objectTypes": "array of { name: string, definition: string, identity: string, properties: array of { name: string, type: string, units?: string } }",
+        "linkTypes": "array of { name: string, from: string, to: string, cardinality: 'one-to-one' | 'one-to-many' | 'many-to-many', inverse: string }",
+        "actionTypes": "array of { name: string, objectType: string, changes: string[], validates: string[], sideEffects: string[], repeatBehavior: 'idempotent' | 'rejects-duplicate' }",
+        "interfaces": "array of { name: string, shape: string, implementedBy: string[] }"
       }
     },
     "failureModes": {
@@ -57,6 +60,10 @@
     "allRequiredSectionsPresent": "purpose, scope, architecture, and failureModes must all be non-empty",
     "scopeIsExhaustive": "in + out + deferred must cover the full problem space — nothing unaddressed",
     "failureModesNonTrivial": "at least one failure mode beyond 'the whole thing crashes'",
-    "alternativesAcknowledged": "if alternatives were discussed, the rejected ones must appear in an alternatives section"
+    "alternativesAcknowledged": "if alternatives were discussed, the rejected ones must appear in an alternatives section",
+    "everyMutationIsAnAction": "every state change in dataFlow names an actionType; a component with no actionType does not write",
+    "everyLinkHasAnInverse": "each linkType names its inverse, so traversal works in both directions",
+    "everyActionValidates": "each actionType lists at least one validation and states whether repeating it is idempotent",
+    "interfaceHasTwoImplementations": "an interface is declared only when at least two object types share the shape; one implementation is a rename"
   }
 }

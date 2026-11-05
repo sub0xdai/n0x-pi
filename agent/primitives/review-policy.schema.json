@@ -1,7 +1,7 @@
 {
   "$id": "https://pi.agent/primitives/review-policy",
   "title": "Review Policy Primitive",
-  "description": "The 7 dimensions of a brilliance code review, formalized as queryable rules. Each dimension defines what to check, how to check it, and what constitutes a violation.",
+  "description": "The dimensions of a brilliance code review, formalized as queryable rules. Each dimension defines what to check, how to check it, and what constitutes a violation.",
 
   "dimensions": {
     "naming": {
@@ -74,6 +74,17 @@
         "Matches existing patterns — if project uses Result<T,E>, don't introduce callbacks",
         "Formatting matches — line width ≤ 100, no trailing whitespace",
         "Commit message follows project convention"
+      ]
+    },
+    "mutationSurface": {
+      "id": "RP-08",
+      "question": "Does every change to shared or persisted state go through a named, validated operation?",
+      "checks": [
+        "Every write to persisted or shared state is reachable through a named operation that validates its input and states its side effects",
+        "No component writes a field it does not own; a direct field write outside that operation is a finding",
+        "Repeating the operation is either idempotent or explicitly rejected, never silently duplicated",
+        "A change spanning several objects is one operation, not a sequence of partial writes the caller must remember to order",
+        "Every action type the spec names (spec.schema.json actionTypes) exists in code, and every write in code maps to one"
       ]
     }
   },

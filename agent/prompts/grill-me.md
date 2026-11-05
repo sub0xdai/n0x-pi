@@ -34,7 +34,7 @@ Walk through every standard branch. Create new branches only if the subject dema
 1. **purpose** — what changes for the user? what's success?
 2. **scope** — explicitly: in / out / deferred
 3. **constraints** — perf, security, deadlines, budgets, compatibility
-4. **architecture** — components, boundaries, data flow, cardinality
+4. **architecture** — components, boundaries, data flow, object types, link types, action types
 5. **failureModes** — partial failures, retries, rollback, observability
 6. **testing** — what proves correctness, and which command or surface shows it
 7. **migration** — how does this ship without breaking prod

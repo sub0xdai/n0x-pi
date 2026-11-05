@@ -11,7 +11,7 @@ Target: $@ (defaults to staged changes + working tree diff if omitted)
 
 ## Primitives (read before acting)
 
-1. **`~/.pi/agent/primitives/review-policy.schema.json`** — the 7 review dimensions (RP-01 through RP-07) and severity classification. Every finding must be tagged with its dimension ID.
+1. **`~/.pi/agent/primitives/review-policy.schema.json`** — the review dimensions (RP-01 onward) and severity classification. Every finding must be tagged with its dimension ID.
 
 ## Phase 0 — Ground yourself
 
@@ -34,6 +34,7 @@ For every changed line, evaluate against each dimension:
 - **RP-05 Testing** — catches the bug you'd introduce, behavior-named, no accidental passes
 - **RP-06 Minimalism** — no dead code, no TODO without ticket, no unearned abstraction
 - **RP-07 Consistency** — matches existing patterns, line width ≤100, commit convention
+- **RP-08 MutationSurface** — every write to shared or persisted state goes through a named, validated operation; no component writes a field it does not own
 
 ## Process
 

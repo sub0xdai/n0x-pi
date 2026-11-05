@@ -68,6 +68,7 @@ Quote the lines that answer it. A goal whose behavior already exists is a findin
 
 If the change introduces state, name the data shape first: the types, their variants, which states are illegal.
 Read TB-15 and TB-16 in `~/.pi/agent/primitives/coding-standard.schema.json`.
+If the change writes shared or persisted state, name the action that performs the write, from the spec's `actionTypes` when a spec exists.
 
 **3. Write the goal file**
 
@@ -92,9 +93,11 @@ Every line names the check that proves it.
 ## Units
 
 Ordered. Each one ends in a state a reviewer can verify.
+Every unit names the action type it implements, or `none` with the reason it writes nothing.
+A write with no action behind it is a spec gap: fix the spec, then the unit.
 
-- [ ] <unit> - touches <files> - `<check>`
-- [ ] <unit> - touches <files> - `<check>`
+- [ ] <unit> - touches <files> - `<check>` - action <actionType | none: why>
+- [ ] <unit> - touches <files> - `<check>` - action <actionType | none: why>
 ```
 
 **4. Stop**
@@ -128,7 +131,7 @@ If every unit is checked, say so and point at `/skill:vox ship`.
 
 **3. Restate it in one line**
 
-The unit, the files it touches, and the check that will prove it.
+The unit, the files it touches, the action it implements, and the check that will prove it.
 Then start. Do not recount the whole goal.
 
 **4. Make the smallest change**
@@ -148,7 +151,7 @@ If the check cannot run on this machine, say what replaced it and why that is en
 
 In the goal file, check the unit box and append the evidence on the same line:
 
-    - [x] <unit> - touches <files> - `<check>` -> <result>, <YYYY-MM-DD>
+    - [x] <unit> - touches <files> - `<check>` - action <actionType> -> <result>, <YYYY-MM-DD>
 
 Check an acceptance box only when its own check passed, not because a unit that seemed related is done.
 
@@ -166,9 +169,12 @@ Triggered by `/skill:vox ship [slug]`. Every unit must already be checked.
 **1. Audit the goal file mechanically**
 
     grep -n '\- \[ \]' docs/goals/<slug>.md
+    grep -n 'touches ' docs/goals/<slug>.md | grep -v ' - action '
 
-An empty result means every unit and acceptance line is checked.
+An empty result from the first means every unit and acceptance line is checked.
 Any hit is unverified work. Stop and report the line.
+An empty result from the second means every unit names its action.
+A unit that does not is either a write with no spec behind it or a line to rewrite.
 
 **2. Run the gates**
 

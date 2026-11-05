@@ -60,7 +60,7 @@ When an ADR is warranted, write it to `docs/adr/YYYY-MM-DD-<slug>.md` matching t
 2. **purpose** — what changes for the user? what's success?
 3. **scope** — in / out / deferred
 4. **constraints** — perf, security, deadlines, budgets, compatibility
-5. **architecture** — components, boundaries, data flow, cardinality
+5. **architecture** — components, boundaries, data flow, object types, link types, action types
 6. **failureModes** — partial failures, retries, rollback, observability
 7. **testing** — what proves correctness, and which command or surface shows it
 8. **migration** — how does this ship without breaking prod
