@@ -6,6 +6,8 @@ agent/sessions/
 
 # Runtime data
 agent/pi-fff/
+agent/pi-web-access/
+subagents/sessions/
 
 # Backup / stale files
 *.bak
@@ -23,3 +25,6 @@ diagrams/*.png
 
 # pi-managed launcher symlink into the ignored install tree
 agent/bin/
+
+# Vendored reference corpus - 14M, shallow clone, refresh via coding-standard.referenceCheck
+reference/tigerbeetle/

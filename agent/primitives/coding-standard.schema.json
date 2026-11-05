@@ -1,7 +1,7 @@
 {
   "$id": "https://pi.agent/primitives/coding-standard",
   "title": "TigerBeetle Coding Standard",
-  "description": "17 non-negotiable rules applied to all production code. Each rule is machine-checkable - the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification.",
+  "description": "The non-negotiable rules applied to all production code. Each rule is machine-checkable - the agent must verify compliance before outputting code. Violations are blocks, not warnings. Waivers require explicit justification. This file is the only copy of the rule list; nothing else enumerates the rules or their count.",
   "rules": {
     "assertionDensity": {
       "id": "TB-01",
@@ -159,10 +159,72 @@
       ],
       "enforcement": "mechanical",
       "enforcedBy": "scripts/__check.sh, run by state-guard.ts"
+    },
+    "boundedLoops": {
+      "id": "TB-18",
+      "description": "Put a limit on everything. Every loop and every queue has a fixed upper bound, and the bound fails fast. Unbounded work is an unbounded tail-latency spike: a slow request today, an outage under load tomorrow. A loop that cannot terminate, such as a service or event loop, asserts its own progress instead.",
+      "check": "For each loop and queue, name the bound and the place it is enforced. Reject a retry loop without an attempt cap, a queue with no capacity, and a drain loop over a producer that can outrun it. For a loop that cannot terminate, verify an assertion that it is still making progress.",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
+    },
+    "noRecursion": {
+      "id": "TB-19",
+      "description": "No recursion. Simple, explicit control flow only. A recursive call hides the stack bound at the call site, and the stack bound is what fails in production, once, on the input nobody tested. Rewrite the cycle as a loop with an explicit bound.",
+      "check": "Trace the call graph for any function that reaches itself, directly or through a cycle. Rewrite it as a loop over an explicit stack or accumulator with a bound (TB-18).",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
+    },
+    "fixedWidthIntegers": {
+      "id": "TB-20",
+      "description": "Explicit-width integers. Anything persisted, sent over a protocol, hashed, or shared between processes uses a fixed-width type (u32, i64, u64-shaped). An architecture-dependent width (usize, isize, size_t, int, number) changes encoding between machines without a code change, and is the classic 32-bit truncation bug.",
+      "check": "For each stored, serialized, hashed, or cross-process value, verify a fixed width in the type. Arch-dependent widths are acceptable only for indexing inside one process.",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
+    },
+    "qualifierOrder": {
+      "id": "TB-21",
+      "description": "Names go most significant word first, least significant last. latency_ms_max, never max_latency_ms. Related names then sort together, line up in a diff, and group in completion. Extends TB-11, which fixes the unit but not the order.",
+      "check": "Read each multi-word name. If a qualifier (max, min, count, total, average) or a unit sits before the noun it qualifies, reorder it so the noun comes first and the qualifiers follow, descending in significance.",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
+    },
+    "declareAtPointOfUse": {
+      "id": "TB-22",
+      "description": "Declare a variable where it is used, and end its scope at its last use. A value computed far from its use is a place-of-check to place-of-use gap: the reader, and the next edit, must hold state across that distance, which is where most bugs come from. Do not introduce a variable before it is needed and do not keep one after.",
+      "check": "For each binding: is it declared within a few lines of first use, and does its scope end at the last use? Flag a hoisted temporary, a mutable flag carried across a block, and one variable reused for a second purpose.",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
+    },
+    "splitAssertions": {
+      "id": "TB-23",
+      "description": "One condition per assertion. assert(a); assert(b); beats assert(a and b) because the failure names which condition broke. Express an implication as if (a) assert(b). Assert the relationship between compile-time constants (buffer sizes, limits, unit conversions) to pin an invariant the types cannot express. Extends TB-01, which fixes the density but not the shape.",
+      "check": "For each assertion whose condition contains and/or, split it. For each conditional path that assumes a property of its input, add if (...) assert(...). For each pair of constants whose relationship must hold, add an assertion.",
+      "severity": "block",
+      "enforcement": "semantic",
+      "enforcedBy": "the model, in the semantic self-check"
     }
   },
+  "referenceCheck": {
+    "description": "Reference check #1. When a rule is about shape rather than compliance, or when the honest answer is 'how has this been done', read the canonical implementation instead of guessing. These rules were derived from that repository's TIGER_STYLE.md, so the code is the worked example of every rule here.",
+    "path": "~/.pi/reference/tigerbeetle",
+    "upstream": "https://github.com/tigerbeetle/tigerbeetle",
+    "refresh": "git -C ~/.pi/reference/tigerbeetle fetch --depth 1 origin && git -C ~/.pi/reference/tigerbeetle reset --hard origin/main",
+    "style": "docs/TIGER_STYLE.md",
+    "startAt": [
+      "src/state_machine.zig - prepare/commit split, 55 assertions in one function",
+      "src/lsm - bounded structures and allocation-free hot paths",
+      "src/vsr - protocol boundaries and pair assertions",
+      "src/testing - fuzzing and deterministic replay"
+    ],
+    "protocol": "Grep the corpus before inventing a shape. Cite the file and the pattern you copied, the same way you cite a test. Do not copy Zig idioms into another language: copy the shape, not the syntax. Never edit the corpus, and never gate it: it carries a VENDOR marker and __check.sh skips it."
+  },
   "enforcementProtocol": {
-    "description": "Three rules are mechanical: __check.sh enforces them, and state-guard.ts runs it on every edit and write. The other fourteen are semantic and rest on the model answering for them; no tooling checks them. Every rule states which it is, so nobody has to guess which rules are guaranteed.",
+    "description": "Three rules are mechanical: __check.sh enforces them, and state-guard.ts runs it on every edit and write. Every other rule is semantic and rests on the model answering for it; no tooling checks it. Each rule states which it is, so nobody has to guess which rules are guaranteed.",
     "beforeOutput": "Run CodingStandard.check on every changed function.",
     "violationResponse": "Fix the violation. Do not emit the code.",
     "waiverProtocol": {

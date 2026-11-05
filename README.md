@@ -6,7 +6,7 @@ Looking to decrease bloat where possible.
 
 - [Contract](agent/AGENTS.md) - directory layout, naming, the extension boundary test
 - [Harness map](agent/harness-map.md) - every count in the tree, read off disk, with diagrams
-- [TigerBeetle](agent/prompts/tigerbeetle.md) - 17 coding rules, always enforced
+- [TigerBeetle](agent/prompts/tigerbeetle.md) - the coding rules, always enforced
 - [Ponytail](agent/git/github.com/DietrichGebert/ponytail/skills/ponytail/SKILL.md) - lazy-first, the smallest solution that works
 - [Vox](agent/skills/vox/SKILL.md) - goal and acceptance first, then one verified unit at a time
 - [jev-sieve](jev-sieve.md) - design record for the Jev context sieve, including its security review

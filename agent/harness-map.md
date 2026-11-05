@@ -1,6 +1,7 @@
 # Harness map
 
 Drawn 2026-10-17 from the live tree at `~/.pi/agent` (pi 1.3.0), not from memory or docs.
+Re-verified 2026-11-05 on pi 1.5.0: every count below still matches disk.
 Every count was read off disk at draw time, and every diagram below was rendered to check it,
 not eyeballed. Regenerate with:
 
@@ -108,8 +109,9 @@ Where this can still fail:
 - The gate is regex, so it sees tokens rather than intent. `@waiver` is the release valve.
 - The semantic step is the model grading itself, in the same context that wrote the code.
 - The run-artifact step is a pattern match, and a weak one. It sees a command that starts an
-execution (`node`, `cargo run`, `./binary`, `curl`, a kitesurf page tool) and excludes test
-runners by name. That means a run named like a test is discounted, a `make` target is not
+execution (`node`, `cargo run`, `./binary`, `curl`, a kitesurf page tool issued directly or from a
+codemode script) and excludes test runners by name. That means a run named like a test is
+discounted, a `make` target is not
 recognized at all, and a command that merely looks like a run still counts. It proves a surface
 was touched, never that the claim was checked.
 - The pre-commit hook is the only gate that runs after the agent has stopped.
@@ -120,9 +122,9 @@ One file owns the rules. Nothing else enumerates them or their counts.
 
 ```mermaid
 flowchart TB
-    CS["coding-standard.schema.json<br/>17 rules"]
+    CS["coding-standard.schema.json<br/>the rule list"]
     M3["3 mechanical<br/>TB-09, TB-10, TB-17"]
-    S14["14 semantic<br/>everything else"]
+    S14["semantic<br/>everything else"]
     G["__check.sh<br/>run by state-guard"]
     SELF["the model's own verdict"]
     CS --> M3
