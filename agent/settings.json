@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.3.0",
+  "lastChangelogVersion": "1.5.0",
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-flash",
   "defaultThinkingLevel": "high",
@@ -7,6 +7,12 @@
   "hideThinkingBlock": true,
   "quietStartup": true,
   "enableInstallTelemetry": true,
+  "npmCommand": [
+    "npm",
+    "--no-fund",
+    "--no-audit",
+    "--loglevel=error"
+  ],
   "packages": [
     "npm:pi-web-access",
     "git:github.com/DietrichGebert/ponytail",
@@ -16,5 +22,10 @@
     "git:github.com/eko24ive/pi-ask",
     "npm:@ff-labs/pi-fff",
     "npm:vim-motions-pi"
-  ]
+  ],
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-web-access\",\"scope\":\"user\"}": "0.46.0",
+    "{\"source\":\"npm:@tungthedev/pi-extensions\",\"scope\":\"user\"}": "2.6.4",
+    "{\"source\":\"git:github.com/eko24ive/pi-ask\",\"scope\":\"user\"}": "1.2.0"
+  }
 }
