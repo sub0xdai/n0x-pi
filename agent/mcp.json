@@ -6,7 +6,10 @@
         "-y",
         "chrome-devtools-mcp@latest",
         "--wsEndpoint=wss://kitesurf.cloudflare.app/devtools/browser"
-      ]
+      ],
+      "description": "Chrome DevTools over the kitesurf browser: navigate, snapshot, act, screenshot, read console and network",
+      "exposure": "deferred",
+      "timeout": 120
     }
   }
 }

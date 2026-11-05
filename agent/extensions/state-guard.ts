@@ -72,10 +72,13 @@ const RUNTIME_SUFFIX = new RegExp(
 
 const PAGE_SERVER = "mcp__kitesurf__";
 
-const PAGE_TOOL = new RegExp(
-  "(screenshot|snapshot|navigate|click|fill|press|evaluate|wait|drag" +
-    "|hover|type_text|upload|new_page|emulate|resize|console|network)"
-);
+const PAGE_VERB =
+  "screenshot|snapshot|navigate|click|fill|press|evaluate|wait|drag" +
+  "|hover|type_text|upload|new_page|emulate|resize|console|network";
+
+const PAGE_TOOL = new RegExp(PAGE_VERB);
+
+const PAGE_SCRIPT = new RegExp(`${PAGE_SERVER}\\w*(?:${PAGE_VERB})`);
 
 function isRuntime(path: string): boolean {
   return RUNTIME_SUFFIX.test(path);
@@ -197,9 +200,13 @@ function blindMutation(state: Observed, cwd: string, event: ToolCallEvent): stri
 }
 
 function outcomeOf(event: ToolResultEvent): Outcome | undefined {
+  const input = event.input as Record<string, unknown>;
   const pageTool = event.toolName.startsWith(PAGE_SERVER) && PAGE_TOOL.test(event.toolName);
   if (!event.isError && pageTool) return { kind: "proved" };
-  const input = event.input as Record<string, unknown>;
+  if (!event.isError && event.toolName === "codemode") {
+    const script = typeof input.code === "string" ? input.code : "";
+    if (PAGE_SCRIPT.test(script)) return { kind: "proved" };
+  }
   const raw = typeof input.path === "string" ? input.path : undefined;
   if (event.toolName === "read" && raw) {
     return { kind: "read", path: raw, ok: !event.isError };

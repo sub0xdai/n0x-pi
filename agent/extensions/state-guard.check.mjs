@@ -125,6 +125,20 @@ assert.equal(await settle(), undefined, "a live-surface tool result counts as pr
 
 await call("session_start", {});
 await mutate("edit", "a.ts");
+await call("tool_result", {
+  toolName: "codemode",
+  input: { code: "await tools.mcp__kitesurf__take_screenshot({});" },
+  isError: false,
+});
+assert.equal(await settle(), undefined, "a kitesurf call inside codemode counts as proof");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await call("tool_result", { toolName: "codemode", input: { code: "return 1;" }, isError: false });
+assert.equal((await settle())?.continue, true, "a codemode script with no page call is not proof");
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
 await call("tool_result", { toolName: "mcp__kitesurf__list_pages", input: {}, isError: false });
 assert.equal(
   (await settle())?.continue,
