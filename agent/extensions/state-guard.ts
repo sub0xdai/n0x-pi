@@ -194,7 +194,7 @@ function blindMutation(state: Observed, cwd: string, event: ToolCallEvent): stri
   if (event.toolName !== "edit" && event.toolName !== "write") return undefined;
   const raw = event.input.path;
   const full = normalizePath(cwd, raw);
-  if (!existsSync(full) || state.read.has(full)) return undefined;
+  if (isVendored(full) || !existsSync(full) || state.read.has(full)) return undefined;
   const blocked = `${event.toolName} refused: ${raw} exists and was not read in this session.`;
   return `${blocked} Read it, then repeat the ${event.toolName}.`;
 }
