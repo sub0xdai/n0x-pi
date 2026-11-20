@@ -20,6 +20,11 @@ const JEV_SH = envStr("JEV_SH", join(HOME, "dotfiles/scripts/jev.sh"));
 const CACHE_DIR = envStr("JEV_CACHE_DIR", join(HOME, ".cache/jev"));
 const BLOCK_CACHE = join(CACHE_DIR, "blocks");
 const LOG_FILE = join(CACHE_DIR, "sieve.jsonl");
+const REPORT_SH = envStr(
+  "JEV_SIEVE_REPORT",
+  join(HOME, "dotfiles/scripts/jev_sieve_report.sh"),
+);
+const OVERRIDE = envStr("JEV_SIEVE_OVERRIDE", "");
 
 export const DEFAULT_MODE = "off";
 const MODE = envStr("JEV_SIEVE", DEFAULT_MODE);
@@ -324,6 +329,57 @@ function isEnvelope(value: unknown): value is Envelope {
   return v.status === "ok" && typeof (value as { verdicts?: unknown }).verdicts === "object";
 }
 
+export type Gate =
+  | { readonly kind: "ready" }
+  | { readonly kind: "override"; readonly detail: string }
+  | { readonly kind: "blocked"; readonly detail: string };
+
+function exitCode(command: string, args: readonly string[]): Promise<number | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (code: number | null) => {
+      if (settled) return;
+      settled = true;
+      resolve(code);
+    };
+    let child: ReturnType<typeof spawn>;
+    try {
+      child = spawn(command, args, { stdio: "ignore" });
+    } catch {
+      done(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      done(null);
+    }, JEV_TIMEOUT_MS);
+    child.on("error", () => {
+      clearTimeout(timer);
+      done(null);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      done(code);
+    });
+  });
+}
+
+let gate: Promise<Gate> | null = null;
+
+export function interlock(): Promise<Gate> {
+  gate ??= exitCode(REPORT_SH, [QUESTION_ID]).then((code) => {
+    const detail = `jev_sieve_report.sh exit ${code === null ? "unknown" : String(code)}`;
+    if (code === 0) return { kind: "ready" } as const;
+    if (OVERRIDE !== "") {
+      process.stderr.write(`jev-sieve: on refused, ${detail}; overridden\n`);
+      return { kind: "override", detail } as const;
+    }
+    process.stderr.write(`jev-sieve: on refused, ${detail}\n`);
+    return { kind: "blocked", detail } as const;
+  });
+  return gate;
+}
+
 export async function runJev(body: string): Promise<Envelope | null> {
   return new Promise((resolve) => {
     let settled = false;
@@ -501,6 +557,15 @@ export default function (pi: ExtensionAPI) {
     if (event.isError) return;
 
     const session = ctx.sessionManager.getSessionId();
+
+    if (mode === "on") {
+      const verdict = await interlock();
+      if (verdict.kind === "blocked") {
+        await log({ ts: Date.now(), kind: "refused", session, mode, detail: verdict.detail });
+        return;
+      }
+    }
+
     const target = String(
       (event.input as { file_path?: string; path?: string; command?: string })?.file_path ??
         (event.input as { path?: string })?.path ??

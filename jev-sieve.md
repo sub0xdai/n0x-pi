@@ -141,3 +141,21 @@ The pure logic lives in `jev-sieve.check.ts` and the impure half in `jev-sieve.e
 The e2e exists for one invariant: shadow must cache the block text of every hide candidate while leaving the content alone. If that breaks, shadow silently stops producing a dataset and the gate above blames a flat instrument instead of a broken cache write, which is a misleading diagnosis rather than a visible failure. It now also covers a denied result, which must cache nothing and be logged with its rule, and the 0700 and 0600 modes on the cache. It points `JEV_SH` at a stub, so it uses no network and no API key, and everything lives in a temp directory that is removed at the end.
 
 The pure check pins the instrument: versioned state, a pinned model, and one question per block naming its own block path, because a question that does not name its own subject gets answered about no block in particular, which is what flattened the v1 readings. Banding keeps the uncertain middle and holds the documented 0.10 boundary against float representation error. `splitBlocks` numbers from line 1 and drops blank blocks. `namedInTask` is the deterministic half of "was this asked for on purpose". `recallPath` finds a replaced block being read back, by `read` or by `bash`. Every block survives into exactly one pass and a single unsliceable line travels alone instead of looping. A question's named path is its position in that pass's own state array, which is where a multi-pass split can drift, so the split fixture is chosen to split. A hidden block becomes a stub naming the exact range to read back, with everything outside it left verbatim. `egressFor` is covered by the cases in the section above.
+
+## The calibration gate
+
+`jev_sieve_report.sh` answers one question: is the instrument in use qualified to mutate context? It prints a verdict, not a pile of numbers.
+
+It targets one instrument, the named one or the most recently used, and lists the others as superseded without judging them.
+
+A hide candidate is a block the band marked `no`. Both modes cache the text of every candidate, so a shadow run is already a labeling dataset with nothing mutated. Only `on` names a stub, so only `on` yields a free label: reading a replaced block back means the hide was wrong.
+
+The free label is necessary and not sufficient. A hide the agent never notices leaves no record, so read-backs bound the false-negative rate from below and the bound is optimistic. `--samples` prints the labeling worklist, so a batch can be stratified by instrument, `namedInTask`, and reading.
+
+Usage: no argument gates the most recently used instrument, `<question-id>` gates that one, `--samples [id]` prints the TSV worklist.
+
+Exit: 0 qualified, 1 not ready or not qualified, 2 the log could not be read. A missing or empty log is `NOT READY` and exits 1, so a broken or purged cache cannot read as a pass. Before 2026-11-20 both of those exits returned 0 and the gate passed on no data.
+
+Thresholds (env): `JEV_SIEVE_MIN_SAMPLES`, `JEV_SIEVE_MIN_READINGS`, `JEV_SIEVE_MIN_LIVE`, `JEV_SIEVE_MAX_FN_PCT`.
+
+`on` refuses to judge unless this gate exits 0. The extension runs it once per process, with `JEV_SIEVE_REPORT` (default `~/dotfiles/scripts/jev_sieve_report.sh`) and the sieve question id, logs `kind: refused` with the exit code, and returns the tool result untouched. `JEV_SIEVE_OVERRIDE` set to any non-empty value admits `on` anyway and warns on stderr, for deliberate A/B work.
