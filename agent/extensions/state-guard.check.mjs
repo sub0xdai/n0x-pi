@@ -93,6 +93,33 @@ await bash("node --test");
 assert.equal((await settle())?.continue, true, "node --test is not a run artifact");
 
 await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("npx tsc --noEmit && node bench.js");
+assert.equal(
+  await settle(),
+  undefined,
+  "a run later in the same command still proves the turn"
+);
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("./node_modules/.bin/tsc -p tsconfig.json | head -5; node bench.js | tail -3");
+assert.equal(
+  await settle(),
+  undefined,
+  "a typecheck piped beside a run does not hide the run"
+);
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("npx tsc --noEmit; npx eslint src/");
+assert.equal(
+  (await settle())?.continue,
+  true,
+  "two checkers and no run still demand an artifact"
+);
+
+await call("session_start", {});
 await mutate("edit", "main.rs");
 await bash("./target/debug/app --smoke");
 assert.equal(await settle(), undefined, "running the built binary is a run artifact");

@@ -217,8 +217,8 @@ function outcomeOf(event: ToolResultEvent): Outcome | undefined {
   if (event.toolName === "bash" || event.toolName === "powershell") {
     const command = typeof input.command === "string" ? input.command : "";
     if (event.isError) return undefined;
-    if (RUN_COMMAND.test(command) && !TEST_ONLY.test(command)) return { kind: "proved" };
-    if (VERIFY_COMMAND.test(command)) return { kind: "checked" };
+    if (ranSomething(command)) return { kind: "proved" };
+    if (checkedSomething(command)) return { kind: "checked" };
   }
   return undefined;
 }
@@ -287,6 +287,25 @@ function hasVendorMarker(target: string): boolean {
 
 function isVendored(target: string): boolean {
   return VENDORED_SEGMENT.test(target) || hasVendorMarker(target);
+}
+
+const SEGMENT_DELIMITER = /[;&|()\n]+/;
+
+function segmentsOf(command: string): string[] {
+  return command.split(SEGMENT_DELIMITER).map((segment) => segment.trim());
+}
+
+// ponytail: splits on every delimiter, so a quoted "a; node x" counts as a run
+function ranSomething(command: string): boolean {
+  return segmentsOf(command).some(
+    (segment) => RUN_COMMAND.test(segment) && !TEST_ONLY.test(segment),
+  );
+}
+
+function checkedSomething(command: string): boolean {
+  return segmentsOf(command).some(
+    (segment) => TEST_ONLY.test(segment) || VERIFY_COMMAND.test(segment),
+  );
 }
 
 function shellWriteTargets(command: string): string[] {
