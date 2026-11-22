@@ -120,6 +120,24 @@ assert.equal(
 );
 
 await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("HOME=/tmp/x node app.js");
+assert.equal(
+  await settle(),
+  undefined,
+  "an env assignment before the run does not hide it"
+);
+
+await call("session_start", {});
+await mutate("edit", "a.ts");
+await bash("JUMP=1 npx tsc --noEmit");
+assert.equal(
+  (await settle())?.continue,
+  true,
+  "an env assignment before a typecheck is still not a run"
+);
+
+await call("session_start", {});
 await mutate("edit", "main.rs");
 await bash("./target/debug/app --smoke");
 assert.equal(await settle(), undefined, "running the built binary is a run artifact");

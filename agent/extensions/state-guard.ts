@@ -290,9 +290,12 @@ function isVendored(target: string): boolean {
 }
 
 const SEGMENT_DELIMITER = /[;&|()\n]+/;
+const ENV_ASSIGNMENT = /^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/;
 
 function segmentsOf(command: string): string[] {
-  return command.split(SEGMENT_DELIMITER).map((segment) => segment.trim());
+  return command
+    .split(SEGMENT_DELIMITER)
+    .map((segment) => segment.trim().replace(ENV_ASSIGNMENT, ""));
 }
 
 // ponytail: splits on every delimiter, so a quoted "a; node x" counts as a run
