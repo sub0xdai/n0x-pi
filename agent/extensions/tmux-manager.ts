@@ -1,18 +1,29 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { Type } from "typebox";
-import { spawn, execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
+
+const HELP =
+  "Tmux Commands:\n" +
+  "  /tmux list                 - List sessions\n" +
+  "  /tmux new <name> [cmd]     - Create detached session\n" +
+  "  /tmux attach <name>        - Attach (exits pi temporarily)\n" +
+  "  /tmux send <name> <cmd>    - Send command to session\n" +
+  "  /tmux capture <name>       - Print pane content\n" +
+  "  /tmux kill <name>          - Kill session";
+
+const MAX_LINES = 200;
 
 function execTmux(args: string[]): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
     const proc = spawn("tmux", args, { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
     let stdout = "";
     let stderr = "";
-    proc.stdout?.on("data", (d) => (stdout += d.toString()));
-    proc.stderr?.on("data", (d) => (stderr += d.toString()));
+    proc.stdout?.on("data", (chunk) => (stdout += chunk.toString()));
+    proc.stderr?.on("data", (chunk) => (stderr += chunk.toString()));
     proc.on("close", (code) =>
-      resolve({ stdout: stdout.trim(), stderr: stderr.trim(), code: code || 0 })
+      resolve({ stdout: stdout.trim(), stderr: stderr.trim(), code: code || 0 }),
     );
-    proc.on("error", (err) => resolve({ stdout: "", stderr: err.message, code: -1 }));
+    proc.on("error", (error) => resolve({ stdout: "", stderr: error.message, code: -1 }));
   });
 }
 
@@ -26,13 +37,13 @@ function hasTmux(): boolean {
 }
 
 export default function (pi: ExtensionAPI) {
-  const NOT_INSTALLED = {
-    content: [{ type: "text" as const, text: "Error: tmux not installed" }],
+  const failure = (text: string) => ({
+    content: [{ type: "text" as const, text }],
     isError: true,
     details: {},
-  };
+  });
 
-  // ============== Tools (LLM-callable) ==============
+  const NOT_INSTALLED = failure("Error: tmux not installed");
 
   pi.registerTool({
     name: "tmux_new_session",
@@ -48,11 +59,12 @@ export default function (pi: ExtensionAPI) {
       const args = ["new-session", "-d", "-s", params.name];
       if (params.cwd) args.unshift("-c", params.cwd);
       args.push(params.command);
-      const r = await execTmux(args);
-      if (r.code !== 0)
-        return { content: [{ type: "text", text: `Error: ${r.stderr}` }], isError: true, details: {} };
+      const result = await execTmux(args);
+      if (result.code !== 0) return failure(`Error: ${result.stderr}`);
       return {
-        content: [{ type: "text", text: `✓ Session '${params.name}' started\n$ ${params.command}` }],
+        content: [
+          { type: "text", text: `✓ Session '${params.name}' started\n$ ${params.command}` },
+        ],
         details: { session: params.name },
       };
     },
@@ -61,19 +73,20 @@ export default function (pi: ExtensionAPI) {
   pi.registerTool({
     name: "tmux_capture_pane",
     label: "Tmux: Capture Pane",
-    description: "Read the current visible content of a tmux session — use to check on background jobs.",
+    description: "Read the visible content of a tmux session. Use to check on background jobs.",
     parameters: Type.Object({
       session: Type.String({ description: "Session name" }),
       target: Type.Optional(Type.String({ description: "Target pane (default: active)" })),
     }),
     async execute(_id, params) {
       if (!hasTmux()) return NOT_INSTALLED;
-      const r = await execTmux(["capture-pane", "-p", "-t", params.target || params.session]);
-      if (r.code !== 0)
-        return { content: [{ type: "text", text: `Error: ${r.stderr}` }], isError: true, details: {} };
-      const lines = r.stdout.split("\n");
+      const target = params.target || params.session;
+      const result = await execTmux(["capture-pane", "-p", "-t", target]);
+      if (result.code !== 0) return failure(`Error: ${result.stderr}`);
+      const lines = result.stdout.split("\n");
+      const tail = lines.slice(-MAX_LINES).join("\n");
       const truncated =
-        lines.length > 200 ? lines.slice(-200).join("\n") + "\n... (truncated to last 200 lines)" : r.stdout;
+        lines.length > MAX_LINES ? `${tail}\n... (truncated to last ${MAX_LINES} lines)` : tail;
       return {
         content: [{ type: "text", text: `Session: ${params.session}\n\n${truncated}` }],
         details: { session: params.session, lines: lines.length },
@@ -88,16 +101,20 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       session: Type.String({ description: "Session name" }),
       keys: Type.String({ description: "Keys or command to send" }),
-      enter: Type.Optional(Type.Boolean({ description: "Press Enter after sending", default: true })),
+      enter: Type.Optional(
+        Type.Boolean({ description: "Press Enter after sending", default: true }),
+      ),
     }),
     async execute(_id, params) {
       if (!hasTmux()) return NOT_INSTALLED;
       const args = ["send-keys", "-t", params.session, params.keys];
       if (params.enter !== false) args.push("Enter");
-      const r = await execTmux(args);
-      if (r.code !== 0)
-        return { content: [{ type: "text", text: `Error: ${r.stderr}` }], isError: true, details: {} };
-      return { content: [{ type: "text", text: `✓ Sent to '${params.session}': ${params.keys}` }], details: {} };
+      const result = await execTmux(args);
+      if (result.code !== 0) return failure(`Error: ${result.stderr}`);
+      return {
+        content: [{ type: "text", text: `✓ Sent to '${params.session}': ${params.keys}` }],
+        details: {},
+      };
     },
   });
 
@@ -110,14 +127,11 @@ export default function (pi: ExtensionAPI) {
     }),
     async execute(_id, params) {
       if (!hasTmux()) return NOT_INSTALLED;
-      const r = await execTmux(["kill-session", "-t", params.name]);
-      if (r.code !== 0)
-        return { content: [{ type: "text", text: `Error: ${r.stderr}` }], isError: true, details: {} };
+      const result = await execTmux(["kill-session", "-t", params.name]);
+      if (result.code !== 0) return failure(`Error: ${result.stderr}`);
       return { content: [{ type: "text", text: `✓ Killed '${params.name}'` }], details: {} };
     },
   });
-
-  // ============== Slash command (user-facing) ==============
 
   pi.registerCommand("tmux", {
     description: "Manage tmux sessions for background work",
@@ -127,79 +141,56 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const [cmd, sessionName, ...rest] = args?.split(" ") || [];
+      const [command, name, ...rest] = args?.split(" ") || [];
+      const missing = (usage: string) => ctx.ui.notify(`Usage: ${usage}`, "error");
 
-      switch (cmd) {
+      switch (command) {
         case "list": {
-          const r = await execTmux(["list-sessions"]);
-          ctx.ui.notify(r.stdout || "No active sessions", "info");
+          const result = await execTmux(["list-sessions"]);
+          ctx.ui.notify(result.stdout || "No active sessions", "info");
           break;
         }
         case "new": {
-          if (!sessionName) {
-            ctx.ui.notify("Usage: /tmux new <name> [command]", "error");
-            return;
-          }
-          const command = rest.join(" ") || "bash";
-          await execTmux(["new-session", "-d", "-s", sessionName, command]);
-          ctx.ui.notify(`✓ Created '${sessionName}'  $ ${command}`, "info");
+          if (!name) return missing("/tmux new <name> [command]");
+          const launched = rest.join(" ") || "bash";
+          await execTmux(["new-session", "-d", "-s", name, launched]);
+          ctx.ui.notify(`✓ Created '${name}'  $ ${launched}`, "info");
           break;
         }
         case "attach": {
-          if (!sessionName) {
-            ctx.ui.notify("Usage: /tmux attach <name>", "error");
-            return;
-          }
-          await execTmux(["attach-session", "-t", sessionName]);
+          if (!name) return missing("/tmux attach <name>");
+          await execTmux(["attach-session", "-t", name]);
           break;
         }
         case "kill": {
-          if (!sessionName) {
-            ctx.ui.notify("Usage: /tmux kill <name>", "error");
-            return;
-          }
-          await execTmux(["kill-session", "-t", sessionName]);
-          ctx.ui.notify(`✓ Killed '${sessionName}'`, "info");
+          if (!name) return missing("/tmux kill <name>");
+          await execTmux(["kill-session", "-t", name]);
+          ctx.ui.notify(`✓ Killed '${name}'`, "info");
           break;
         }
         case "send": {
-          if (!sessionName || !rest.length) {
-            ctx.ui.notify("Usage: /tmux send <name> <command>", "error");
-            return;
-          }
-          await execTmux(["send-keys", "-t", sessionName, rest.join(" "), "Enter"]);
-          ctx.ui.notify(`✓ Sent to '${sessionName}'`, "info");
+          if (!name || !rest.length) return missing("/tmux send <name> <command>");
+          await execTmux(["send-keys", "-t", name, rest.join(" "), "Enter"]);
+          ctx.ui.notify(`✓ Sent to '${name}'`, "info");
           break;
         }
         case "capture": {
-          if (!sessionName) {
-            ctx.ui.notify("Usage: /tmux capture <name>", "error");
-            return;
-          }
-          const r = await execTmux(["capture-pane", "-p", "-t", sessionName]);
-          ctx.ui.notify(r.stdout || "Empty session", "info");
+          if (!name) return missing("/tmux capture <name>");
+          const result = await execTmux(["capture-pane", "-p", "-t", name]);
+          ctx.ui.notify(result.stdout || "Empty session", "info");
           break;
         }
         default:
-          ctx.ui.notify(
-            "Tmux Commands:\n" +
-              "  /tmux list                 - List sessions\n" +
-              "  /tmux new <name> [cmd]     - Create detached session\n" +
-              "  /tmux attach <name>        - Attach (exits pi temporarily)\n" +
-              "  /tmux send <name> <cmd>    - Send command to session\n" +
-              "  /tmux capture <name>       - Print pane content\n" +
-              "  /tmux kill <name>          - Kill session",
-            "info"
-          );
+          ctx.ui.notify(HELP, "info");
       }
     },
   });
 
   pi.on("session_start", async (_event, ctx) => {
     if (!hasTmux()) return;
-    const r = await execTmux(["list-sessions"]);
-    if (r.stdout) {
-      const count = r.stdout.split("\n").length;
+    const result = await execTmux(["list-sessions"]);
+    if (result.stdout) {
+      const count = result.stdout.split("\n").length;
       ctx.ui.notify(`tmux: ${count} active session(s)`, "info");
     }
   });
